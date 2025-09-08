@@ -38,6 +38,8 @@
         .toggle-checkbox:before { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform .3s; }
         .toggle-checkbox:checked { background: var(--primary-color); }
         .toggle-checkbox:checked:before { transform: translateX(20px); }
+        /* Fix modal z-index issue */
+        #theme-purchase-modal { z-index: 60; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen antialiased">
@@ -228,10 +230,14 @@
 
                         const countdownContainer = $('#countdown-list');
                         countdownContainer.innerHTML = state.countdowns.length ? state.countdowns.map(cd => {
-                            const targetDate = new Date(cd.date);
-                            targetDate.setHours(23, 59, 59, 999);
-                            const diffTime = targetDate - today;
+                            // Correct countdown logic
+                            const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                            const targetStart = new Date(cd.date);
+                            targetStart.setHours(0,0,0,0);
+
+                            const diffTime = targetStart - todayStart;
                             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            
                             const dayText = diffDays > 0 ? `あと <span class="text-2xl font-bold primary-text">${diffDays}</span> 日` : diffDays === 0 ? `<span class="text-xl font-bold text-red-500">今日です！</span>` : `<span class="text-gray-500">終了</span>`;
                             return `<div class="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-3 flex items-center justify-between"><div><h3 class="font-semibold text-gray-800 dark:text-gray-200">${cd.name}</h3><p class="text-sm text-gray-500 dark:text-gray-400">${cd.date.replace(/-/g, '/')}</p></div><div class="flex items-center"><div class="mr-4">${dayText}</div><button class="delete-countdown-btn p-2 text-gray-400 hover:text-red-500" data-id="${cd.id}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`;
                         }).join('') : `<p class="text-sm text-gray-500 text-center">右上の「+」ボタンでテストなどの日程を追加できます。</p>`;
@@ -553,6 +559,43 @@
                 $('#stopwatch-display').textContent = formatStopwatchTime(stopwatch.elapsedTime);
             };
 
+            const pauseFocusTimer = () => {
+                if (!focusTimer.isRunning || focusTimer.isPaused) return;
+                const btn = $('#focus-pause-btn');
+                focusTimer.isPaused = true;
+                clearInterval(focusTimer.interval);
+                btn.innerHTML = `<i data-lucide="play" class="w-6 h-6 mr-2"></i>再開`;
+                lucide.createIcons();
+            };
+
+            const resumeFocusTimer = () => {
+                if (!focusTimer.isRunning || !focusTimer.isPaused) return;
+                const btn = $('#focus-pause-btn');
+                focusTimer.isPaused = false;
+                focusTimer.interval = setInterval(timerTick, 1000);
+                btn.innerHTML = `<i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止`;
+                lucide.createIcons();
+            };
+
+            const pauseStopwatch = () => {
+                if (!stopwatch.isRunning || stopwatch.isPaused) return;
+                const btn = $('#stopwatch-pause-btn');
+                stopwatch.isPaused = true;
+                clearInterval(stopwatch.interval);
+                btn.innerHTML = `<i data-lucide="play" class="w-6 h-6 mr-2"></i>再開`;
+                lucide.createIcons();
+            };
+
+            const resumeStopwatch = () => {
+                if (!stopwatch.isRunning || !stopwatch.isPaused) return;
+                const btn = $('#stopwatch-pause-btn');
+                stopwatch.isPaused = false;
+                stopwatch.startTime = Date.now() - stopwatch.elapsedTime * 1000;
+                stopwatch.interval = setInterval(stopwatchTick, 100);
+                btn.innerHTML = `<i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止`;
+                lucide.createIcons();
+            };
+
             const updateFocusModeUI = () => {
                 const isTimer = state.focus.mode === 'timer';
                 $('#timer-view').style.display = isTimer ? 'flex' : 'none';
@@ -592,16 +635,11 @@
                 $('#focus-controls').classList.remove('hidden');
             });
             $('#focus-pause-btn').addEventListener('click', () => {
-                const btn = $('#focus-pause-btn');
-                focusTimer.isPaused = !focusTimer.isPaused;
-                if(focusTimer.isPaused) {
-                    clearInterval(focusTimer.interval);
-                    btn.innerHTML = `<i data-lucide="play" class="w-6 h-6 mr-2"></i>再開`;
+                if (focusTimer.isPaused) {
+                    resumeFocusTimer();
                 } else {
-                    focusTimer.interval = setInterval(timerTick, 1000);
-                    btn.innerHTML = `<i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止`;
+                    pauseFocusTimer();
                 }
-                lucide.createIcons();
             });
             $('#focus-end-btn').addEventListener('click', () => {
                 const elapsed = focusTimer.defaultTime - focusTimer.timeLeft;
@@ -625,17 +663,11 @@
                 $('#stopwatch-controls').classList.remove('hidden');
             });
             $('#stopwatch-pause-btn').addEventListener('click', () => {
-                const btn = $('#stopwatch-pause-btn');
-                stopwatch.isPaused = !stopwatch.isPaused;
-                if(stopwatch.isPaused) {
-                    clearInterval(stopwatch.interval);
-                    btn.innerHTML = `<i data-lucide="play" class="w-6 h-6 mr-2"></i>再開`;
+                if (stopwatch.isPaused) {
+                    resumeStopwatch();
                 } else {
-                    stopwatch.startTime = Date.now() - stopwatch.elapsedTime * 1000;
-                    stopwatch.interval = setInterval(stopwatchTick, 100);
-                    btn.innerHTML = `<i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止`;
+                    pauseStopwatch();
                 }
-                lucide.createIcons();
             });
              $('#stopwatch-end-btn').addEventListener('click', () => {
                 const elapsed = Math.round(stopwatch.elapsedTime);
@@ -665,7 +697,19 @@
             });
 
             $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
+                const previousPageId = $('.page.active')?.id;
                 const pageId = e.currentTarget.dataset.page;
+
+                // Pause timer/stopwatch when leaving focus page
+                if (previousPageId === 'focus-page' && pageId !== 'focus-page') {
+                   if (focusTimer.isRunning && !focusTimer.isPaused) {
+                        pauseFocusTimer();
+                    }
+                    if (stopwatch.isRunning && !stopwatch.isPaused) {
+                        pauseStopwatch();
+                    }
+                }
+
                 $$('.page').forEach(p => p.classList.remove('active'));
                 $(`#${pageId}`).classList.add('active');
                 $$('.tab-btn').forEach(b => b.classList.replace('primary-text', 'text-gray-500'));
@@ -700,3 +744,5 @@
     </script>
 </body>
 </html>
+
+
