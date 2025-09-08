@@ -54,6 +54,18 @@
 
         <main class="flex-grow overflow-y-auto pb-20">
             <div id="home-page" class="page active p-4 space-y-6">
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm text-center">
+                    <p id="today-date" class="text-lg font-semibold text-gray-600 dark:text-gray-300"></p>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center"><i data-lucide="calendar-clock" class="w-5 h-5 mr-2 primary-text"></i> カウントダウン</h2>
+                        <button id="add-countdown-btn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                    </div>
+                    <div id="countdown-list" class="space-y-3"></div>
+                </div>
+
                 <div>
                     <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center mb-3"><i data-lucide="calendar-check-2" class="w-5 h-5 mr-2 primary-text"></i> 今日の復習</h2>
                     <div id="review-list" class="space-y-3"></div>
@@ -131,6 +143,7 @@
     <div id="quiz-modal" class="fixed inset-0 bg-black/70 z-50 flex-col hidden"><div class="w-full h-full max-w-lg mx-auto bg-gray-100 dark:bg-gray-900 flex flex-col"><header class="p-3 flex items-center justify-between shadow-md bg-white dark:bg-gray-800"><h2 id="quiz-modal-title" class="truncate font-bold"></h2><button class="close-modal-btn p-1" data-modal="quiz-modal"><i data-lucide="x"></i></button></header><div class="flex-grow relative"><div class="absolute inset-0 flex items-center justify-center"><div id="loader"></div></div><iframe id="quiz-iframe" class="w-full h-full border-0 invisible" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe></div></div></div>
     <div id="assessment-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center"><h2 class="text-xl font-bold mb-4">お疲れ様でした！</h2><p class="mb-6">このクイズの理解度を記録しよう</p><div class="flex justify-around"><button class="assessment-btn p-2" data-level="3"><i data-lucide="award" class="w-10 h-10 text-yellow-400"></i><p>完璧！</p></button><button class="assessment-btn p-2" data-level="2"><i data-lucide="thumbs-up" class="w-10 h-10 text-green-400"></i><p>まあまあ</p></button><button class="assessment-btn p-2" data-level="1"><i data-lucide="book-open-check" class="w-10 h-10 text-blue-400"></i><p>要復習</p></button></div></div></div>
     <div id="theme-purchase-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center"><h2 id="theme-purchase-title" class="text-xl font-bold mb-2"></h2><p id="theme-purchase-cost" class="mb-6"></p><div class="flex justify-center space-x-4"><button id="theme-purchase-cancel" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">やめる</button><button id="theme-purchase-confirm" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg">交換する</button></div></div></div>
+    <div id="countdown-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6"><h2 class="text-xl font-bold mb-4">カウントダウン追加</h2><div class="space-y-4"><input id="countdown-name" type="text" placeholder="イベント名 (例: 期末テスト)" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"><input id="countdown-date" type="date" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"></div><div class="flex justify-end space-x-4 mt-6"><button id="countdown-cancel-btn" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">キャンセル</button><button id="countdown-save-btn" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg">保存</button></div></div></div>
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300 z-50 transform -translate-y-10"></div>
     
     <script>
@@ -170,25 +183,38 @@
                     progress: {},
                     reviewSchedule: [],
                     pinnedQuizzes: [],
+                    countdowns: [], // {id, name, date}
                     focus: { totalTime: 0 },
-                    studyLog: {}, // { 'YYYY-MM-DD': { focus: seconds, quiz: seconds } }
+                    studyLog: {}, 
                     settings: { reviewNotifications: true },
                     lastLogin: null,
                 };
-                state = JSON.parse(localStorage.getItem('quizAppUltimateV2')) || defaultState;
+                state = JSON.parse(localStorage.getItem('quizAppUltimateV3')) || defaultState;
                 if(state.lastLogin !== new Date().toDateString()){
                     addLP(10, 'ログインボーナス');
                     state.lastLogin = new Date().toDateString();
                 }
             };
-            const saveState = () => localStorage.setItem('quizAppUltimateV2', JSON.stringify(state));
+            const saveState = () => localStorage.setItem('quizAppUltimateV3', JSON.stringify(state));
 
             const renderEngine = {
                 pages: {
                     'home-page': () => {
+                        const today = new Date();
+                        $('#today-date').textContent = `${today.getFullYear()}年 ${today.getMonth() + 1}月 ${today.getDate()}日 (${'日月火水木金土'[today.getDay()]}曜日)`;
+
+                        const countdownContainer = $('#countdown-list');
+                        countdownContainer.innerHTML = state.countdowns.length ? state.countdowns.map(cd => {
+                            const targetDate = new Date(cd.date);
+                            targetDate.setHours(23, 59, 59, 999);
+                            const diffTime = targetDate - today;
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            const dayText = diffDays > 0 ? `あと <span class="text-2xl font-bold primary-text">${diffDays}</span> 日` : diffDays === 0 ? `<span class="text-xl font-bold text-red-500">今日です！</span>` : `<span class="text-gray-500">終了</span>`;
+                            return `<div class="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-3 flex items-center justify-between"><div><h3 class="font-semibold text-gray-800 dark:text-gray-200">${cd.name}</h3><p class="text-sm text-gray-500 dark:text-gray-400">${cd.date.replace(/-/g, '/')}</p></div><div class="flex items-center"><div class="mr-4">${dayText}</div><button class="delete-countdown-btn p-2 text-gray-400 hover:text-red-500" data-id="${cd.id}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`;
+                        }).join('') : `<p class="text-sm text-gray-500 text-center">右上の「+」ボタンでテストなどの日程を追加できます。</p>`;
+
                         const reviewContainer = $('#review-list');
-                        const now = new Date();
-                        const reviews = state.reviewSchedule.filter(r => new Date(r.reviewDate) <= now);
+                        const reviews = state.reviewSchedule.filter(r => new Date(r.reviewDate) <= today);
                         reviewContainer.innerHTML = reviews.length ? reviews.map(r => createQuizCard(initialData.quizzes.find(q => q.id === r.quizId), false, true)).join('') : `<p class="text-sm text-gray-500">今日の復習はありません。素晴らしい！</p>`;
                         
                         const titlesContainer = $('#recent-titles');
@@ -201,10 +227,10 @@
                         const allContainer = $('#all-quizzes');
                         const pinnedContainer = $('#pinned-quizzes');
                         const subjects = ['all', ...new Set(initialData.quizzes.map(q => q.subject))];
-                        $('#filter-container').innerHTML = subjects.map(s => `<button class="filter-btn ${s === 'all' ? 'active primary-bg text-white' : 'bg-gray-200 dark:bg-gray-600'} px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="${s}">${s === 'all' ? 'すべて' : s}</button>`).join('');
+                        const activeFilter = $('#filter-container .active')?.dataset.filter || 'all';
+                        $('#filter-container').innerHTML = subjects.map(s => `<button class="filter-btn ${s === activeFilter ? 'active primary-bg text-white' : 'bg-gray-200 dark:bg-gray-600'} px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="${s}">${s === 'all' ? 'すべて' : s}</button>`).join('');
                         
-                        const filter = $('#filter-container .active').dataset.filter;
-                        const quizzes = initialData.quizzes.filter(q => filter === 'all' || q.subject === filter);
+                        const quizzes = initialData.quizzes.filter(q => activeFilter === 'all' || q.subject === activeFilter);
                         allContainer.innerHTML = quizzes.map(q => createQuizCard(q, state.pinnedQuizzes.includes(q.id))).join('');
                         
                         const pinnedQuizzes = state.pinnedQuizzes.map(id => initialData.quizzes.find(q => q.id === id)).filter(Boolean);
@@ -251,7 +277,11 @@
                     }
                 },
                 renderAll: () => {
-                    Object.values(renderEngine.pages).forEach(renderFunc => renderFunc());
+                    for(const pageId in renderEngine.pages){
+                        if($(`#${pageId}`).classList.contains('active')){
+                            renderEngine.pages[pageId]();
+                        }
+                    }
                     $('#lp-display').textContent = `${state.profile.lp} LP`;
                     const activeTheme = initialData.themes[state.profile.activeTheme];
                     document.documentElement.style.setProperty('--primary-color', activeTheme.color);
@@ -381,6 +411,38 @@
                     }
                     saveState(); renderEngine.renderAll();
                 }
+
+                const deleteCountdownBtn = e.target.closest('.delete-countdown-btn');
+                if(deleteCountdownBtn){
+                    const id = deleteCountdownBtn.dataset.id;
+                    state.countdowns = state.countdowns.filter(cd => cd.id !== id);
+                    saveState();
+                    renderEngine.pages['home-page']();
+                    lucide.createIcons();
+                }
+            });
+
+            $('#add-countdown-btn').addEventListener('click', () => {
+                $('#countdown-modal').style.display = 'flex';
+            });
+            $('#countdown-cancel-btn').addEventListener('click', () => {
+                $('#countdown-modal').style.display = 'none';
+            });
+            $('#countdown-save-btn').addEventListener('click', () => {
+                const name = $('#countdown-name').value.trim();
+                const date = $('#countdown-date').value;
+                if(name && date) {
+                    state.countdowns.push({ id: `cd_${Date.now()}`, name, date });
+                    state.countdowns.sort((a, b) => new Date(a.date) - new Date(b.date));
+                    saveState();
+                    renderEngine.pages['home-page']();
+                    lucide.createIcons();
+                    $('#countdown-name').value = '';
+                    $('#countdown-date').value = '';
+                    $('#countdown-modal').style.display = 'none';
+                } else {
+                    showToast('イベント名と日付を入力してください');
+                }
             });
 
             $('#theme-purchase-confirm').addEventListener('click', e => {
@@ -437,12 +499,16 @@
             });
             
             $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
+                const pageId = e.currentTarget.dataset.page;
                 $$('.page').forEach(p => p.classList.remove('active'));
-                $(`#${e.currentTarget.dataset.page}`).classList.add('active');
+                $(`#${pageId}`).classList.add('active');
                 $$('.tab-btn').forEach(b => b.classList.replace('primary-text', 'text-gray-500'));
                 e.currentTarget.classList.replace('text-gray-500', 'primary-text');
                 $('#header-title').textContent = e.currentTarget.dataset.title;
-                if(e.currentTarget.dataset.page === 'my-chart-page') renderEngine.pages['my-chart-page']();
+                if(renderEngine.pages[pageId]) {
+                    renderEngine.pages[pageId]();
+                    lucide.createIcons();
+                }
             }));
 
             const init = () => {
