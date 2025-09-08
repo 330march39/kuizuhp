@@ -29,39 +29,19 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* PWAインストールボタンのスタイル */
-        #install-button {
-            display: none;
-        }
-        
         /* ページの表示/非表示を滑らかにする */
-        .page {
-            display: none;
-        }
-        .page.active {
-            display: block;
-            animation: fadeIn 0.3s ease-in-out;
-        }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         /* カスタムスクロールバー */
-        ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 5px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
 
         /* iframeのローディングインジケーター */
         #loader {
@@ -72,10 +52,18 @@
             height: 40px;
             animation: spin 1s linear infinite;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        /* トグルスイッチ */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #4A90E2;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #4A90E2;
         }
     </style>
 </head>
@@ -84,8 +72,14 @@
     <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-2xl">
         
         <!-- ヘッダー -->
-        <header class="bg-white dark:bg-gray-800 shadow-md z-10 p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+        <header class="bg-white dark:bg-gray-800 shadow-md z-10 p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 relative">
             <h1 id="header-title" class="text-xl font-bold text-gray-900 dark:text-white">ホーム</h1>
+             <div id="search-container" class="absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 flex items-center px-4 hidden">
+                <input type="search" id="search-input" placeholder="教材を検索..." class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button id="close-search-btn" class="ml-2 p-2">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
             <div id="header-icons" class="flex items-center space-x-4">
                  <button id="search-button" class="text-gray-600 dark:text-gray-300">
                     <i data-lucide="search" class="w-6 h-6"></i>
@@ -97,43 +91,52 @@
         <main class="flex-grow overflow-y-auto pb-20">
             <!-- ホーム画面 -->
             <div id="home-page" class="page active p-4">
-                <div id="pinned-section" class="mb-6">
-                    <h2 class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300 flex items-center">
-                        <i data-lucide="pin" class="w-5 h-5 mr-2 text-blue-500"></i>
-                        ピン留めしたクイズ
-                    </h2>
-                    <div id="pinned-quizzes" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                       <p id="no-pins-message" class="text-gray-500 dark:text-gray-400">クイズをピン留めして、すぐにアクセスしよう！</p>
-                    </div>
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow mb-6 text-center">
+                    <p id="current-date" class="text-lg font-semibold text-gray-700 dark:text-gray-300"></p>
                 </div>
-                <div>
+                
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+                        <i data-lucide="calendar-clock" class="w-5 h-5 mr-2 text-blue-500"></i>
+                        カウントダウン
+                    </h2>
+                    <button id="add-countdown-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold p-2 rounded-full">
+                         <i data-lucide="plus" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div id="countdown-list" class="space-y-3">
+                    <!-- カウントダウンカードはJSで生成 -->
+                </div>
+                <p id="no-countdown-message" class="text-gray-500 dark:text-gray-400 text-center py-4">テストやイベントを登録しよう！</p>
+            </div>
+
+            <!-- 教材ページ -->
+            <div id="materials-page" class="page p-4">
+                 <div>
                     <h2 class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300 flex items-center">
                        <i data-lucide="book-marked" class="w-5 h-5 mr-2 text-blue-500"></i>
                         すべてのクイズ
                     </h2>
                     <div class="flex space-x-2 mb-4 overflow-x-auto pb-2">
-                         <button class="filter-btn active bg-blue-500 text-white px-4 py-1.5 rounded-full text-sm font-medium" data-filter="all">すべて</button>
-                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium" data-filter="国語">国語</button>
-                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium" data-filter="数学">数学</button>
-                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium" data-filter="英語">英語</button>
-                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium" data-filter="理科">理科</button>
-                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium" data-filter="社会">社会</button>
+                         <button class="filter-btn active bg-blue-500 text-white px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="all">すべて</button>
+                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="国語">国語</button>
+                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="数学">数学</button>
+                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="英語">英語</button>
+                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="理科">理科</button>
+                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="社会">社会</button>
                     </div>
                     <div id="all-quizzes" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <!-- クイズカードはJSで生成 -->
                     </div>
+                    <p id="no-quizzes-message" class="text-gray-500 dark:text-gray-400 hidden">クイズが見つかりませんでした。</p>
                 </div>
-            </div>
-
-            <!-- 教材ページ -->
-            <div id="materials-page" class="page p-4">
-                <h2 class="text-2xl font-bold mb-4">教材・資料</h2>
-                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
-                    <p class="text-gray-600 dark:text-gray-300">
-                        ここは、クイズ以外の学習教材や資料を配置するページです。
-                        <br><br>
-                        例えば、重要な公式集のPDFへのリンクや、参考動画の埋め込みなどが考えられます。
-                    </p>
+                 <div id="pinned-section" class="mt-6">
+                    <h2 class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300 flex items-center">
+                        <i data-lucide="pin" class="w-5 h-5 mr-2 text-blue-500"></i>
+                        ピン留めしたクイズ
+                    </h2>
+                    <div id="pinned-quizzes" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    </div>
+                    <p id="no-pins-message" class="text-gray-500 dark:text-gray-400">クイズをピン留めして、すぐにアクセスしよう！</p>
                 </div>
             </div>
 
@@ -143,15 +146,22 @@
                 <div class="space-y-4">
                      <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                         <h3 class="font-semibold mb-2">通知設定</h3>
-                        <button id="notification-button" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                        <button id="notification-permission-button" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center mb-4">
                             <i data-lucide="bell-ring" class="w-5 h-5 mr-2"></i>
-                            通知を許可する
+                            ブラウザ通知を許可
                         </button>
+                        <div class="flex items-center justify-between">
+                            <span>カウントダウン通知</span>
+                            <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="toggle" id="countdown-notification-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                <label for="countdown-notification-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                            </div>
+                        </div>
                     </div>
                     <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                         <h3 class="font-semibold mb-2">アプリのインストール</h3>
                         <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">このアプリをホーム画面に追加して、素早くアクセスできます。</p>
-                        <button id="install-button" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                        <button id="install-button" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center hidden">
                             <i data-lucide="download-cloud" class="w-5 h-5 mr-2"></i>
                             ホーム画面に追加
                         </button>
@@ -167,7 +177,7 @@
                 <span class="text-xs font-medium">ホーム</span>
             </button>
             <button class="tab-btn flex flex-col items-center justify-center text-gray-500 dark:text-gray-400" data-page="materials-page" data-title="教材">
-                <i data-lucide="folder" class="w-6 h-6 mb-1"></i>
+                <i data-lucide="book-marked" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">教材</span>
             </button>
             <button class="tab-btn flex flex-col items-center justify-center text-gray-500 dark:text-gray-400" data-page="settings-page" data-title="設定">
@@ -177,21 +187,81 @@
         </nav>
     </div>
 
+    <!-- ===== モーダルウィンドウ群 ===== -->
     <!-- クイズ表示用モーダル -->
-    <div id="quiz-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex-col items-center justify-center hidden">
+    <div id="quiz-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex-col items-center justify-center hidden">
         <div class="w-full h-full max-w-lg bg-gray-100 dark:bg-gray-900 flex flex-col">
             <header class="bg-white dark:bg-gray-800 p-3 flex items-center justify-between shadow-md">
-                <h2 id="quiz-title" class="text-lg font-bold text-gray-800 dark:text-gray-200 truncate">クイズを読み込み中...</h2>
-                <button id="close-quiz-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                <h2 id="quiz-title" class="text-lg font-bold text-gray-800 dark:text-gray-200 truncate"></h2>
+                <button class="close-modal-btn p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-modal="quiz-modal">
                     <i data-lucide="x" class="w-6 h-6 text-gray-600 dark:text-gray-300"></i>
                 </button>
             </header>
             <div class="flex-grow relative">
-                <div id="loader-container" class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-                    <div id="loader"></div>
-                </div>
+                <div id="loader-container" class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-900"><div id="loader"></div></div>
                 <iframe id="quiz-iframe" class="w-full h-full border-0" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
             </div>
+        </div>
+    </div>
+    <!-- カウントダウン追加モーダル -->
+    <div id="countdown-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6">
+            <h2 class="text-xl font-bold mb-4">新しいカウントダウン</h2>
+            <form id="countdown-form">
+                <input type="hidden" id="countdown-id">
+                <div class="mb-4">
+                    <label for="countdown-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">イベント名</label>
+                    <input type="text" id="countdown-name" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                </div>
+                <div class="mb-6">
+                    <label for="countdown-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">日付</label>
+                    <input type="date" id="countdown-date" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" class="close-modal-btn px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-md" data-modal="countdown-modal">キャンセル</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- 管理者パネルモーダル -->
+    <div id="admin-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex-col items-center justify-center hidden">
+         <div class="w-full h-full max-w-lg bg-gray-100 dark:bg-gray-900 flex flex-col">
+             <header class="bg-white dark:bg-gray-800 p-3 flex items-center justify-between shadow-md">
+                <h2 class="text-lg font-bold">管理者パネル</h2>
+                <button class="close-modal-btn p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-modal="admin-modal">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </header>
+            <div class="flex-grow overflow-y-auto p-4">
+                <h3 class="font-semibold mb-2">クイズ管理</h3>
+                <div id="admin-quiz-list" class="space-y-2 mb-4"></div>
+                <button id="admin-add-quiz-btn" class="w-full bg-green-500 text-white py-2 rounded-lg mb-6">新しいクイズを追加</button>
+
+                <h3 class="font-semibold mb-2">期末テスト日程管理</h3>
+                 <form id="admin-countdown-form">
+                    <input type="text" id="admin-countdown-name" placeholder="イベント名 (例: 2学期期末テスト)" class="w-full mb-2 p-2 rounded border dark:bg-gray-700 dark:border-gray-600">
+                    <input type="date" id="admin-countdown-date" class="w-full mb-2 p-2 rounded border dark:bg-gray-700 dark:border-gray-600">
+                    <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg">管理者カウントダウンを設定</button>
+                </form>
+            </div>
+         </div>
+    </div>
+    <!-- クイズ編集モーダル -->
+    <div id="quiz-edit-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6">
+             <h2 id="quiz-edit-title" class="text-xl font-bold mb-4">クイズ編集</h2>
+             <form id="quiz-edit-form">
+                <input type="hidden" id="quiz-edit-id">
+                <div class="mb-3"><input type="text" id="quiz-edit-name" placeholder="タイトル" class="w-full p-2 rounded border dark:bg-gray-700 dark:border-gray-600" required></div>
+                <div class="mb-3"><input type="text" id="quiz-edit-subject" placeholder="教科" class="w-full p-2 rounded border dark:bg-gray-700 dark:border-gray-600" required></div>
+                <div class="mb-3"><input type="text" id="quiz-edit-genre" placeholder="ジャンル" class="w-full p-2 rounded border dark:bg-gray-700 dark:border-gray-600" required></div>
+                <div class="mb-4"><input type="url" id="quiz-edit-url" placeholder="Google Form URL" class="w-full p-2 rounded border dark:bg-gray-700 dark:border-gray-600" required></div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" class="close-modal-btn px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-md" data-modal="quiz-edit-modal">キャンセル</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md">保存</button>
+                </div>
+             </form>
         </div>
     </div>
     
@@ -203,281 +273,464 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- データ定義 ---
-            const quizzes = [
-                // このデータは本来APIから取得しますが、今回はデモ用に直接定義します。
-                // URLは実際のGoogle FormのURLに差し替えてください。
+            // --- デフォルトデータ定義 ---
+            const defaultQuizzes = [
                 { id: 1, title: "中学1年 数学 - 正負の数", subject: "数学", genre: "中1", url: "https://docs.google.com/forms/d/e/1FAIpQLSclW_A-1fwnE4bFpYp7qLgVwUa_3jX9sZ6cK8rB0oI1mN5n_Q/viewform?usp=sf_link" },
                 { id: 2, title: "中学1年 英語 - be動詞", subject: "英語", genre: "中1", url: "https://docs.google.com/forms/d/e/1FAIpQLSclW_A-1fwnE4bFpYp7qLgVwUa_3jX9sZ6cK8rB0oI1mN5n_Q/viewform?usp=sf_link" },
                 { id: 3, title: "中学2年 理科 - 化学反応", subject: "理科", genre: "中2", url: "https://docs.google.com/forms/d/e/1FAIpQLSclW_A-1fwnE4bFpYp7qLgVwUa_3jX9sZ6cK8rB0oI1mN5n_Q/viewform?usp=sf_link" },
                 { id: 4, title: "高校1年 国語 - 古文基礎", subject: "国語", genre: "高1", url: "https://docs.google.com/forms/d/e/1FAIpQLSclW_A-1fwnE4bFpYp7qLgVwUa_3jX9sZ6cK8rB0oI1mN5n_Q/viewform?usp=sf_link" },
-                { id: 5, title: "中学歴史 - 鎌倉時代", subject: "社会", genre: "歴史", url: "https://docs.google.com/forms/d/e/1FAIpQLSclW_A-1fwnE4bFpYp7qLgVwUa_3jX9sZ6cK8rB0oI1mN5n_Q/viewform?usp=sf_link" },
-                { id: 6, title: "中学3年 数学 - 2次方程式", subject: "数学", genre: "中3", url: "https://docs.google.com/forms/d/e/1FAIpQLSclW_A-1fwnE4bFpYp7qLgVwUa_3jX9sZ6cK8rB0oI1mN5n_Q/viewform?usp=sf_link" },
-                { id: 7, title: "高校2年 英語 - 関係代名詞", subject: "英語", genre: "高2", url: "https://docs.google.com/forms/d/e/1FAIpQLSclW_A-1fwnE4bFpYp7qLgVwUa_3jX9sZ6cK8rB0oI1mN5n_Q/viewform?usp=sf_link" },
             ];
+            const defaultAdminCountdowns = [{ id: 1, title: '２学期 期末テスト', date: '2025-11-25' }];
 
-            // --- DOM要素の取得 ---
-            const allQuizzesContainer = document.getElementById('all-quizzes');
-            const pinnedQuizzesContainer = document.getElementById('pinned-quizzes');
-            const noPinsMessage = document.getElementById('no-pins-message');
-            const headerTitle = document.getElementById('header-title');
-            const quizModal = document.getElementById('quiz-modal');
-            const quizIframe = document.getElementById('quiz-iframe');
-            const quizTitle = document.getElementById('quiz-title');
-            const loaderContainer = document.getElementById('loader-container');
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-
-            // --- 状態管理 ---
-            let pinnedQuizzes = JSON.parse(localStorage.getItem('pinnedQuizzes')) || [];
-            let currentFilter = 'all';
-
-            // --- PWA Service Worker & Manifest ---
-            // manifest.jsonを動的に生成し、ファイルレスPWAを実現
-            const manifest = {
-                "name": "クイズHP",
-                "short_name": "クイズHP",
-                "start_url": ".",
-                "display": "standalone",
-                "background_color": "#f3f4f6",
-                "theme_color": "#4a90e2",
-                "description": "中学・高校の定期テスト対策クイズアプリ",
-                "icons": [{
-                    "src": "https://placehold.co/192x192/4a90e2/ffffff?text=Q",
-                    "sizes": "192x192",
-                    "type": "image/png"
-                }, {
-                    "src": "https://placehold.co/512x512/4a90e2/ffffff?text=Q",
-                    "sizes": "512x512",
-                    "type": "image/png"
-                }]
+            // --- 状態管理 & データ永続化 ---
+            let state = {
+                quizzes: JSON.parse(localStorage.getItem('quizzes')) || defaultQuizzes,
+                pinnedQuizzes: JSON.parse(localStorage.getItem('pinnedQuizzes')) || [],
+                adminCountdowns: JSON.parse(localStorage.getItem('adminCountdowns')) || defaultAdminCountdowns,
+                userCountdowns: JSON.parse(localStorage.getItem('userCountdowns')) || [],
+                dismissedAdminCountdowns: JSON.parse(localStorage.getItem('dismissedAdminCountdowns')) || [],
+                settings: JSON.parse(localStorage.getItem('settings')) || { countdownNotifications: true },
+                currentFilter: 'all',
+                searchQuery: '',
             };
-            const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-            const manifestURL = URL.createObjectURL(manifestBlob);
-            const link = document.createElement('link');
-            link.rel = 'manifest';
-            link.href = manifestURL;
-            document.head.appendChild(link);
+
+            const saveData = () => {
+                localStorage.setItem('quizzes', JSON.stringify(state.quizzes));
+                localStorage.setItem('pinnedQuizzes', JSON.stringify(state.pinnedQuizzes));
+                localStorage.setItem('adminCountdowns', JSON.stringify(state.adminCountdowns));
+                localStorage.setItem('userCountdowns', JSON.stringify(state.userCountdowns));
+                localStorage.setItem('dismissedAdminCountdowns', JSON.stringify(state.dismissedAdminCountdowns));
+                localStorage.setItem('settings', JSON.stringify(state.settings));
+            };
+
+            // --- DOM要素 ---
+            const $ = (selector) => document.querySelector(selector);
+            const $$ = (selector) => document.querySelectorAll(selector);
+
+            // --- PWA Service Worker & Manifest (変更なし) ---
+            // manifest.jsonを動的に生成
+            const manifest = {"name": "クイズHP", "short_name": "クイズHP", "start_url": ".", "display": "standalone", "background_color": "#f3f4f6", "theme_color": "#4a90e2", "description": "中学・高校の定期テスト対策クイズアプリ", "icons": [{"src": "https://placehold.co/192x192/4a90e2/ffffff?text=Q", "sizes": "192x192", "type": "image/png"}, {"src": "https://placehold.co/512x512/4a90e2/ffffff?text=Q", "sizes": "512x512", "type": "image/png"}]};
+            const manifestURL = URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type: 'application/json'}));
+            document.head.appendChild(Object.assign(document.createElement('link'), {rel: 'manifest', href: manifestURL}));
 
             // Service Workerを登録
             if ('serviceWorker' in navigator) {
-                const swContent = `
-                    const CACHE_NAME = 'quiz-hp-cache-v1';
-                    const urlsToCache = [
-                        '/',
-                        '/index.html' // ルートをindex.htmlとしてキャッシュ
-                    ];
-                    self.addEventListener('install', event => {
-                        event.waitUntil(
-                            caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
-                        );
-                    });
-                    self.addEventListener('fetch', event => {
-                        event.respondWith(
-                            caches.match(event.request).then(response => {
-                                return response || fetch(event.request);
-                            })
-                        );
-                    });
-                `;
-                const swBlob = new Blob([swContent], { type: 'application/javascript' });
-                const swURL = URL.createObjectURL(swBlob);
-                navigator.serviceWorker.register(swURL)
-                    .then(registration => console.log('ServiceWorker registration successful with scope: ', registration.scope))
-                    .catch(error => console.log('ServiceWorker registration failed: ', error));
+                // const swContent = `const CACHE_NAME = 'quiz-hp-cache-v2'; const urlsToCache = ['/','/index.html']; self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(urlsToCache)))); self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
+                // navigator.serviceWorker.register(URL.createObjectURL(new Blob([swContent], {type: 'application/javascript'})));
+                console.log("Service Worker registration is disabled in this environment to prevent blob: URL errors.");
             }
             
             // PWAインストールプロンプト
             let deferredPrompt;
-            const installButton = document.getElementById('install-button');
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
-                installButton.style.display = 'flex';
-                installButton.addEventListener('click', () => {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('User accepted the install prompt');
-                        }
-                        deferredPrompt = null;
-                    });
-                });
+                $('#install-button').style.display = 'flex';
+                $('#install-button').onclick = () => deferredPrompt.prompt();
             });
 
+            // --- レンダリング関数群 ---
+            const renderAll = () => {
+                renderQuizzes();
+                renderCountdowns();
+                renderSettings();
+            };
 
-            // --- レンダリング関数 ---
             const renderQuizzes = () => {
-                // 全クイズ表示
+                const allQuizzesContainer = $('#all-quizzes');
+                const pinnedQuizzesContainer = $('#pinned-quizzes');
+                const noPinsMessage = $('#no-pins-message');
+                const noQuizzesMessage = $('#no-quizzes-message');
                 allQuizzesContainer.innerHTML = '';
-                const filteredQuizzes = quizzes.filter(q => currentFilter === 'all' || q.subject === currentFilter);
+                pinnedQuizzesContainer.innerHTML = '';
 
-                filteredQuizzes.forEach(quiz => {
-                    const isPinned = pinnedQuizzes.includes(quiz.id);
-                    const card = `
-                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 flex items-center justify-between quiz-card" data-url="${quiz.url}" data-title="${quiz.title}">
-                            <div>
-                                <h3 class="font-semibold text-gray-800 dark:text-gray-200">${quiz.title}</h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">${quiz.subject} - ${quiz.genre}</p>
-                            </div>
-                            <button class="pin-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600" data-id="${quiz.id}">
-                                <i data-lucide="pin" class="w-5 h-5 ${isPinned ? 'text-blue-500 fill-current' : 'text-gray-400'}"></i>
-                            </button>
-                        </div>
-                    `;
+                let quizzesToDisplay = state.quizzes;
+                if (state.currentFilter !== 'all') {
+                    quizzesToDisplay = quizzesToDisplay.filter(q => q.subject === state.currentFilter);
+                }
+                if (state.searchQuery) {
+                    quizzesToDisplay = quizzesToDisplay.filter(q => 
+                        q.title.toLowerCase().includes(state.searchQuery) ||
+                        q.subject.toLowerCase().includes(state.searchQuery) ||
+                        q.genre.toLowerCase().includes(state.searchQuery)
+                    );
+                }
+
+                if(quizzesToDisplay.length === 0) {
+                    noQuizzesMessage.classList.remove('hidden');
+                } else {
+                    noQuizzesMessage.classList.add('hidden');
+                }
+
+                quizzesToDisplay.forEach(quiz => {
+                    const isPinned = state.pinnedQuizzes.includes(quiz.id);
+                    const card = createQuizCard(quiz, isPinned);
                     allQuizzesContainer.insertAdjacentHTML('beforeend', card);
                 });
                 
-                // ピン留めクイズ表示
-                pinnedQuizzesContainer.innerHTML = '';
-                if (pinnedQuizzes.length > 0) {
-                    noPinsMessage.style.display = 'none';
-                    const pinnedQuizObjects = pinnedQuizzes.map(id => quizzes.find(q => q.id === id)).filter(Boolean);
-                    
+                if (state.pinnedQuizzes.length > 0) {
+                    noPinsMessage.classList.add('hidden');
+                    const pinnedQuizObjects = state.pinnedQuizzes.map(id => state.quizzes.find(q => q.id === id)).filter(Boolean);
                     pinnedQuizObjects.forEach(quiz => {
-                        const card = `
-                            <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 flex items-center justify-between quiz-card" data-url="${quiz.url}" data-title="${quiz.title}">
-                                <div>
-                                    <h3 class="font-semibold text-gray-800 dark:text-gray-200">${quiz.title}</h3>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">${quiz.subject} - ${quiz.genre}</p>
-                                </div>
-                                <button class="pin-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600" data-id="${quiz.id}">
-                                    <i data-lucide="pin" class="w-5 h-5 text-blue-500 fill-current"></i>
-                                </button>
-                            </div>
-                        `;
+                        const card = createQuizCard(quiz, true);
                         pinnedQuizzesContainer.insertAdjacentHTML('beforeend', card);
                     });
                 } else {
-                    noPinsMessage.style.display = 'block';
+                    noPinsMessage.classList.remove('hidden');
                 }
-
-                // アイコンを再描画
                 lucide.createIcons();
             };
+
+            const createQuizCard = (quiz, isPinned) => `
+                <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 flex items-center justify-between quiz-card" data-url="${quiz.url}" data-title="${quiz.title}">
+                    <div>
+                        <h3 class="font-semibold text-gray-800 dark:text-gray-200">${quiz.title}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">${quiz.subject} - ${quiz.genre}</p>
+                    </div>
+                    <button class="pin-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600" data-id="${quiz.id}">
+                        <i data-lucide="pin" class="w-5 h-5 ${isPinned ? 'text-blue-500 fill-current' : 'text-gray-400'}"></i>
+                    </button>
+                </div>`;
             
+            const renderCountdowns = () => {
+                const list = $('#countdown-list');
+                const noCountdownMessage = $('#no-countdown-message');
+                list.innerHTML = '';
+                
+                const allCountdowns = [
+                    ...state.adminCountdowns
+                        .filter(ac => !state.dismissedAdminCountdowns.includes(ac.id))
+                        .map(c => ({...c, isAdmin: true})),
+                    ...state.userCountdowns.map(c => ({...c, isAdmin: false}))
+                ];
+
+                if(allCountdowns.length === 0) {
+                    noCountdownMessage.style.display = 'block';
+                    return;
+                }
+                noCountdownMessage.style.display = 'none';
+
+                allCountdowns.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+                allCountdowns.forEach(cd => {
+                    const targetDate = new Date(cd.date + 'T23:59:59');
+                    const now = new Date();
+                    const diffTime = targetDate - now;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    let timeLeftStr = `あと ${diffDays} 日`;
+                    if (diffDays === 0) timeLeftStr = '今日です！';
+                    if (diffDays < 0) timeLeftStr = `${Math.abs(diffDays)}日前に終了`;
+
+                    const card = `
+                    <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-semibold text-lg text-gray-800 dark:text-gray-200">${cd.title}</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">${cd.date.replace(/-/g, '/')}</p>
+                            </div>
+                            <p class="text-2xl font-bold text-blue-500">${timeLeftStr}</p>
+                        </div>
+                         <div class="text-right mt-2">
+                            ${!cd.isAdmin ? `<button class="edit-countdown-btn text-sm text-gray-500 mr-2" data-id="${cd.id}">編集</button>` : ''}
+                            <button class="delete-countdown-btn text-sm text-red-500" data-id="${cd.id}" data-is-admin="${cd.isAdmin}">削除</button>
+                        </div>
+                    </div>`;
+                    list.insertAdjacentHTML('beforeend', card);
+                });
+            };
+
+            const renderAdminPanel = () => {
+                const list = $('#admin-quiz-list');
+                list.innerHTML = '';
+                state.quizzes.forEach(quiz => {
+                    const item = `
+                    <div class="bg-white dark:bg-gray-700 p-2 rounded flex justify-between items-center">
+                        <span class="truncate">${quiz.title}</span>
+                        <div>
+                            <button class="admin-edit-quiz-btn p-1" data-id="${quiz.id}"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                            <button class="admin-delete-quiz-btn p-1" data-id="${quiz.id}"><i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i></button>
+                        </div>
+                    </div>`;
+                    list.insertAdjacentHTML('beforeend', item);
+                });
+                lucide.createIcons();
+            };
+
+            const renderSettings = () => {
+                $('#countdown-notification-toggle').checked = state.settings.countdownNotifications;
+            };
+
+            // --- ヘルパー関数 ---
+            const showToast = (message) => {
+                $('#toast-message').textContent = message;
+                $('#toast').classList.remove('opacity-0');
+                setTimeout(() => $('#toast').classList.add('opacity-0'), 2000);
+            };
+
+            const openModal = (modalId) => $(`#${modalId}`).style.display = 'flex';
+            const closeModal = (modalId) => $(`#${modalId}`).style.display = 'none';
+
             // --- イベントハンドラ ---
             const handlePageChange = (e) => {
                 const target = e.currentTarget;
-                const pageId = target.dataset.page;
-                const pageTitle = target.dataset.title;
+                $$('.page').forEach(p => p.classList.remove('active'));
+                $(`#${target.dataset.page}`).classList.add('active');
 
-                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                document.getElementById(pageId).classList.add('active');
+                $$('.tab-btn').forEach(btn => btn.classList.replace('text-blue-500', 'text-gray-500'));
+                target.classList.replace('text-gray-500', 'text-blue-500');
 
-                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('text-blue-500'));
-                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.add('text-gray-500', 'dark:text-gray-400'));
-                
-                target.classList.remove('text-gray-500', 'dark:text-gray-400');
-                target.classList.add('text-blue-500');
-
-                headerTitle.textContent = pageTitle;
+                $('#header-title').textContent = target.dataset.title;
+                $('#search-button').style.display = (target.dataset.page === 'materials-page') ? 'block' : 'none';
             };
 
             const handleQuizClick = (e) => {
                 const card = e.target.closest('.quiz-card');
                 if (!card) return;
-
-                // ピンボタンが押された場合はモーダルを開かない
                 if (e.target.closest('.pin-btn')) {
                     e.stopPropagation();
-                    const pinBtn = e.target.closest('.pin-btn');
-                    togglePin(parseInt(pinBtn.dataset.id, 10));
-                    return;
-                }
-                
-                openQuiz(card.dataset.url, card.dataset.title);
-            };
-
-            const togglePin = (id) => {
-                if (pinnedQuizzes.includes(id)) {
-                    pinnedQuizzes = pinnedQuizzes.filter(pinnedId => pinnedId !== id);
-                    showToast('ピン留めを解除しました');
-                } else {
-                    pinnedQuizzes.push(id);
-                     showToast('クイズをピン留めしました！');
-                }
-                localStorage.setItem('pinnedQuizzes', JSON.stringify(pinnedQuizzes));
-                renderQuizzes();
-            };
-
-            const openQuiz = (url, title) => {
-                quizTitle.textContent = title;
-                quizIframe.src = 'about:blank'; // Iframeをリセット
-                loaderContainer.style.display = 'flex';
-                quizIframe.style.visibility = 'hidden';
-                quizModal.style.display = 'flex';
-                
-                // Google Formはiframe内での表示を拒否することがあるため、代替URLでデモ
-                // 実際には、ご自身のGoogle FormのURLに差し替えてください
-                // const embedUrl = url.replace('/viewform', '/viewform?embedded=true');
-                quizIframe.src = url;
-
-                quizIframe.onload = () => {
-                    loaderContainer.style.display = 'none';
-                    quizIframe.style.visibility = 'visible';
-                };
-            };
-            
-            const closeQuiz = () => {
-                quizModal.style.display = 'none';
-                quizIframe.src = 'about:blank';
-            };
-            
-            const handleFilterClick = (e) => {
-                const target = e.target.closest('.filter-btn');
-                if (!target) return;
-                
-                currentFilter = target.dataset.filter;
-                document.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.classList.remove('active', 'bg-blue-500', 'text-white');
-                    btn.classList.add('bg-gray-200', 'dark:bg-gray-700');
-                });
-                target.classList.add('active', 'bg-blue-500', 'text-white');
-                target.classList.remove('bg-gray-200', 'dark:bg-gray-700');
-                
-                renderQuizzes();
-            }
-
-            const showToast = (message) => {
-                toastMessage.textContent = message;
-                toast.classList.remove('opacity-0');
-                setTimeout(() => {
-                    toast.classList.add('opacity-0');
-                }, 2000);
-            };
-
-            // --- 通知機能 ---
-            const handleNotificationRequest = () => {
-                Notification.requestPermission().then(permission => {
-                    if (permission === "granted") {
-                        showToast('通知が許可されました！');
-                        new Notification("クイズHPへようこそ！", {
-                            body: "新しいクイズが追加された時にお知らせします。",
-                            icon: "https://placehold.co/192x192/4a90e2/ffffff?text=Q"
-                        });
+                    const id = parseInt(e.target.closest('.pin-btn').dataset.id, 10);
+                    if (state.pinnedQuizzes.includes(id)) {
+                        state.pinnedQuizzes = state.pinnedQuizzes.filter(pId => pId !== id);
+                        showToast('ピン留めを解除しました');
                     } else {
-                        showToast('通知が拒否されました。');
+                        state.pinnedQuizzes.push(id);
+                        showToast('クイズをピン留めしました！');
+                    }
+                    saveData();
+                    renderQuizzes();
+                } else {
+                    $('#quiz-title').textContent = card.dataset.title;
+                    $('#quiz-iframe').src = 'about:blank';
+                    $('#loader-container').style.display = 'flex';
+                    $('#quiz-iframe').style.visibility = 'hidden';
+                    openModal('quiz-modal');
+                    $('#quiz-iframe').src = card.dataset.url;
+                    $('#quiz-iframe').onload = () => {
+                        $('#loader-container').style.display = 'none';
+                        $('#quiz-iframe').style.visibility = 'visible';
+                    };
+                }
+            };
+            
+            // --- 初期化 & メインロジック ---
+            const init = () => {
+                renderAll();
+                lucide.createIcons();
+
+                // 日付表示
+                const today = new Date();
+                $('#current-date').textContent = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日 (${'日月火水木金土'[today.getDay()]}曜日)`;
+                
+                // カウントダウンタイマー
+                setInterval(renderCountdowns, 1000 * 60); // 1分ごとに更新
+
+                // 通知チェック
+                checkCountdownNotifications();
+
+                // イベントリスナー設定
+                $$('.tab-btn').forEach(btn => btn.addEventListener('click', handlePageChange));
+                $$('.close-modal-btn').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.modal)));
+                $('#all-quizzes').addEventListener('click', handleQuizClick);
+                $('#pinned-quizzes').addEventListener('click', handleQuizClick);
+                $('.flex.space-x-2').addEventListener('click', (e) => {
+                     const target = e.target.closest('.filter-btn');
+                     if (!target) return;
+                     state.currentFilter = target.dataset.filter;
+                     $$('.filter-btn').forEach(btn => btn.classList.remove('active', 'bg-blue-500', 'text-white'));
+                     target.classList.add('active', 'bg-blue-500', 'text-white');
+                     renderQuizzes();
+                });
+
+                // 検索機能
+                $('#search-button').addEventListener('click', () => {
+                    $('#search-container').classList.remove('hidden');
+                    $('#search-input').focus();
+                });
+                $('#close-search-btn').addEventListener('click', () => {
+                    $('#search-container').classList.add('hidden');
+                    $('#search-input').value = '';
+                    state.searchQuery = '';
+                    renderQuizzes();
+                });
+                $('#search-input').addEventListener('input', (e) => {
+                    state.searchQuery = e.target.value.toLowerCase();
+                    renderQuizzes();
+                });
+
+                // カウントダウン機能
+                $('#add-countdown-btn').addEventListener('click', () => {
+                    $('#countdown-form').reset();
+                    $('#countdown-id').value = '';
+                    openModal('countdown-modal');
+                });
+
+                $('#countdown-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const id = $('#countdown-id').value;
+                    const newCountdown = {
+                        id: id || crypto.randomUUID(),
+                        title: $('#countdown-name').value,
+                        date: $('#countdown-date').value
+                    };
+                    if (id) { //編集
+                        state.userCountdowns = state.userCountdowns.map(cd => cd.id === id ? newCountdown : cd);
+                    } else { //新規
+                        state.userCountdowns.push(newCountdown);
+                    }
+                    saveData();
+                    renderCountdowns();
+                    closeModal('countdown-modal');
+                });
+                
+                $('#countdown-list').addEventListener('click', (e) => {
+                    const target = e.target;
+                    if(target.classList.contains('delete-countdown-btn')){
+                        const id = target.dataset.id;
+                        const isAdmin = target.dataset.isAdmin === 'true';
+                        if(isAdmin) {
+                            state.dismissedAdminCountdowns.push(parseInt(id));
+                        } else {
+                            state.userCountdowns = state.userCountdowns.filter(cd => cd.id !== id);
+                        }
+                    }
+                    if(target.classList.contains('edit-countdown-btn')){
+                        const id = target.dataset.id;
+                        const countdown = state.userCountdowns.find(cd => cd.id === id);
+                        if(countdown){
+                            $('#countdown-id').value = countdown.id;
+                            $('#countdown-name').value = countdown.title;
+                            $('#countdown-date').value = countdown.date;
+                            openModal('countdown-modal');
+                        }
+                    }
+                    saveData();
+                    renderCountdowns();
+                });
+
+                // 設定
+                $('#notification-permission-button').addEventListener('click', () => Notification.requestPermission().then(p => showToast(p === "granted" ? '通知が許可されました！' : '通知が拒否されました')));
+                $('#countdown-notification-toggle').addEventListener('change', (e) => {
+                    state.settings.countdownNotifications = e.target.checked;
+                    saveData();
+                });
+
+                // 管理者パネル
+                let tapState = { home: 0, settings: 0, timer: null };
+                const resetTapState = () => { tapState = { home: 0, settings: 0, timer: null }; };
+                $$('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const page = e.currentTarget.dataset.page;
+                        if(page === 'home-page') tapState.home++;
+                        if(page === 'settings-page') tapState.settings++;
+                        
+                        clearTimeout(tapState.timer);
+                        tapState.timer = setTimeout(resetTapState, 1000);
+
+                        if(tapState.home >= 5 && tapState.settings >= 5) {
+                            resetTapState();
+                            const pass = prompt('管理者パスワードを入力してください:');
+                            if(pass === '1234') {
+                                renderAdminPanel();
+                                openModal('admin-modal');
+                            } else if (pass) {
+                                alert('パスワードが違います。');
+                            }
+                        }
+                    });
+                });
+
+                $('#admin-add-quiz-btn').addEventListener('click', () => {
+                    $('#quiz-edit-form').reset();
+                    $('#quiz-edit-id').value = '';
+                    $('#quiz-edit-title').textContent = '新しいクイズを追加';
+                    openModal('quiz-edit-modal');
+                });
+                
+                $('#admin-quiz-list').addEventListener('click', (e) => {
+                     const editBtn = e.target.closest('.admin-edit-quiz-btn');
+                     const deleteBtn = e.target.closest('.admin-delete-quiz-btn');
+                     if(editBtn) {
+                         const id = parseInt(editBtn.dataset.id);
+                         const quiz = state.quizzes.find(q => q.id === id);
+                         $('#quiz-edit-id').value = quiz.id;
+                         $('#quiz-edit-name').value = quiz.title;
+                         $('#quiz-edit-subject').value = quiz.subject;
+                         $('#quiz-edit-genre').value = quiz.genre;
+                         $('#quiz-edit-url').value = quiz.url;
+                         $('#quiz-edit-title').textContent = 'クイズを編集';
+                         openModal('quiz-edit-modal');
+                     }
+                     if(deleteBtn) {
+                         const id = parseInt(deleteBtn.dataset.id);
+                         if(confirm('本当にこのクイズを削除しますか？')) {
+                            state.quizzes = state.quizzes.filter(q => q.id !== id);
+                            saveData();
+                            renderAdminPanel();
+                            renderQuizzes();
+                         }
+                     }
+                });
+
+                $('#quiz-edit-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const id = parseInt($('#quiz-edit-id').value);
+                    const quizData = {
+                        title: $('#quiz-edit-name').value,
+                        subject: $('#quiz-edit-subject').value,
+                        genre: $('#quiz-edit-genre').value,
+                        url: $('#quiz-edit-url').value,
+                    };
+                    if(id) { //編集
+                        state.quizzes = state.quizzes.map(q => q.id === id ? {...q, ...quizData} : q);
+                    } else { //新規
+                        quizData.id = state.quizzes.length > 0 ? Math.max(...state.quizzes.map(q => q.id)) + 1 : 1;
+                        state.quizzes.push(quizData);
+                    }
+                    saveData();
+                    renderAdminPanel();
+                    renderQuizzes();
+                    closeModal('quiz-edit-modal');
+                });
+                
+                $('#admin-countdown-form').addEventListener('submit', e => {
+                    e.preventDefault();
+                    const title = $('#admin-countdown-name').value;
+                    const date = $('#admin-countdown-date').value;
+                    if (title && date) {
+                        state.adminCountdowns = [{ id: 1, title, date }]; // 現在は1つのみ設定可能
+                        saveData();
+                        renderCountdowns();
+                        showToast('管理者カウントダウンを設定しました。');
                     }
                 });
             };
 
-            // --- イベントリスナーの設定 ---
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', handlePageChange));
-            document.getElementById('all-quizzes').addEventListener('click', handleQuizClick);
-            document.getElementById('pinned-quizzes').addEventListener('click', handleQuizClick);
-            document.getElementById('close-quiz-btn').addEventListener('click', closeQuiz);
-            document.querySelector('.flex.space-x-2').addEventListener('click', handleFilterClick);
-            document.getElementById('notification-button').addEventListener('click', handleNotificationRequest);
+            const checkCountdownNotifications = () => {
+                if (!state.settings.countdownNotifications || Notification.permission !== 'granted') return;
+                
+                const allCountdowns = [
+                    ...state.adminCountdowns.filter(ac => !state.dismissedAdminCountdowns.includes(ac.id)),
+                    ...state.userCountdowns
+                ];
 
-            // --- 初期化処理 ---
-            const init = () => {
-                renderQuizzes();
-                lucide.createIcons();
+                allCountdowns.forEach(cd => {
+                    const targetDate = new Date(cd.date + 'T00:00:00');
+                    const now = new Date();
+                    const diffDays = Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24));
+                    
+                    if([7, 3, 1].includes(diffDays)){
+                         new Notification(`${cd.title} まであと ${diffDays} 日です！`, {
+                            body: "準備は順調ですか？頑張りましょう！",
+                            icon: "https://placehold.co/192x192/4a90e2/ffffff?text=Q"
+                        });
+                    }
+                });
             };
-
+            
             init();
         });
     </script>
 </body>
 </html>
+
