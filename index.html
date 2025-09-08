@@ -132,7 +132,7 @@
                         </div>
                         <div id="focus-timer-display" class="text-7xl font-bold tabular-nums mb-6">25:00</div>
                         <button id="focus-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center mx-auto"><i data-lucide="play" class="w-6 h-6 mr-2"></i>集中モード開始</button>
-                        <div id="focus-controls" class="hidden items-center justify-center space-x-4">
+                        <div id="focus-controls" class="hidden flex flex-wrap items-center justify-center gap-4">
                             <button id="focus-pause-btn" class="bg-gray-500/70 hover:bg-gray-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
                             <button id="focus-end-btn" class="bg-red-500/70 hover:bg-red-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="stop-circle" class="w-6 h-6 mr-2"></i>終了</button>
                         </div>
@@ -144,7 +144,7 @@
                      <div class="relative z-10 p-4">
                         <div id="stopwatch-display" class="text-7xl font-bold tabular-nums mb-6">00:00:00</div>
                          <button id="stopwatch-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center mx-auto"><i data-lucide="play" class="w-6 h-6 mr-2"></i>スタート</button>
-                        <div id="stopwatch-controls" class="hidden items-center justify-center space-x-4">
+                        <div id="stopwatch-controls" class="hidden flex flex-wrap items-center justify-center gap-4">
                             <button id="stopwatch-pause-btn" class="bg-gray-500/70 hover:bg-gray-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
                             <button id="stopwatch-end-btn" class="bg-red-500/70 hover:bg-red-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="flag" class="w-6 h-6 mr-2"></i>記録して終了</button>
                         </div>
@@ -189,8 +189,8 @@
             </div>
         </main>
 
-        <div id="mini-timer-container" class="fixed bottom-20 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-lg z-20">
-             <div id="mini-timer-bar" class="bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg flex items-center p-2 space-x-3 cursor-pointer">
+        <div id="mini-timer-container" class="fixed bottom-20 left-0 right-0 max-w-lg mx-auto px-4 z-20">
+             <div id="mini-timer-bar" class="w-full bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg flex items-center p-2 space-x-3 cursor-pointer">
                 <div class="flex items-center space-x-3 flex-grow min-w-0">
                     <i data-lucide="timer" class="w-5 h-5 primary-text flex-shrink-0"></i>
                     <span id="mini-timer-text" class="text-sm font-mono text-white truncate"></span>
