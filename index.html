@@ -46,10 +46,10 @@
         
         <header class="bg-white dark:bg-gray-800/80 backdrop-blur-sm z-10 p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 sticky top-0">
             <h1 id="header-title" class="text-xl font-bold text-gray-900 dark:text-white">ホーム</h1>
-            <div class="flex items-center space-x-2 bg-yellow-400/20 text-yellow-600 dark:text-yellow-400 rounded-full px-3 py-1">
+            <button id="lp-button" class="flex items-center space-x-2 bg-yellow-400/20 text-yellow-600 dark:text-yellow-400 rounded-full px-3 py-1 hover:bg-yellow-400/30 transition-colors">
                 <i data-lucide="star" class="w-4 h-4 fill-current"></i>
                 <span id="lp-display" class="font-bold text-sm">0 LP</span>
-            </div>
+            </button>
         </header>
 
         <main class="flex-grow overflow-y-auto pb-20">
@@ -57,7 +57,6 @@
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm text-center">
                     <p id="today-date" class="text-lg font-semibold text-gray-600 dark:text-gray-300"></p>
                 </div>
-
                 <div>
                     <div class="flex justify-between items-center mb-3">
                         <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center"><i data-lucide="calendar-clock" class="w-5 h-5 mr-2 primary-text"></i> カウントダウン</h2>
@@ -65,7 +64,6 @@
                     </div>
                     <div id="countdown-list" class="space-y-3"></div>
                 </div>
-
                 <div>
                     <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center mb-3"><i data-lucide="calendar-check-2" class="w-5 h-5 mr-2 primary-text"></i> 今日の復習</h2>
                     <div id="review-list" class="space-y-3"></div>
@@ -88,12 +86,35 @@
                 </div>
             </div>
 
-            <div id="focus-page" class="page p-4 flex flex-col items-center justify-center h-full text-center">
-                <div id="focus-timer-display" class="text-7xl font-bold tabular-nums mb-6">25:00</div>
-                <button id="focus-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="play" class="w-6 h-6 mr-2"></i>集中モード開始</button>
-                <div id="focus-controls" class="hidden items-center space-x-4">
-                    <button id="focus-pause-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
-                    <button id="focus-end-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="stop-circle" class="w-6 h-6 mr-2"></i>終了</button>
+            <div id="focus-page" class="page p-4 flex flex-col h-full">
+                <div class="flex-shrink-0 mb-4">
+                    <div class="flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
+                        <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="timer">タイマー</button>
+                        <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="stopwatch">ストップウォッチ</button>
+                    </div>
+                </div>
+
+                <div id="timer-view" class="flex-grow flex flex-col items-center justify-center text-center">
+                    <div class="flex space-x-2 mb-6">
+                        <button class="timer-duration-btn bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-full text-sm" data-time="900">15分</button>
+                        <button class="timer-duration-btn primary-bg text-white px-3 py-1 rounded-full text-sm" data-time="1500">25分</button>
+                        <button class="timer-duration-btn bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-full text-sm" data-time="2700">45分</button>
+                    </div>
+                    <div id="focus-timer-display" class="text-7xl font-bold tabular-nums mb-6">25:00</div>
+                    <button id="focus-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="play" class="w-6 h-6 mr-2"></i>集中モード開始</button>
+                    <div id="focus-controls" class="hidden items-center space-x-4">
+                        <button id="focus-pause-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
+                        <button id="focus-end-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="stop-circle" class="w-6 h-6 mr-2"></i>終了</button>
+                    </div>
+                </div>
+
+                <div id="stopwatch-view" class="hidden flex-grow flex-col items-center justify-center text-center">
+                    <div id="stopwatch-display" class="text-7xl font-bold tabular-nums mb-6">00:00:00</div>
+                     <button id="stopwatch-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="play" class="w-6 h-6 mr-2"></i>スタート</button>
+                    <div id="stopwatch-controls" class="hidden items-center space-x-4">
+                        <button id="stopwatch-pause-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
+                        <button id="stopwatch-end-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="flag" class="w-6 h-6 mr-2"></i>記録して終了</button>
+                    </div>
                 </div>
             </div>
 
@@ -144,6 +165,7 @@
     <div id="assessment-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center"><h2 class="text-xl font-bold mb-4">お疲れ様でした！</h2><p class="mb-6">このクイズの理解度を記録しよう</p><div class="flex justify-around"><button class="assessment-btn p-2" data-level="3"><i data-lucide="award" class="w-10 h-10 text-yellow-400"></i><p>完璧！</p></button><button class="assessment-btn p-2" data-level="2"><i data-lucide="thumbs-up" class="w-10 h-10 text-green-400"></i><p>まあまあ</p></button><button class="assessment-btn p-2" data-level="1"><i data-lucide="book-open-check" class="w-10 h-10 text-blue-400"></i><p>要復習</p></button></div></div></div>
     <div id="theme-purchase-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center"><h2 id="theme-purchase-title" class="text-xl font-bold mb-2"></h2><p id="theme-purchase-cost" class="mb-6"></p><div class="flex justify-center space-x-4"><button id="theme-purchase-cancel" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">やめる</button><button id="theme-purchase-confirm" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg">交換する</button></div></div></div>
     <div id="countdown-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6"><h2 class="text-xl font-bold mb-4">カウントダウン追加</h2><div class="space-y-4"><input id="countdown-name" type="text" placeholder="イベント名 (例: 期末テスト)" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"><input id="countdown-date" type="date" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"></div><div class="flex justify-end space-x-4 mt-6"><button id="countdown-cancel-btn" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">キャンセル</button><button id="countdown-save-btn" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg">保存</button></div></div></div>
+    <div id="point-details-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold">マイステータス</h2><button id="close-point-modal-btn" class="p-1"><i data-lucide="x"></i></button></div><div class="space-y-6"><div class="text-center"><p class="text-sm text-gray-500">現在の学習ポイント</p><p class="text-4xl font-bold primary-text" id="modal-lp-display"></p></div><div><h3 class="font-semibold mb-2">テーマカラー交換所</h3><div id="modal-theme-selector" class="grid grid-cols-4 gap-4"></div></div><div><h3 class="font-semibold mb-2">獲得した称号</h3><div id="modal-titles-list" class="flex flex-wrap gap-2"></div></div></div></div></div>
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300 z-50 transform -translate-y-10"></div>
     
     <script>
@@ -171,7 +193,8 @@
 
             let state;
             let chartInstances = {};
-            let focusTimer = { interval: null, timeLeft: 1500, isRunning: false };
+            let focusTimer = { interval: null, defaultTime: 1500, timeLeft: 1500, isRunning: false };
+            let stopwatch = { interval: null, elapsedTime: 0, isRunning: false };
             let quizTimer = { startTime: null };
 
             const $ = (s) => document.querySelector(s);
@@ -183,19 +206,19 @@
                     progress: {},
                     reviewSchedule: [],
                     pinnedQuizzes: [],
-                    countdowns: [], // {id, name, date}
-                    focus: { totalTime: 0 },
+                    countdowns: [],
+                    focus: { totalTime: 0, mode: 'timer' },
                     studyLog: {}, 
                     settings: { reviewNotifications: true },
                     lastLogin: null,
                 };
-                state = JSON.parse(localStorage.getItem('quizAppUltimateV3')) || defaultState;
+                state = JSON.parse(localStorage.getItem('quizAppUltimateV4')) || defaultState;
                 if(state.lastLogin !== new Date().toDateString()){
                     addLP(10, 'ログインボーナス');
                     state.lastLogin = new Date().toDateString();
                 }
             };
-            const saveState = () => localStorage.setItem('quizAppUltimateV3', JSON.stringify(state));
+            const saveState = () => localStorage.setItem('quizAppUltimateV4', JSON.stringify(state));
 
             const renderEngine = {
                 pages: {
@@ -312,24 +335,22 @@
             const checkTitles = () => initialData.titles.forEach(t => !state.profile.earnedTitles.includes(t.id) && t.condition(state) && (state.profile.earnedTitles.push(t.id), showToast(`称号「${t.name}」獲得！`)));
             const scheduleReview = (quizId) => [1, 3, 7].forEach(days => state.reviewSchedule.push({ quizId, reviewDate: new Date(Date.now() + days * 86400000).toISOString() }));
 
-            const formatTime = (s) => `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
-
-            const updateFocusTimer = () => {
-                focusTimer.timeLeft--;
-                $('#focus-timer-display').textContent = formatTime(focusTimer.timeLeft);
-                if (focusTimer.timeLeft <= 0) {
-                    clearInterval(focusTimer.interval);
-                    showToast('集中モード完了！お疲れ様でした！');
-                    const elapsed = 1500; // 25 minutes
-                    logStudyTime('focus', elapsed);
-                    addLP(25, '集中モード完了');
-                    state.focus.totalTime += elapsed;
-                    checkTitles();
-                    saveState();
-                    // Reset UI
+            const formatTime = (s, showMs = false) => {
+                const totalSeconds = Math.floor(s);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                const ms = Math.floor((s * 100) % 100);
+                
+                if (showMs) {
+                    return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}:${ms.toString().padStart(2,'0')}`;
                 }
+                if (hours > 0) {
+                    return `${hours.toString()}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+                }
+                return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
             };
-            
+
             const logStudyTime = (type, seconds) => {
                 const today = new Date().toISOString().split('T')[0];
                 if (!state.studyLog[today]) state.studyLog[today] = { focus: 0, quiz: 0 };
@@ -402,6 +423,9 @@
                     const themeId = themeBtn.dataset.theme;
                     if(state.profile.unlockedThemes.includes(themeId)) {
                         state.profile.activeTheme = themeId;
+                        saveState(); renderEngine.renderAll();
+                        $('#modal-theme-selector').innerHTML = getModalThemeHTML();
+                        lucide.createIcons();
                     } else {
                         const theme = initialData.themes[themeId];
                         $('#theme-purchase-title').textContent = `「${theme.name}」を交換しますか？`;
@@ -409,7 +433,6 @@
                         $('#theme-purchase-confirm').dataset.themeId = themeId;
                         $('#theme-purchase-modal').style.display = 'flex';
                     }
-                    saveState(); renderEngine.renderAll();
                 }
 
                 const deleteCountdownBtn = e.target.closest('.delete-countdown-btn');
@@ -420,14 +443,52 @@
                     renderEngine.pages['home-page']();
                     lucide.createIcons();
                 }
+
+                const focusModeBtn = e.target.closest('.focus-mode-btn');
+                if(focusModeBtn) {
+                    const mode = focusModeBtn.dataset.mode;
+                    state.focus.mode = mode;
+                    updateFocusModeUI();
+                }
+
+                const timerDurationBtn = e.target.closest('.timer-duration-btn');
+                if(timerDurationBtn && !focusTimer.isRunning) {
+                    const time = parseInt(timerDurationBtn.dataset.time);
+                    focusTimer.defaultTime = time;
+                    focusTimer.timeLeft = time;
+                    $('#focus-timer-display').textContent = formatTime(time);
+                    $$('.timer-duration-btn').forEach(btn => {
+                        btn.classList.remove('primary-bg', 'text-white');
+                        btn.classList.add('bg-gray-200', 'dark:bg-gray-600');
+                    });
+                    timerDurationBtn.classList.add('primary-bg', 'text-white');
+                    timerDurationBtn.classList.remove('bg-gray-200', 'dark:bg-gray-600');
+                }
+            });
+            
+            $('#lp-button').addEventListener('click', () => {
+                $('#modal-lp-display').textContent = state.profile.lp;
+                $('#modal-theme-selector').innerHTML = getModalThemeHTML();
+                
+                const titlesList = $('#modal-titles-list');
+                const earnedTitles = state.profile.earnedTitles.map(id => initialData.titles.find(t => t.id === id));
+                titlesList.innerHTML = earnedTitles.length ? earnedTitles.map(t => `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">${t.name}</span>`).join('') : '<p class="text-sm text-gray-500">まだ称号はありません</p>';
+
+                $('#point-details-modal').style.display = 'flex';
+                lucide.createIcons();
             });
 
-            $('#add-countdown-btn').addEventListener('click', () => {
-                $('#countdown-modal').style.display = 'flex';
-            });
-            $('#countdown-cancel-btn').addEventListener('click', () => {
-                $('#countdown-modal').style.display = 'none';
-            });
+            const getModalThemeHTML = () => Object.entries(initialData.themes).map(([id, theme]) => {
+                    const isUnlocked = state.profile.unlockedThemes.includes(id);
+                    const isActive = state.profile.activeTheme === id;
+                    return `<div class="text-center"><button class="theme-btn w-12 h-12 rounded-full border-4 ${isActive ? 'border-blue-500' : 'border-transparent'} relative" style="background-color: ${theme.color}" data-theme="${id}">${!isUnlocked ? `<i data-lucide="lock" class="w-6 h-6 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>` : ''}</button><p class="text-xs mt-1">${isUnlocked ? theme.name : `${theme.cost} LP`}</p></div>`;
+            }).join('');
+
+
+            $('#close-point-modal-btn').addEventListener('click', () => $('#point-details-modal').style.display = 'none');
+
+            $('#add-countdown-btn').addEventListener('click', () => $('#countdown-modal').style.display = 'flex');
+            $('#countdown-cancel-btn').addEventListener('click', () => $('#countdown-modal').style.display = 'none');
             $('#countdown-save-btn').addEventListener('click', () => {
                 const name = $('#countdown-name').value.trim();
                 const date = $('#countdown-date').value;
@@ -454,19 +515,62 @@
                     state.profile.activeTheme = themeId;
                     showToast(`「${theme.name}」を解放しました！`);
                     saveState(); renderEngine.renderAll();
+                    $('#modal-theme-selector').innerHTML = getModalThemeHTML();
+                    lucide.createIcons();
                 } else {
                     showToast('LPが足りません！');
                 }
                 $('#theme-purchase-modal').style.display = 'none';
             });
             $('#theme-purchase-cancel').addEventListener('click', () => $('#theme-purchase-modal').style.display = 'none');
+            
+            // --- Focus Page Logic ---
+            const updateFocusModeUI = () => {
+                const isTimer = state.focus.mode === 'timer';
+                $('#timer-view').style.display = isTimer ? 'flex' : 'none';
+                $('#stopwatch-view').style.display = isTimer ? 'none' : 'flex';
+                $$('.focus-mode-btn').forEach(btn => {
+                    btn.classList.toggle('primary-bg', btn.dataset.mode === state.focus.mode);
+                    btn.classList.toggle('text-white', btn.dataset.mode === state.focus.mode);
+                });
+            };
 
+            const resetTimerUI = () => {
+                focusTimer.isRunning = false;
+                clearInterval(focusTimer.interval);
+                focusTimer.timeLeft = focusTimer.defaultTime;
+                $('#focus-timer-display').textContent = formatTime(focusTimer.defaultTime);
+                $('#focus-start-btn').classList.remove('hidden');
+                $('#focus-controls').classList.add('hidden');
+            };
+
+            const resetStopwatchUI = () => {
+                stopwatch.isRunning = false;
+                clearInterval(stopwatch.interval);
+                stopwatch.elapsedTime = 0;
+                $('#stopwatch-display').textContent = formatTime(0, true);
+                $('#stopwatch-start-btn').classList.remove('hidden');
+                $('#stopwatch-controls').classList.add('hidden');
+            };
+
+            // Timer
             $('#focus-start-btn').addEventListener('click', () => {
                 focusTimer.isRunning = true;
-                focusTimer.interval = setInterval(updateFocusTimer, 1000);
+                focusTimer.interval = setInterval(() => {
+                    focusTimer.timeLeft--;
+                    $('#focus-timer-display').textContent = formatTime(focusTimer.timeLeft);
+                    if (focusTimer.timeLeft <= 0) {
+                        clearInterval(focusTimer.interval);
+                        showToast('集中モード完了！お疲れ様でした！');
+                        const elapsed = focusTimer.defaultTime;
+                        logStudyTime('focus', elapsed);
+                        addLP(Math.floor(elapsed/60), 'タイマー完了');
+                        state.focus.totalTime += elapsed;
+                        checkTitles(); saveState(); resetTimerUI();
+                    }
+                }, 1000);
                 $('#focus-start-btn').classList.add('hidden');
                 $('#focus-controls').classList.remove('hidden');
-                $('#focus-controls').classList.add('flex');
             });
             $('#focus-pause-btn').addEventListener('click', () => {
                 const btn = $('#focus-pause-btn');
@@ -474,28 +578,56 @@
                     clearInterval(focusTimer.interval);
                     btn.innerHTML = `<i data-lucide="play" class="w-6 h-6 mr-2"></i>再開`;
                 } else {
-                    focusTimer.interval = setInterval(updateFocusTimer, 1000);
+                    focusTimer.interval = setInterval(() => { /* As above */ }, 1000);
                     btn.innerHTML = `<i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止`;
                 }
                 focusTimer.isRunning = !focusTimer.isRunning;
                 lucide.createIcons();
             });
             $('#focus-end-btn').addEventListener('click', () => {
-                clearInterval(focusTimer.interval);
-                const elapsed = 1500 - focusTimer.timeLeft;
+                const elapsed = focusTimer.defaultTime - focusTimer.timeLeft;
                 if(elapsed > 0) {
                      logStudyTime('focus', elapsed);
                      addLP(Math.floor(elapsed/60), '集中モード');
                      state.focus.totalTime += elapsed;
-                     checkTitles();
-                     saveState();
+                     checkTitles(); saveState();
                 }
-                focusTimer.timeLeft = 1500;
-                focusTimer.isRunning = false;
-                $('#focus-timer-display').textContent = formatTime(1500);
-                $('#focus-start-btn').classList.remove('hidden');
-                $('#focus-controls').classList.add('hidden');
-                $('#focus-controls').classList.remove('flex');
+                resetTimerUI();
+            });
+
+            // Stopwatch
+            $('#stopwatch-start-btn').addEventListener('click', () => {
+                stopwatch.isRunning = true;
+                const startTime = Date.now() - stopwatch.elapsedTime * 1000;
+                stopwatch.interval = setInterval(() => {
+                    stopwatch.elapsedTime = (Date.now() - startTime) / 1000;
+                    $('#stopwatch-display').textContent = formatTime(stopwatch.elapsedTime, true);
+                }, 100);
+                $('#stopwatch-start-btn').classList.add('hidden');
+                $('#stopwatch-controls').classList.remove('hidden');
+            });
+            $('#stopwatch-pause-btn').addEventListener('click', () => {
+                const btn = $('#stopwatch-pause-btn');
+                 if(stopwatch.isRunning) {
+                    clearInterval(stopwatch.interval);
+                    btn.innerHTML = `<i data-lucide="play" class="w-6 h-6 mr-2"></i>再開`;
+                } else {
+                    const startTime = Date.now() - stopwatch.elapsedTime * 1000;
+                    stopwatch.interval = setInterval(() => { /* As above */}, 100);
+                    btn.innerHTML = `<i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止`;
+                }
+                stopwatch.isRunning = !stopwatch.isRunning;
+                lucide.createIcons();
+            });
+             $('#stopwatch-end-btn').addEventListener('click', () => {
+                const elapsed = Math.round(stopwatch.elapsedTime);
+                if(elapsed > 0) {
+                    logStudyTime('focus', elapsed);
+                    addLP(Math.floor(elapsed/60), 'ストップウォッチ');
+                    state.focus.totalTime += elapsed;
+                    checkTitles(); saveState();
+                }
+                resetStopwatchUI();
             });
             
             $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
@@ -514,6 +646,7 @@
             const init = () => {
                 loadState();
                 renderEngine.renderAll();
+                updateFocusModeUI();
                 let deferredPrompt;
                 window.addEventListener('beforeinstallprompt', (e) => {
                     e.preventDefault(); deferredPrompt = e;
