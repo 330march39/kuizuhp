@@ -41,12 +41,16 @@
         #theme-purchase-modal, #background-purchase-modal { z-index: 60; }
 
         /* ミニタイマー */
-        #mini-timer-bar {
-            transition: transform 0.3s ease-in-out;
-            transform: translateY(100%);
+        #mini-timer-container {
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s;
+            transform: translateY(150%);
+            opacity: 0;
+            pointer-events: none;
         }
-        #mini-timer-bar.visible {
+        #mini-timer-container.visible {
             transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
         }
         #mini-timer-progress-bar {
             transition: width 0.5s linear;
@@ -63,7 +67,7 @@
 
     <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto bg-gray-50 dark:bg-gray-800 shadow-2xl">
         
-        <header class="bg-white dark:bg-gray-800/80 backdrop-blur-sm z-10 p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 sticky top-0">
+        <header class="bg-white dark:bg-gray-800/80 backdrop-blur-sm z-30 p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 sticky top-0">
             <h1 id="header-title" class="text-xl font-bold text-gray-900 dark:text-white">ホーム</h1>
             <button id="lp-button" class="flex items-center space-x-2 bg-yellow-400/20 text-yellow-600 dark:text-yellow-400 rounded-full px-3 py-1 hover:bg-yellow-400/30 transition-colors">
                 <i data-lucide="star" class="w-4 h-4 fill-current"></i>
@@ -171,11 +175,11 @@
                     <div class="flex items-center justify-between"><p>復習リマインダー通知</p><input type="checkbox" id="review-notification-toggle" class="toggle-checkbox"></div>
                 </div>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
-                     <h3 class="font-semibold mb-2">テーマカラー交換所</h3>
+                     <h3 class="font-semibold mb-2">テーマカラーを選択</h3>
                      <div id="theme-selector" class="grid grid-cols-4 gap-4"></div>
                 </div>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
-                     <h3 class="font-semibold mb-2">集中モード背景 交換所</h3>
+                     <h3 class="font-semibold mb-2">集中モード背景を選択</h3>
                      <div id="background-selector" class="grid grid-cols-3 gap-4"></div>
                 </div>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
@@ -185,10 +189,18 @@
             </div>
         </main>
 
-        <div id="mini-timer-bar" class="fixed bottom-16 left-0 right-0 max-w-lg mx-auto h-8 bg-gray-800/90 backdrop-blur-sm flex items-center justify-between px-4 z-10 text-white">
-            <span id="mini-timer-text" class="text-sm font-mono"></span>
-            <div class="w-2/3 h-1.5 bg-gray-600 rounded-full overflow-hidden">
-                <div id="mini-timer-progress-bar" class="h-full primary-bg rounded-full"></div>
+        <div id="mini-timer-container" class="fixed bottom-20 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-lg z-20">
+             <div id="mini-timer-bar" class="bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg flex items-center p-2 space-x-3 cursor-pointer">
+                <div class="flex items-center space-x-3 flex-grow min-w-0">
+                    <i data-lucide="timer" class="w-5 h-5 primary-text flex-shrink-0"></i>
+                    <span id="mini-timer-text" class="text-sm font-mono text-white truncate"></span>
+                </div>
+                <div class="w-1/3 h-1.5 bg-gray-600 rounded-full overflow-hidden flex-shrink-0">
+                    <div id="mini-timer-progress-bar" class="h-full primary-bg rounded-full"></div>
+                </div>
+                <button id="close-mini-timer-btn" class="p-1 text-gray-400 hover:text-white flex-shrink-0">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
             </div>
         </div>
 
@@ -207,7 +219,7 @@
     <div id="theme-purchase-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center"><h2 id="theme-purchase-title" class="text-xl font-bold mb-2"></h2><p id="theme-purchase-cost" class="mb-6"></p><div class="flex justify-center space-x-4"><button id="theme-purchase-cancel" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">やめる</button><button id="theme-purchase-confirm" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg">交換する</button></div></div></div>
     <div id="background-purchase-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center"><h2 id="background-purchase-title" class="text-xl font-bold mb-2"></h2><p id="background-purchase-cost" class="mb-6"></p><div class="flex justify-center space-x-4"><button id="background-purchase-cancel" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">やめる</button><button id="background-purchase-confirm" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg">交換する</button></div></div></div>
     <div id="countdown-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6"><h2 class="text-xl font-bold mb-4">カウントダウン追加</h2><div class="space-y-4"><input id="countdown-name" type="text" placeholder="イベント名 (例: 期末テスト)" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"><input id="countdown-date" type="date" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"></div><div class="flex justify-end space-x-4 mt-6"><button id="countdown-cancel-btn" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">キャンセル</button><button id="countdown-save-btn" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg">保存</button></div></div></div>
-    <div id="point-details-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold">マイステータス</h2><button id="close-point-modal-btn" class="p-1"><i data-lucide="x"></i></button></div><div class="space-y-6"><div class="text-center"><p class="text-sm text-gray-500">現在の学習ポイント</p><p class="text-4xl font-bold primary-text" id="modal-lp-display"></p></div><div><h3 class="font-semibold mb-2">テーマカラー交換所</h3><div id="modal-theme-selector" class="grid grid-cols-4 gap-4"></div></div><div><h3 class="font-semibold mb-2">獲得した称号</h3><div id="modal-titles-list" class="flex flex-wrap gap-2"></div></div></div></div></div>
+    <div id="point-details-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold">マイステータス</h2><button id="close-point-modal-btn" class="p-1"><i data-lucide="x"></i></button></div><div class="space-y-6"><div class="text-center"><p class="text-sm text-gray-500">現在の学習ポイント</p><p class="text-4xl font-bold primary-text" id="modal-lp-display"></p></div><div><h3 class="font-semibold mb-2">アイテム交換所</h3><div id="modal-theme-selector" class="grid grid-cols-4 gap-4"></div></div><div><h3 class="font-semibold mb-2">背景 交換所</h3><div id="modal-background-selector" class="grid grid-cols-3 gap-2"></div></div><div><h3 class="font-semibold mb-2">獲得した称号</h3><div id="modal-titles-list" class="flex flex-wrap gap-2"></div></div></div></div></div>
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300 z-50 transform -translate-y-10"></div>
     
     <script>
@@ -269,13 +281,13 @@
                     settings: { reviewNotifications: true },
                     lastLogin: null,
                 };
-                state = JSON.parse(localStorage.getItem('quizAppUltimateV6')) || defaultState;
+                state = JSON.parse(localStorage.getItem('quizAppUltimateV7')) || defaultState;
                 if(state.lastLogin !== new Date().toDateString()){
                     addLP(10, 'ログインボーナス');
                     state.lastLogin = new Date().toDateString();
                 }
             };
-            const saveState = () => localStorage.setItem('quizAppUltimateV6', JSON.stringify(state));
+            const saveState = () => localStorage.setItem('quizAppUltimateV7', JSON.stringify(state));
 
             const renderEngine = {
                 pages: {
@@ -351,27 +363,24 @@
                     },
                     'settings-page': () => {
                         $('#review-notification-toggle').checked = state.settings.reviewNotifications;
-                        $('#theme-selector').innerHTML = Object.entries(initialData.themes).map(([id, theme]) => {
-                            const isUnlocked = state.profile.unlockedThemes.includes(id);
+                        
+                        $('#theme-selector').innerHTML = state.profile.unlockedThemes.map(id => {
+                            const theme = initialData.themes[id];
                             const isActive = state.profile.activeTheme === id;
                             return `<div class="text-center">
-                                <button class="theme-btn w-12 h-12 rounded-full border-4 ${isActive ? 'border-blue-500' : 'border-transparent'} relative" style="background-color: ${theme.color}" data-theme="${id}">
-                                    ${!isUnlocked ? `<i data-lucide="lock" class="w-6 h-6 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>` : ''}
-                                </button>
-                                <p class="text-xs mt-1">${isUnlocked ? theme.name : `${theme.cost} LP`}</p>
+                                <button class="theme-btn w-12 h-12 rounded-full border-4 ${isActive ? 'border-blue-500' : 'border-transparent'} relative" style="background-color: ${theme.color}" data-theme="${id}"></button>
+                                <p class="text-xs mt-1">${theme.name}</p>
                             </div>`;
-                        }).join('');
+                        }).join('') || `<p class="text-sm text-gray-500">マイステータスからテーマを交換できます。</p>`;
 
-                        $('#background-selector').innerHTML = Object.entries(initialData.backgrounds).map(([id, bg]) => {
-                            const isUnlocked = state.profile.unlockedBackgrounds.includes(id);
+                        $('#background-selector').innerHTML = state.profile.unlockedBackgrounds.map(id => {
+                            const bg = initialData.backgrounds[id];
                             const isActive = state.profile.activeBackground === id;
                              return `<div class="text-center">
-                                <button class="background-btn w-full h-20 rounded-lg border-4 ${isActive ? 'border-blue-500' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}">
-                                     ${!isUnlocked ? `<div class="absolute inset-0 bg-black/60 flex items-center justify-center rounded-md"><i data-lucide="lock" class="w-8 h-8 text-white"></i></div>` : ''}
-                                </button>
-                                <p class="text-xs mt-1">${isUnlocked ? bg.name : `${bg.cost} LP`}</p>
+                                <button class="background-btn w-full h-20 rounded-lg border-4 ${isActive ? 'border-blue-500' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}"></button>
+                                <p class="text-xs mt-1">${bg.name}</p>
                             </div>`;
-                        }).join('');
+                        }).join('') || `<p class="text-sm text-gray-500">マイステータスから背景を交換できます。</p>`;
                     }
                 },
                 renderAll: () => {
@@ -499,7 +508,8 @@
                     const themeId = themeBtn.dataset.theme;
                     if(state.profile.unlockedThemes.includes(themeId)) {
                         state.profile.activeTheme = themeId;
-                        saveState(); renderEngine.renderAll();
+                        saveState(); 
+                        renderEngine.renderAll();
                     } else {
                         const theme = initialData.themes[themeId];
                         $('#theme-purchase-title').textContent = `「${theme.name}」を交換しますか？`;
@@ -556,10 +566,25 @@
             
             $('#lp-button').addEventListener('click', () => {
                 $('#modal-lp-display').textContent = state.profile.lp;
+                
                 $('#modal-theme-selector').innerHTML = Object.entries(initialData.themes).map(([id, theme]) => {
                     const isUnlocked = state.profile.unlockedThemes.includes(id);
-                    const isActive = state.profile.activeTheme === id;
-                    return `<div class="text-center"><button class="theme-btn w-12 h-12 rounded-full border-4 ${isActive ? 'border-blue-500' : 'border-transparent'} relative" style="background-color: ${theme.color}" data-theme="${id}">${!isUnlocked ? `<i data-lucide="lock" class="w-6 h-6 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>` : ''}</button><p class="text-xs mt-1">${isUnlocked ? theme.name : `${theme.cost} LP`}</p></div>`;
+                    return `<div class="text-center">
+                        <button class="theme-btn w-12 h-12 rounded-full border-2 ${isUnlocked ? 'border-green-400' : 'border-transparent'} relative" style="background-color: ${theme.color}" data-theme="${id}">
+                            ${!isUnlocked ? `<i data-lucide="lock" class="w-6 h-6 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>` : ''}
+                        </button>
+                        <p class="text-xs mt-1">${isUnlocked ? theme.name : `${theme.cost} LP`}</p>
+                    </div>`;
+                }).join('');
+
+                $('#modal-background-selector').innerHTML = Object.entries(initialData.backgrounds).map(([id, bg]) => {
+                     const isUnlocked = state.profile.unlockedBackgrounds.includes(id);
+                     return `<div class="text-center">
+                                <button class="background-btn w-full h-16 rounded-lg border-2 ${isUnlocked ? 'border-green-400' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}">
+                                     ${!isUnlocked ? `<div class="absolute inset-0 bg-black/60 flex items-center justify-center rounded-md"><i data-lucide="lock" class="w-6 h-6 text-white"></i></div>` : ''}
+                                </button>
+                                <p class="text-xs mt-1">${isUnlocked ? bg.name : `${bg.cost} LP`}</p>
+                            </div>`;
                 }).join('');
                 
                 const titlesList = $('#modal-titles-list');
@@ -603,7 +628,6 @@
                 if (state.profile.lp >= itemData.cost) {
                     state.profile.lp -= itemData.cost;
                     state.profile[`unlocked${itemType.charAt(0).toUpperCase() + itemType.slice(1)}s`].push(itemId);
-                    state.profile[`active${itemType.charAt(0).toUpperCase() + itemType.slice(1)}`] = itemId;
                     showToast(`「${itemData.name}」を解放しました！`);
                     saveState();
                     renderEngine.renderAll();
@@ -615,18 +639,20 @@
             
             // --- Focus Page Logic ---
             const updateMiniTimer = () => {
+                const container = $('#mini-timer-container');
                 const bar = $('#mini-timer-bar');
-                if (focusTimer.isRunning) {
-                    bar.classList.add('visible');
-                    const progress = (focusTimer.defaultTime - focusTimer.timeLeft) / focusTimer.defaultTime * 100;
-                    $('#mini-timer-text').textContent = `タイマー: ${formatTime(focusTimer.timeLeft)}`;
-                    $('#mini-timer-progress-bar').style.width = `${progress}%`;
-                } else if (stopwatch.isRunning) {
-                     bar.classList.add('visible');
-                    $('#mini-timer-text').textContent = `計測中: ${formatStopwatchTime(stopwatch.elapsedTime)}`;
-                    $('#mini-timer-progress-bar').style.width = `100%`;
+                if ((focusTimer.isRunning || stopwatch.isRunning) && !$('#focus-page').classList.contains('active')) {
+                    container.classList.add('visible');
+                    if(focusTimer.isRunning){
+                        const progress = (focusTimer.defaultTime - focusTimer.timeLeft) / focusTimer.defaultTime * 100;
+                        $('#mini-timer-text').textContent = `タイマー: ${formatTime(focusTimer.timeLeft)}`;
+                        $('#mini-timer-progress-bar').style.width = `${progress}%`;
+                    } else { // stopwatch
+                         $('#mini-timer-text').textContent = `計測中: ${formatStopwatchTime(stopwatch.elapsedTime)}`;
+                         $('#mini-timer-progress-bar').style.width = `100%`;
+                    }
                 } else {
-                    bar.classList.remove('visible');
+                    container.classList.remove('visible');
                 }
             };
             
@@ -638,10 +664,7 @@
                     clearInterval(focusTimer.interval);
                     showToast('集中モード完了！お疲れ様でした！');
                     if (Notification.permission === 'granted') {
-                        new Notification('集中モード完了！', {
-                            body: 'お疲れ様でした！少し休憩しましょう。',
-                            icon: 'https://placehold.co/180x180/4f46e5/ffffff?text=Q'
-                        });
+                        new Notification('集中モード完了！', { body: 'お疲れ様でした！少し休憩しましょう。', icon: 'https://placehold.co/180x180/4f46e5/ffffff?text=Q' });
                     }
                     const elapsed = focusTimer.defaultTime;
                     logStudyTime('focus', elapsed);
@@ -661,38 +684,34 @@
 
             const pauseFocusTimer = () => {
                 if (!focusTimer.isRunning || focusTimer.isPaused) return;
-                const btn = $('#focus-pause-btn');
                 focusTimer.isPaused = true;
                 clearInterval(focusTimer.interval);
-                btn.innerHTML = `<i data-lucide="play" class="w-6 h-6 mr-2"></i>再開`;
+                $('#focus-pause-btn').innerHTML = `<i data-lucide="play" class="w-6 h-6 mr-2"></i>再開`;
                 lucide.createIcons();
             };
 
             const resumeFocusTimer = () => {
                 if (!focusTimer.isRunning || !focusTimer.isPaused) return;
-                const btn = $('#focus-pause-btn');
                 focusTimer.isPaused = false;
                 focusTimer.interval = setInterval(timerTick, 1000);
-                btn.innerHTML = `<i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止`;
+                $('#focus-pause-btn').innerHTML = `<i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止`;
                 lucide.createIcons();
             };
 
             const pauseStopwatch = () => {
                 if (!stopwatch.isRunning || stopwatch.isPaused) return;
-                const btn = $('#stopwatch-pause-btn');
                 stopwatch.isPaused = true;
                 clearInterval(stopwatch.interval);
-                btn.innerHTML = `<i data-lucide="play" class="w-6 h-6 mr-2"></i>再開`;
+                $('#stopwatch-pause-btn').innerHTML = `<i data-lucide="play" class="w-6 h-6 mr-2"></i>再開`;
                 lucide.createIcons();
             };
 
             const resumeStopwatch = () => {
                 if (!stopwatch.isRunning || !stopwatch.isPaused) return;
-                const btn = $('#stopwatch-pause-btn');
                 stopwatch.isPaused = false;
                 stopwatch.startTime = Date.now() - stopwatch.elapsedTime * 1000;
                 stopwatch.interval = setInterval(stopwatchTick, 100);
-                btn.innerHTML = `<i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止`;
+                $('#stopwatch-pause-btn').innerHTML = `<i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止`;
                 lucide.createIcons();
             };
 
@@ -708,8 +727,7 @@
 
             const resetTimerUI = () => {
                 clearInterval(focusTimer.interval);
-                focusTimer.isRunning = false;
-                focusTimer.isPaused = false;
+                focusTimer.isRunning = false; focusTimer.isPaused = false;
                 focusTimer.timeLeft = focusTimer.defaultTime;
                 $('#focus-timer-display').textContent = formatTime(focusTimer.defaultTime);
                 $('#focus-start-btn').classList.remove('hidden');
@@ -719,8 +737,7 @@
 
             const resetStopwatchUI = () => {
                 clearInterval(stopwatch.interval);
-                stopwatch.isRunning = false;
-                stopwatch.isPaused = false;
+                stopwatch.isRunning = false; stopwatch.isPaused = false;
                 stopwatch.elapsedTime = 0;
                 $('#stopwatch-display').textContent = formatStopwatchTime(0);
                 $('#stopwatch-start-btn').classList.remove('hidden');
@@ -731,113 +748,89 @@
             const endFocusTimer = () => {
                 if (!focusTimer.isRunning) return;
                 const elapsed = focusTimer.defaultTime - focusTimer.timeLeft;
-                if (elapsed > 0) {
-                    logStudyTime('focus', elapsed);
-                    addLP(Math.floor(elapsed / 60), '集中モード');
-                    state.focus.totalTime += elapsed;
-                    checkTitles();
-                    saveState();
-                }
+                if (elapsed > 0) { logStudyTime('focus', elapsed); addLP(Math.floor(elapsed / 60), '集中モード'); state.focus.totalTime += elapsed; checkTitles(); saveState(); }
                 resetTimerUI();
             };
 
             const endStopwatch = () => {
                 if (!stopwatch.isRunning) return;
                 const elapsed = Math.round(stopwatch.elapsedTime);
-                if (elapsed > 0) {
-                    logStudyTime('focus', elapsed);
-                    addLP(Math.floor(elapsed / 60), 'ストップウォッチ');
-                    state.focus.totalTime += elapsed;
-                    checkTitles();
-                    saveState();
-                }
+                if (elapsed > 0) { logStudyTime('focus', elapsed); addLP(Math.floor(elapsed / 60), 'ストップウォッチ'); state.focus.totalTime += elapsed; checkTitles(); saveState(); }
                 resetStopwatchUI();
             };
             
             const setTimer = (seconds) => {
-                 focusTimer.defaultTime = seconds;
-                 focusTimer.timeLeft = seconds;
+                 focusTimer.defaultTime = seconds; focusTimer.timeLeft = seconds;
                  $('#focus-timer-display').textContent = formatTime(seconds);
                  $('#custom-time-input').value = '';
             };
             
             $('#set-custom-time-btn').addEventListener('click', () => {
                 const minutes = parseInt($('#custom-time-input').value);
-                if (minutes > 0) {
-                    setTimer(minutes * 60);
-                    $$('.timer-duration-btn').forEach(btn => btn.classList.replace('bg-white/40', 'bg-white/20'));
-                }
+                if (minutes > 0) { setTimer(minutes * 60); $$('.timer-duration-btn').forEach(btn => btn.classList.replace('bg-white/40', 'bg-white/20')); }
             });
 
             $('#focus-start-btn').addEventListener('click', () => {
-                focusTimer.isRunning = true;
-                focusTimer.isPaused = false;
+                focusTimer.isRunning = true; focusTimer.isPaused = false;
                 focusTimer.interval = setInterval(timerTick, 1000);
                 $('#focus-start-btn').classList.add('hidden');
                 $('#focus-controls').classList.remove('hidden');
                 updateMiniTimer();
             });
-            $('#focus-pause-btn').addEventListener('click', () => {
-                if (focusTimer.isPaused) resumeFocusTimer(); else pauseFocusTimer();
-            });
+            $('#focus-pause-btn').addEventListener('click', () => { if (focusTimer.isPaused) resumeFocusTimer(); else pauseFocusTimer(); });
             $('#focus-end-btn').addEventListener('click', endFocusTimer);
 
             $('#stopwatch-start-btn').addEventListener('click', () => {
-                stopwatch.isRunning = true;
-                stopwatch.isPaused = false;
+                stopwatch.isRunning = true; stopwatch.isPaused = false;
                 stopwatch.startTime = Date.now() - stopwatch.elapsedTime * 1000;
                 stopwatch.interval = setInterval(stopwatchTick, 100);
                 $('#stopwatch-start-btn').classList.add('hidden');
                 $('#stopwatch-controls').classList.remove('hidden');
                 updateMiniTimer();
             });
-            $('#stopwatch-pause-btn').addEventListener('click', () => {
-                if (stopwatch.isPaused) resumeStopwatch(); else pauseStopwatch();
-            });
-             $('#stopwatch-end-btn').addEventListener('click', endStopwatch);
+            $('#stopwatch-pause-btn').addEventListener('click', () => { if (stopwatch.isPaused) resumeStopwatch(); else pauseStopwatch(); });
+            $('#stopwatch-end-btn').addEventListener('click', endStopwatch);
             
             $('#notification-permission-btn').addEventListener('click', async () => {
                 if (!('Notification' in window)) { showToast('お使いのブラウザは通知に対応していません。'); return; }
                 const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    showToast('通知が許可されました！');
-                    new Notification('クイズHPへようこそ！', { body: '通知設定がオンになりました。' });
-                } else {
-                    showToast('通知が拒否されました。設定から変更できます。');
-                }
+                if (permission === 'granted') { showToast('通知が許可されました！'); new Notification('クイズHPへようこそ！', { body: '通知設定がオンになりました。' }); } 
+                else { showToast('通知が拒否されました。設定から変更できます。'); }
             });
 
             $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                 const pageId = e.currentTarget.dataset.page;
                 
-                // Don't stop timer, just manage UI visibility
-                if (pageId === 'focus-page') {
-                    $('#mini-timer-bar').style.visibility = 'hidden';
-                } else if (focusTimer.isRunning || stopwatch.isRunning) {
-                     $('#mini-timer-bar').style.visibility = 'visible';
-                }
-
                 $$('.page').forEach(p => p.classList.remove('active'));
                 $(`#${pageId}`).classList.add('active');
+                
                 $$('.tab-btn').forEach(b => b.classList.replace('primary-text', 'text-gray-500'));
                 e.currentTarget.classList.replace('text-gray-500', 'primary-text');
                 $('#header-title').textContent = e.currentTarget.dataset.title;
-                if(renderEngine.pages[pageId]) {
-                    renderEngine.pages[pageId]();
-                    lucide.createIcons();
-                }
+                if(renderEngine.pages[pageId]) { renderEngine.pages[pageId](); }
+                
+                updateMiniTimer();
+                lucide.createIcons();
             }));
+
+            $('#mini-timer-bar').addEventListener('click', (e) => {
+                if (e.target.closest('#close-mini-timer-btn')) return;
+                document.querySelector('.tab-btn[data-page="focus-page"]').click();
+            });
+
+            $('#close-mini-timer-btn').addEventListener('click', () => {
+                if (focusTimer.isRunning) endFocusTimer();
+                if (stopwatch.isRunning) endStopwatch();
+            });
 
             const init = () => {
                 loadState();
                 renderEngine.renderAll();
                 updateFocusModeUI();
-                setTimer(1500); // Default to 25 mins
+                setTimer(1500);
                 
                 const reviewsToday = state.reviewSchedule.filter(r => new Date(r.reviewDate) <= new Date()).length;
-                if(reviewsToday > 0) {
-                    showToast(`今日やるべき復習が ${reviewsToday} 件あります！`);
-                }
+                if(reviewsToday > 0) { showToast(`今日やるべき復習が ${reviewsToday} 件あります！`); }
 
                 let deferredPrompt;
                 window.addEventListener('beforeinstallprompt', (e) => {
