@@ -81,17 +81,24 @@
         header {
             padding-top: env(safe-area-inset-top);
         }
+        /* --- 修正点: 上部セーフエリア --- */
+        #quiz-modal header {
+            /* p-3(0.75rem)に加えてセーフエリアを確保 */
+            padding-top: calc(0.75rem + env(safe-area-inset-top));
+        }
+        /* --- 修正点: 下部タブバー --- */
         nav {
-            height: calc(4rem + env(safe-area-inset-bottom)); /* 4rem = h-16 */
-            padding-bottom: env(safe-area-inset-bottom);
+            /* heightを削除し、paddingで高さを制御 */
+            padding-top: 0.5rem;
+            padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
         }
         main {
-            /* 5rem = pb-20 */
-            padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+            /* navの高さ変更に合わせて調整 (旧5rem) */
+            padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
         }
         #mini-timer-container {
-            /* 5rem = bottom-20 */
-            bottom: calc(5rem + env(safe-area-inset-bottom));
+            /* navの高さ変更に合わせて調整 (旧5rem) */
+            bottom: calc(4.5rem + env(safe-area-inset-bottom));
         }
     </style>
 </head>
@@ -423,9 +430,9 @@
                             const bg = initialData.backgrounds[id];
                             const isActive = state.profile.activeBackground === id;
                              return `<div class="text-center">
-                                <button class="background-btn w-full h-20 rounded-lg border-4 ${isActive ? 'border-blue-500' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}"></button>
-                                <p class="text-xs mt-1">${bg.name}</p>
-                            </div>`;
+                                 <button class="background-btn w-full h-20 rounded-lg border-4 ${isActive ? 'border-blue-500' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}"></button>
+                                 <p class="text-xs mt-1">${bg.name}</p>
+                             </div>`;
                         }).join('') || `<p class="text-sm text-gray-500">マイステータスから背景を交換できます。</p>`;
                     }
                 },
@@ -627,11 +634,11 @@
                 $('#modal-background-selector').innerHTML = Object.entries(initialData.backgrounds).map(([id, bg]) => {
                      const isUnlocked = state.profile.unlockedBackgrounds.includes(id);
                      return `<div class="text-center">
-                                <button class="background-btn w-full h-16 rounded-lg border-2 ${isUnlocked ? 'border-green-400' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}">
-                                     ${!isUnlocked ? `<div class="absolute inset-0 bg-black/60 flex items-center justify-center rounded-md"><i data-lucide="lock" class="w-6 h-6 text-white"></i></div>` : ''}
-                                </button>
-                                <p class="text-xs mt-1">${isUnlocked ? bg.name : `${bg.cost} LP`}</p>
-                            </div>`;
+                             <button class="background-btn w-full h-16 rounded-lg border-2 ${isUnlocked ? 'border-green-400' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}">
+                                  ${!isUnlocked ? `<div class="absolute inset-0 bg-black/60 flex items-center justify-center rounded-md"><i data-lucide="lock" class="w-6 h-6 text-white"></i></div>` : ''}
+                             </button>
+                             <p class="text-xs mt-1">${isUnlocked ? bg.name : `${bg.cost} LP`}</p>
+                         </div>`;
                 }).join('');
                 
                 const titlesList = $('#modal-titles-list');
@@ -1009,4 +1016,3 @@
     </script>
 </body>
 </html>
-
