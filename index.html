@@ -3,17 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>クイズHP</title>
+    <title>クイズHP - 究極の学習パートナー</title>
 
-    <!-- PWA関連のメタデータ -->
+    <!-- PWA関連 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="クイズHP">
-    <meta name="application-name" content="クイズHP">
-    <meta name="theme-color" content="#4a90e2">
-
-    <!-- アイコン -->
-    <link rel="apple-touch-icon" href="https://placehold.co/180x180/4a90e2/ffffff?text=Q">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="apple-touch-icon" href="https://placehold.co/180x180/4f46e5/ffffff?text=Q">
 
     <!-- 外部ライブラリとフォント -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -21,713 +18,443 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* 基本スタイル */
-        body {
-            font-family: 'Inter', 'Noto Sans JP', sans-serif;
-            -webkit-tap-highlight-color: transparent;
+        :root {
+            --primary-color: #4f46e5;
+            --primary-color-hover: #4338ca;
         }
-        
-        /* ページの表示/非表示を滑らかにする */
+        body { font-family: 'Inter', 'Noto Sans JP', sans-serif; -webkit-tap-highlight-color: transparent; }
         .page { display: none; }
         .page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* カスタムスクロールバー */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 5px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-
-        /* iframeのローディングインジケーター */
-        #loader {
-            border: 4px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 4px solid #4a90e2;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* トグルスイッチ */
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #4A90E2;
-        }
-        .toggle-checkbox:checked + .toggle-label {
-            background-color: #4A90E2;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #loader { border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid var(--primary-color); width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .primary-bg { background-color: var(--primary-color); }
+        .primary-bg-hover:hover { background-color: var(--primary-color-hover); }
+        .primary-text { color: var(--primary-color); }
+        .toggle-checkbox { appearance: none; width: 40px; height: 20px; background: #ccc; border-radius: 20px; position: relative; cursor: pointer; transition: background .3s; }
+        .toggle-checkbox:before { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform .3s; }
+        .toggle-checkbox:checked { background: var(--primary-color); }
+        .toggle-checkbox:checked:before { transform: translateX(20px); }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen antialiased">
 
-    <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-2xl">
+    <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto bg-gray-50 dark:bg-gray-800 shadow-2xl">
         
-        <!-- ヘッダー -->
-        <header class="bg-white dark:bg-gray-800 shadow-md z-10 p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 relative">
+        <header class="bg-white dark:bg-gray-800/80 backdrop-blur-sm z-10 p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 sticky top-0">
             <h1 id="header-title" class="text-xl font-bold text-gray-900 dark:text-white">ホーム</h1>
-             <div id="search-container" class="absolute top-0 left-0 w-full h-full bg-white dark:bg-gray-800 flex items-center px-4 hidden">
-                <input type="search" id="search-input" placeholder="教材を検索..." class="w-full bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button id="close-search-btn" class="ml-2 p-2">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            <div id="header-icons" class="flex items-center space-x-4">
-                 <button id="search-button" class="text-gray-600 dark:text-gray-300">
-                    <i data-lucide="search" class="w-6 h-6"></i>
-                </button>
+            <div class="flex items-center space-x-2 bg-yellow-400/20 text-yellow-600 dark:text-yellow-400 rounded-full px-3 py-1">
+                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                <span id="lp-display" class="font-bold text-sm">0 LP</span>
             </div>
         </header>
 
-        <!-- メインコンテンツ -->
         <main class="flex-grow overflow-y-auto pb-20">
-            <!-- ホーム画面 -->
-            <div id="home-page" class="page active p-4">
-                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow mb-6 text-center">
-                    <p id="current-date" class="text-lg font-semibold text-gray-700 dark:text-gray-300"></p>
+            <div id="home-page" class="page active p-4 space-y-6">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center mb-3"><i data-lucide="calendar-check-2" class="w-5 h-5 mr-2 primary-text"></i> 今日の復習</h2>
+                    <div id="review-list" class="space-y-3"></div>
                 </div>
-                
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center">
-                        <i data-lucide="calendar-clock" class="w-5 h-5 mr-2 text-blue-500"></i>
-                        カウントダウン
-                    </h2>
-                    <button id="add-countdown-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold p-2 rounded-full">
-                         <i data-lucide="plus" class="w-5 h-5"></i>
-                    </button>
-                </div>
-                <div id="countdown-list" class="space-y-3">
-                    <!-- カウントダウンカードはJSで生成 -->
-                </div>
-                <p id="no-countdown-message" class="text-gray-500 dark:text-gray-400 text-center py-4">テストやイベントを登録しよう！</p>
-            </div>
-
-            <!-- 教材ページ -->
-            <div id="materials-page" class="page p-4">
                  <div>
-                    <h2 class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300 flex items-center">
-                       <i data-lucide="book-marked" class="w-5 h-5 mr-2 text-blue-500"></i>
-                        すべてのクイズ
-                    </h2>
-                    <div class="flex space-x-2 mb-4 overflow-x-auto pb-2">
-                         <button class="filter-btn active bg-blue-500 text-white px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="all">すべて</button>
-                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="国語">国語</button>
-                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="数学">数学</button>
-                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="英語">英語</button>
-                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="理科">理科</button>
-                         <button class="filter-btn bg-gray-200 dark:bg-gray-700 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="社会">社会</button>
-                    </div>
-                    <div id="all-quizzes" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    </div>
-                    <p id="no-quizzes-message" class="text-gray-500 dark:text-gray-400 hidden">クイズが見つかりませんでした。</p>
-                </div>
-                 <div id="pinned-section" class="mt-6">
-                    <h2 class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300 flex items-center">
-                        <i data-lucide="pin" class="w-5 h-5 mr-2 text-blue-500"></i>
-                        ピン留めしたクイズ
-                    </h2>
-                    <div id="pinned-quizzes" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    </div>
-                    <p id="no-pins-message" class="text-gray-500 dark:text-gray-400">クイズをピン留めして、すぐにアクセスしよう！</p>
+                    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center mb-3"><i data-lucide="award" class="w-5 h-5 mr-2 primary-text"></i> 最近獲得した称号</h2>
+                    <div id="recent-titles" class="flex space-x-3 overflow-x-auto pb-2"></div>
                 </div>
             </div>
 
-            <!-- 設定ページ -->
-            <div id="settings-page" class="page p-4">
-                <h2 class="text-2xl font-bold mb-4">設定</h2>
-                <div class="space-y-4">
-                     <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
-                        <h3 class="font-semibold mb-2">通知設定</h3>
-                        <button id="notification-permission-button" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center mb-4">
-                            <i data-lucide="bell-ring" class="w-5 h-5 mr-2"></i>
-                            ブラウザ通知を許可
-                        </button>
-                        <div class="flex items-center justify-between">
-                            <span>カウントダウン通知</span>
-                            <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" name="toggle" id="countdown-notification-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                                <label for="countdown-notification-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
-                        <h3 class="font-semibold mb-2">アプリのインストール</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">このアプリをホーム画面に追加して、素早くアクセスできます。</p>
-                        <button id="install-button" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center hidden">
-                            <i data-lucide="download-cloud" class="w-5 h-5 mr-2"></i>
-                            ホーム画面に追加
-                        </button>
-                    </div>
+            <div id="study-page" class="page p-4">
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300 flex items-center"><i data-lucide="pin" class="w-5 h-5 mr-2 primary-text"></i> ピン留め</h2>
+                    <div id="pinned-quizzes" class="grid grid-cols-1 gap-3"></div>
+                </div>
+                <div>
+                    <h2 class="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300 flex items-center"><i data-lucide="book-marked" class="w-5 h-5 mr-2 primary-text"></i> すべてのクイズ</h2>
+                    <div id="filter-container" class="flex space-x-2 mb-4 overflow-x-auto pb-2"></div>
+                    <div id="all-quizzes" class="grid grid-cols-1 gap-3"></div>
+                </div>
+            </div>
+
+            <div id="focus-page" class="page p-4 flex flex-col items-center justify-center h-full text-center">
+                <div id="focus-timer-display" class="text-7xl font-bold tabular-nums mb-6">25:00</div>
+                <button id="focus-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="play" class="w-6 h-6 mr-2"></i>集中モード開始</button>
+                <div id="focus-controls" class="hidden items-center space-x-4">
+                    <button id="focus-pause-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
+                    <button id="focus-end-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="stop-circle" class="w-6 h-6 mr-2"></i>終了</button>
+                </div>
+            </div>
+
+            <div id="my-chart-page" class="page p-4 space-y-6">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center mb-3"><i data-lucide="bar-chart-3" class="w-5 h-5 mr-2 primary-text"></i> 週間学習レポート</h2>
+                    <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow"><canvas id="study-time-chart"></canvas></div>
+                </div>
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center mb-3"><i data-lucide="pie-chart" class="w-5 h-5 mr-2 primary-text"></i> 教科別 理解度カルテ</h2>
+                    <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow"><canvas id="subject-radar-chart"></canvas></div>
+                </div>
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center mb-3"><i data-lucide="target" class="w-5 h-5 mr-2 primary-text"></i> 弱点克服リスト</h2>
+                    <div id="weakness-list" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <div id="settings-page" class="page p-4 space-y-4">
+                <h2 class="text-2xl font-bold mb-2">設定</h2>
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
+                    <h3 class="font-semibold mb-2">通知設定</h3>
+                    <button id="notification-permission-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center mb-4"><i data-lucide="bell-ring" class="w-5 h-5 mr-2"></i>ブラウザ通知を許可</button>
+                    <div class="flex items-center justify-between"><p>復習リマインダー通知</p><input type="checkbox" id="review-notification-toggle" class="toggle-checkbox"></div>
+                </div>
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
+                     <h3 class="font-semibold mb-2">テーマカラー交換所</h3>
+                     <div id="theme-selector" class="grid grid-cols-4 gap-4"></div>
+                </div>
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
+                    <h3 class="font-semibold mb-2">アプリのインストール</h3>
+                    <button id="install-button" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center hidden"><i data-lucide="download-cloud" class="w-5 h-5 mr-2"></i>ホーム画面に追加</button>
                 </div>
             </div>
         </main>
 
-        <!-- タブバー -->
-        <nav class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto h-16 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
-            <button class="tab-btn flex flex-col items-center justify-center text-blue-500" data-page="home-page" data-title="ホーム">
-                <i data-lucide="home" class="w-6 h-6 mb-1"></i>
-                <span class="text-xs font-medium">ホーム</span>
-            </button>
-            <button class="tab-btn flex flex-col items-center justify-center text-gray-500 dark:text-gray-400" data-page="materials-page" data-title="教材">
-                <i data-lucide="book-marked" class="w-6 h-6 mb-1"></i>
-                <span class="text-xs font-medium">教材</span>
-            </button>
-            <button class="tab-btn flex flex-col items-center justify-center text-gray-500 dark:text-gray-400" data-page="settings-page" data-title="設定">
-                <i data-lucide="settings" class="w-6 h-6 mb-1"></i>
-                <span class="text-xs font-medium">設定</span>
-            </button>
+        <nav class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto h-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
+            <button class="tab-btn flex flex-col items-center justify-center w-full h-full primary-text" data-page="home-page" data-title="ホーム"><i data-lucide="home" class="w-6 h-6"></i><span class="text-xs mt-1">ホーム</span></button>
+            <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="study-page" data-title="学習"><i data-lucide="book-marked" class="w-6 h-6"></i><span class="text-xs mt-1">学習</span></button>
+            <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="focus-page" data-title="集中"><i data-lucide="timer" class="w-6 h-6"></i><span class="text-xs mt-1">集中</span></button>
+            <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="my-chart-page" data-title="マイカルテ"><i data-lucide="clipboard-list" class="w-6 h-6"></i><span class="text-xs mt-1">マイカルテ</span></button>
+            <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="settings-page" data-title="設定"><i data-lucide="settings" class="w-6 h-6"></i><span class="text-xs mt-1">設定</span></button>
         </nav>
     </div>
 
-    <!-- ===== モーダルウィンドウ群 ===== -->
-    <!-- クイズ表示用モーダル -->
-    <div id="quiz-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex-col items-center justify-center hidden">
-        <div class="w-full h-full max-w-lg bg-gray-100 dark:bg-gray-900 flex flex-col">
-            <header class="bg-white dark:bg-gray-800 p-3 flex items-center justify-between shadow-md">
-                <h2 id="quiz-title" class="text-lg font-bold text-gray-800 dark:text-gray-200 truncate"></h2>
-                <button class="close-modal-btn p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-modal="quiz-modal">
-                    <i data-lucide="x" class="w-6 h-6 text-gray-600 dark:text-gray-300"></i>
-                </button>
-            </header>
-            <div class="flex-grow relative">
-                <div id="loader-container" class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-900"><div id="loader"></div></div>
-                <iframe id="quiz-iframe" class="w-full h-full border-0" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
-            </div>
-        </div>
-    </div>
-    <!-- カウントダウン追加モーダル -->
-    <div id="countdown-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6">
-            <h2 class="text-xl font-bold mb-4">新しいカウントダウン</h2>
-            <form id="countdown-form">
-                <input type="hidden" id="countdown-id">
-                <div class="mb-4">
-                    <label for="countdown-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">イベント名</label>
-                    <input type="text" id="countdown-name" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
-                </div>
-                <div class="mb-6">
-                    <label for="countdown-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">日付</label>
-                    <input type="date" id="countdown-date" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
-                </div>
-                <div class="flex justify-end space-x-2">
-                    <button type="button" class="close-modal-btn px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-md" data-modal="countdown-modal">キャンセル</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md">保存</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <!-- 管理者パネルモーダル -->
-    <div id="admin-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex-col items-center justify-center hidden">
-         <div class="w-full h-full max-w-lg bg-gray-100 dark:bg-gray-900 flex flex-col">
-             <header class="bg-white dark:bg-gray-800 p-3 flex items-center justify-between shadow-md">
-                <h2 class="text-lg font-bold">管理者パネル</h2>
-                <button class="close-modal-btn p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-modal="admin-modal">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </header>
-            <div class="flex-grow overflow-y-auto p-4">
-                <h3 class="font-semibold mb-2">クイズ管理</h3>
-                <div id="admin-quiz-list" class="space-y-2 mb-4"></div>
-                <button id="admin-add-quiz-btn" class="w-full bg-green-500 text-white py-2 rounded-lg mb-6">新しいクイズを追加</button>
-
-                <h3 class="font-semibold mb-2">期末テスト日程管理</h3>
-                 <form id="admin-countdown-form">
-                    <input type="text" id="admin-countdown-name" placeholder="イベント名 (例: 2学期期末テスト)" class="w-full mb-2 p-2 rounded border dark:bg-gray-700 dark:border-gray-600">
-                    <input type="date" id="admin-countdown-date" class="w-full mb-2 p-2 rounded border dark:bg-gray-700 dark:border-gray-600">
-                    <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg">管理者カウントダウンを設定</button>
-                </form>
-            </div>
-         </div>
-    </div>
-    <!-- クイズ編集モーダル -->
-    <div id="quiz-edit-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6">
-             <h2 id="quiz-edit-title" class="text-xl font-bold mb-4">クイズ編集</h2>
-             <form id="quiz-edit-form">
-                <input type="hidden" id="quiz-edit-id">
-                <div class="mb-3"><input type="text" id="quiz-edit-name" placeholder="タイトル" class="w-full p-2 rounded border dark:bg-gray-700 dark:border-gray-600" required></div>
-                <div class="mb-3"><input type="text" id="quiz-edit-subject" placeholder="教科" class="w-full p-2 rounded border dark:bg-gray-700 dark:border-gray-600" required></div>
-                <div class="mb-3"><input type="text" id="quiz-edit-genre" placeholder="ジャンル" class="w-full p-2 rounded border dark:bg-gray-700 dark:border-gray-600" required></div>
-                <div class="mb-4"><input type="url" id="quiz-edit-url" placeholder="Google Form URL" class="w-full p-2 rounded border dark:bg-gray-700 dark:border-gray-600" required></div>
-                <div class="flex justify-end space-x-2">
-                    <button type="button" class="close-modal-btn px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-md" data-modal="quiz-edit-modal">キャンセル</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md">保存</button>
-                </div>
-             </form>
-        </div>
-    </div>
+    <!-- ===== モーダル ===== -->
+    <div id="quiz-modal" class="fixed inset-0 bg-black/70 z-50 flex-col hidden"><div class="w-full h-full max-w-lg mx-auto bg-gray-100 dark:bg-gray-900 flex flex-col"><header class="p-3 flex items-center justify-between shadow-md bg-white dark:bg-gray-800"><h2 id="quiz-modal-title" class="truncate font-bold"></h2><button class="close-modal-btn p-1" data-modal="quiz-modal"><i data-lucide="x"></i></button></header><div class="flex-grow relative"><div class="absolute inset-0 flex items-center justify-center"><div id="loader"></div></div><iframe id="quiz-iframe" class="w-full h-full border-0 invisible" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe></div></div></div>
+    <div id="assessment-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center"><h2 class="text-xl font-bold mb-4">お疲れ様でした！</h2><p class="mb-6">このクイズの理解度を記録しよう</p><div class="flex justify-around"><button class="assessment-btn p-2" data-level="3"><i data-lucide="award" class="w-10 h-10 text-yellow-400"></i><p>完璧！</p></button><button class="assessment-btn p-2" data-level="2"><i data-lucide="thumbs-up" class="w-10 h-10 text-green-400"></i><p>まあまあ</p></button><button class="assessment-btn p-2" data-level="1"><i data-lucide="book-open-check" class="w-10 h-10 text-blue-400"></i><p>要復習</p></button></div></div></div>
+    <div id="theme-purchase-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center"><h2 id="theme-purchase-title" class="text-xl font-bold mb-2"></h2><p id="theme-purchase-cost" class="mb-6"></p><div class="flex justify-center space-x-4"><button id="theme-purchase-cancel" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">やめる</button><button id="theme-purchase-confirm" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg">交換する</button></div></div></div>
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300 z-50 transform -translate-y-10"></div>
     
-    <!-- トースト通知 -->
-    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 z-50">
-        <p id="toast-message"></p>
-    </div>
-
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- デフォルトデータ定義 ---
-            const defaultQuizzes = [
-                { id: 1, title: "中学1年 数学 - 正負の数", subject: "数学", genre: "中1", url: "https://docs.google.com/forms/d/e/1FAIpQLSclW_A-1fwnE4bFpYp7qLgVwUa_3jX9sZ6cK8rB0oI1mN5n_Q/viewform?usp=sf_link" },
-                { id: 2, title: "中学1年 英語 - be動詞", subject: "英語", genre: "中1", url: "https://docs.google.com/forms/d/e/1FAIpQLSclW_A-1fwnE4bFpYp7qLgVwUa_3jX9sZ6cK8rB0oI1mN5n_Q/viewform?usp=sf_link" },
-                { id: 3, title: "中学2年 理科 - 化学反応", subject: "理科", genre: "中2", url: "https://docs.google.com/forms/d/e/1FAIpQLSclW_A-1fwnE4bFpYp7qLgVwUa_3jX9sZ6cK8rB0oI1mN5n_Q/viewform?usp=sf_link" },
-                { id: 4, title: "高校1年 国語 - 古文基礎", subject: "国語", genre: "高1", url: "https://docs.google.com/forms/d/e/1FAIpQLSclW_A-1fwnE4bFpYp7qLgVwUa_3jX9sZ6cK8rB0oI1mN5n_Q/viewform?usp=sf_link" },
-            ];
-            const defaultAdminCountdowns = [{ id: 1, title: '２学期 期末テスト', date: '2025-11-25' }];
-
-            // --- 状態管理 & データ永続化 ---
-            let state = {
-                quizzes: JSON.parse(localStorage.getItem('quizzes')) || defaultQuizzes,
-                pinnedQuizzes: JSON.parse(localStorage.getItem('pinnedQuizzes')) || [],
-                adminCountdowns: JSON.parse(localStorage.getItem('adminCountdowns')) || defaultAdminCountdowns,
-                userCountdowns: JSON.parse(localStorage.getItem('userCountdowns')) || [],
-                dismissedAdminCountdowns: JSON.parse(localStorage.getItem('dismissedAdminCountdowns')) || [],
-                settings: JSON.parse(localStorage.getItem('settings')) || { countdownNotifications: true },
-                currentFilter: 'all',
-                searchQuery: '',
+            const initialData = {
+                quizzes: [
+                    { id: 'math1', title: "数学 - 正負の数", subject: "数学", genre: "中1", tags: ['english1'], url: "https://docs.google.com/forms/d/e/1FAIpQLScsC0BFa_3gY-f-u4pW8Q22o_l3c0T-t_9c3z-q8pY6X-u8qQ/viewform?usp=sf_link" },
+                    { id: 'english1', title: "英語 - be動詞", subject: "英語", genre: "中1", tags: ['math1', 'history1'], url: "https://docs.google.com/forms/d/e/1FAIpQLSfB_iJ3-s-W-hT5pQ8bF_cK6dL_xG9z-u0bM-pC7oR8sT-w_w/viewform?usp=sf_link" },
+                    { id: 'science1', title: "理科 - 植物のつくり", subject: "理科", genre: "中1", tags: [], url: "https://docs.google.com/forms/d/e/1FAIpQLSfp-24sW_4xT8d_aK_b_nL5e-pX7a-j8vN-qA9rR_cT_uL-vQ/viewform?usp=sf_link" },
+                    { id: 'japanese1', title: "国語 - 枕草子", subject: "国語", genre: "古典", tags: ['history1'], url: "https://docs.google.com/forms/d/e/1FAIpQLSe-0P7p_L-rT9c-yS_eD-wA9iR_bO8kM-nL-u_V-iE7xS-tQ/viewform?usp=sf_link" },
+                    { id: 'history1', title: "社会 - 鎌倉時代", subject: "社会", genre: "歴史", tags: ['japanese1'], url: "https://docs.google.com/forms/d/e/1FAIpQLSdi-tYv_zW-a_c_iR_s-vI_oN-eL_a-yP-sN_e-rB_c_uK_wQ/viewform?usp=sf_link" },
+                ],
+                titles: [
+                    { id: 'math_master', name: '数学マスター', condition: (s) => initialData.quizzes.filter(q => q.subject === '数学' && s.progress[q.id]?.level === 3).length >= 1 },
+                    { id: 'perfect_day', name: 'パーフェクトデイ', condition: (s) => Object.values(s.progress).filter(p => new Date(p.date).toDateString() === new Date().toDateString() && p.level === 3).length >= 3 },
+                    { id: 'focus_1hr', name: '集中力の初星', condition: (s) => s.focus.totalTime >= 3600 },
+                ],
+                themes: {
+                    default: { name: 'デフォルト', color: '#4f46e5', hover: '#4338ca', cost: 0 },
+                    green: { name: 'フォレスト', color: '#16a34a', hover: '#15803d', cost: 100 },
+                    red: { name: 'サンセット', color: '#dc2626', hover: '#b91c1c', cost: 150 },
+                    orange: { name: 'ビタミン', color: '#f97316', hover: '#ea580c', cost: 200 },
+                }
             };
 
-            const saveData = () => {
-                localStorage.setItem('quizzes', JSON.stringify(state.quizzes));
-                localStorage.setItem('pinnedQuizzes', JSON.stringify(state.pinnedQuizzes));
-                localStorage.setItem('adminCountdowns', JSON.stringify(state.adminCountdowns));
-                localStorage.setItem('userCountdowns', JSON.stringify(state.userCountdowns));
-                localStorage.setItem('dismissedAdminCountdowns', JSON.stringify(state.dismissedAdminCountdowns));
-                localStorage.setItem('settings', JSON.stringify(state.settings));
+            let state;
+            let chartInstances = {};
+            let focusTimer = { interval: null, timeLeft: 1500, isRunning: false };
+            let quizTimer = { startTime: null };
+
+            const $ = (s) => document.querySelector(s);
+            const $$ = (s) => document.querySelectorAll(s);
+
+            const loadState = () => {
+                const defaultState = {
+                    profile: { lp: 0, unlockedThemes: ['default'], earnedTitles: [], activeTheme: 'default' },
+                    progress: {},
+                    reviewSchedule: [],
+                    pinnedQuizzes: [],
+                    focus: { totalTime: 0 },
+                    studyLog: {}, // { 'YYYY-MM-DD': { focus: seconds, quiz: seconds } }
+                    settings: { reviewNotifications: true },
+                    lastLogin: null,
+                };
+                state = JSON.parse(localStorage.getItem('quizAppUltimateV2')) || defaultState;
+                if(state.lastLogin !== new Date().toDateString()){
+                    addLP(10, 'ログインボーナス');
+                    state.lastLogin = new Date().toDateString();
+                }
             };
+            const saveState = () => localStorage.setItem('quizAppUltimateV2', JSON.stringify(state));
 
-            // --- DOM要素 ---
-            const $ = (selector) => document.querySelector(selector);
-            const $$ = (selector) => document.querySelectorAll(selector);
+            const renderEngine = {
+                pages: {
+                    'home-page': () => {
+                        const reviewContainer = $('#review-list');
+                        const now = new Date();
+                        const reviews = state.reviewSchedule.filter(r => new Date(r.reviewDate) <= now);
+                        reviewContainer.innerHTML = reviews.length ? reviews.map(r => createQuizCard(initialData.quizzes.find(q => q.id === r.quizId), false, true)).join('') : `<p class="text-sm text-gray-500">今日の復習はありません。素晴らしい！</p>`;
+                        
+                        const titlesContainer = $('#recent-titles');
+                        titlesContainer.innerHTML = state.profile.earnedTitles.slice(-5).reverse().map(tid => {
+                             const title = initialData.titles.find(t => t.id === tid);
+                             return `<div class="bg-white dark:bg-gray-700 p-2 rounded-lg shadow-sm text-center min-w-[100px]"><i data-lucide="award" class="mx-auto w-8 h-8 text-yellow-500"></i><p class="text-xs font-semibold mt-1">${title.name}</p></div>`;
+                        }).join('') || `<p class="text-sm text-gray-500">称号を獲得してここに表示しよう！</p>`;
+                    },
+                    'study-page': () => {
+                        const allContainer = $('#all-quizzes');
+                        const pinnedContainer = $('#pinned-quizzes');
+                        const subjects = ['all', ...new Set(initialData.quizzes.map(q => q.subject))];
+                        $('#filter-container').innerHTML = subjects.map(s => `<button class="filter-btn ${s === 'all' ? 'active primary-bg text-white' : 'bg-gray-200 dark:bg-gray-600'} px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="${s}">${s === 'all' ? 'すべて' : s}</button>`).join('');
+                        
+                        const filter = $('#filter-container .active').dataset.filter;
+                        const quizzes = initialData.quizzes.filter(q => filter === 'all' || q.subject === filter);
+                        allContainer.innerHTML = quizzes.map(q => createQuizCard(q, state.pinnedQuizzes.includes(q.id))).join('');
+                        
+                        const pinnedQuizzes = state.pinnedQuizzes.map(id => initialData.quizzes.find(q => q.id === id)).filter(Boolean);
+                        pinnedContainer.innerHTML = pinnedQuizzes.length ? pinnedQuizzes.map(q => createQuizCard(q, true)).join('') : `<p class="text-sm text-gray-500">クイズをピン留めしてすぐアクセス！</p>`;
+                    },
+                    'my-chart-page': () => {
+                        const subjects = [...new Set(initialData.quizzes.map(q => q.subject))];
+                        const radarData = subjects.map(sub => {
+                            const quizzesInSub = initialData.quizzes.filter(q => q.subject === sub);
+                            const totalLevels = quizzesInSub.reduce((acc, q) => acc + (state.progress[q.id]?.level || 0), 0);
+                            const completedCount = quizzesInSub.filter(q => state.progress[q.id]).length;
+                            return completedCount > 0 ? (totalLevels / completedCount) / 3 * 100 : 0;
+                        });
+                        renderChart('subject-radar-chart', 'radar', { labels: subjects, datasets: [{ label: '理解度 (%)', data: radarData, backgroundColor: 'rgba(79, 70, 229, 0.2)', borderColor: 'rgba(79, 70, 229, 1)', borderWidth: 2 }] }, { scales: { r: { beginAtZero: true, max: 100 } } });
 
-            // --- PWA Service Worker & Manifest (変更なし) ---
-            // manifest.jsonを動的に生成
-            const manifest = {"name": "クイズHP", "short_name": "クイズHP", "start_url": ".", "display": "standalone", "background_color": "#f3f4f6", "theme_color": "#4a90e2", "description": "中学・高校の定期テスト対策クイズアプリ", "icons": [{"src": "https://placehold.co/192x192/4a90e2/ffffff?text=Q", "sizes": "192x192", "type": "image/png"}, {"src": "https://placehold.co/512x512/4a90e2/ffffff?text=Q", "sizes": "512x512", "type": "image/png"}]};
-            const manifestURL = URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type: 'application/json'}));
-            document.head.appendChild(Object.assign(document.createElement('link'), {rel: 'manifest', href: manifestURL}));
+                        const weaknessContainer = $('#weakness-list');
+                        const weaknesses = Object.keys(state.progress).filter(id => state.progress[id].level === 1).map(id => initialData.quizzes.find(q => q.id === id));
+                        weaknessContainer.innerHTML = weaknesses.length ? weaknesses.map(q => createQuizCard(q, false)).join('') : `<p class="text-sm text-gray-500">弱点は見つかりませんでした。素晴らしい！</p>`;
 
-            // Service Workerを登録
-            if ('serviceWorker' in navigator) {
-                // const swContent = `const CACHE_NAME = 'quiz-hp-cache-v2'; const urlsToCache = ['/','/index.html']; self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(urlsToCache)))); self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
-                // navigator.serviceWorker.register(URL.createObjectURL(new Blob([swContent], {type: 'application/javascript'})));
-                console.log("Service Worker registration is disabled in this environment to prevent blob: URL errors.");
-            }
+                        const labels = [];
+                        const data = [];
+                        for (let i = 6; i >= 0; i--) {
+                            const d = new Date();
+                            d.setDate(d.getDate() - i);
+                            const day = d.toISOString().split('T')[0];
+                            labels.push(`${d.getMonth()+1}/${d.getDate()}`);
+                            const log = state.studyLog[day] || { focus: 0, quiz: 0 };
+                            data.push((log.focus + log.quiz) / 60); // in minutes
+                        }
+                        renderChart('study-time-chart', 'bar', { labels, datasets: [{ label: '学習時間 (分)', data, backgroundColor: 'rgba(79, 70, 229, 0.5)', borderColor: 'rgba(79, 70, 229, 1)', borderWidth: 1 }] }, { scales: { y: { beginAtZero: true } } });
+                    },
+                    'settings-page': () => {
+                        $('#review-notification-toggle').checked = state.settings.reviewNotifications;
+                        $('#theme-selector').innerHTML = Object.entries(initialData.themes).map(([id, theme]) => {
+                            const isUnlocked = state.profile.unlockedThemes.includes(id);
+                            const isActive = state.profile.activeTheme === id;
+                            return `<div class="text-center">
+                                <button class="theme-btn w-12 h-12 rounded-full border-4 ${isActive ? 'border-blue-500' : 'border-transparent'} relative" style="background-color: ${theme.color}" data-theme="${id}">
+                                    ${!isUnlocked ? `<i data-lucide="lock" class="w-6 h-6 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>` : ''}
+                                </button>
+                                <p class="text-xs mt-1">${isUnlocked ? theme.name : `${theme.cost} LP`}</p>
+                            </div>`;
+                        }).join('');
+                    }
+                },
+                renderAll: () => {
+                    Object.values(renderEngine.pages).forEach(renderFunc => renderFunc());
+                    $('#lp-display').textContent = `${state.profile.lp} LP`;
+                    const activeTheme = initialData.themes[state.profile.activeTheme];
+                    document.documentElement.style.setProperty('--primary-color', activeTheme.color);
+                    document.documentElement.style.setProperty('--primary-color-hover', activeTheme.hover);
+                    lucide.createIcons();
+                }
+            };
             
-            // PWAインストールプロンプト
-            let deferredPrompt;
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredPrompt = e;
-                $('#install-button').style.display = 'flex';
-                $('#install-button').onclick = () => deferredPrompt.prompt();
+            const createQuizCard = (quiz, isPinned, isReview = false) => {
+                if(!quiz) return '';
+                const progress = state.progress[quiz.id];
+                const levelIcons = { 1: 'book-open-check', 2: 'thumbs-up', 3: 'award'};
+                return `<div class="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-3 flex items-center justify-between quiz-card" data-id="${quiz.id}"><div class="flex items-center min-w-0"><div class="w-5 h-5 mr-3 flex-shrink-0">${isReview ? `<i data-lucide="bell-ring" class="text-red-500"></i>` : progress ? `<i data-lucide="${levelIcons[progress.level]}" class="text-yellow-500"></i>` : ``}</div><div class="truncate"><h3 class="font-semibold text-gray-800 dark:text-gray-200 truncate">${quiz.title}</h3><p class="text-sm text-gray-500 dark:text-gray-400">${quiz.subject} - ${quiz.genre}</p></div></div><button class="pin-btn p-2 -mr-2 flex-shrink-0" data-id="${quiz.id}"><i data-lucide="pin" class="w-5 h-5 ${isPinned ? 'primary-text fill-current' : 'text-gray-400'}"></i></button></div>`;
+            };
+            
+            const renderChart = (canvasId, type, data, options) => {
+                const ctx = $(`#${canvasId}`).getContext('2d');
+                if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
+                chartInstances[canvasId] = new Chart(ctx, { type, data, options });
+            };
+
+            const showToast = (message) => {
+                const toast = $('#toast'); toast.textContent = message; toast.classList.remove('opacity-0', '-translate-y-10');
+                setTimeout(() => toast.classList.add('opacity-0', '-translate-y-10'), 2000);
+            };
+
+            const addLP = (amount, reason) => { state.profile.lp += amount; showToast(`${reason}で ${amount} LP 獲得！`); };
+            const checkTitles = () => initialData.titles.forEach(t => !state.profile.earnedTitles.includes(t.id) && t.condition(state) && (state.profile.earnedTitles.push(t.id), showToast(`称号「${t.name}」獲得！`)));
+            const scheduleReview = (quizId) => [1, 3, 7].forEach(days => state.reviewSchedule.push({ quizId, reviewDate: new Date(Date.now() + days * 86400000).toISOString() }));
+
+            const formatTime = (s) => `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+
+            const updateFocusTimer = () => {
+                focusTimer.timeLeft--;
+                $('#focus-timer-display').textContent = formatTime(focusTimer.timeLeft);
+                if (focusTimer.timeLeft <= 0) {
+                    clearInterval(focusTimer.interval);
+                    showToast('集中モード完了！お疲れ様でした！');
+                    const elapsed = 1500; // 25 minutes
+                    logStudyTime('focus', elapsed);
+                    addLP(25, '集中モード完了');
+                    state.focus.totalTime += elapsed;
+                    checkTitles();
+                    saveState();
+                    // Reset UI
+                }
+            };
+            
+            const logStudyTime = (type, seconds) => {
+                const today = new Date().toISOString().split('T')[0];
+                if (!state.studyLog[today]) state.studyLog[today] = { focus: 0, quiz: 0 };
+                state.studyLog[today][type] += seconds;
+            };
+
+            document.body.addEventListener('click', e => {
+                const quizCard = e.target.closest('.quiz-card');
+                if (quizCard && !e.target.closest('.pin-btn')) {
+                    const quiz = initialData.quizzes.find(q => q.id === quizCard.dataset.id);
+                    $('#quiz-modal-title').textContent = quiz.title;
+                    $('#quiz-iframe').classList.add('invisible');
+                    $('#quiz-modal').dataset.currentQuiz = quiz.id;
+                    $('#quiz-modal').style.display = 'flex';
+                    quizTimer.startTime = Date.now();
+                    setTimeout(() => {
+                        $('#quiz-iframe').src = quiz.url;
+                        $('#quiz-iframe').onload = () => $('#quiz-iframe').classList.remove('invisible');
+                    }, 100);
+                }
+
+                const pinBtn = e.target.closest('.pin-btn');
+                if(pinBtn) {
+                    const quizId = pinBtn.dataset.id;
+                    state.pinnedQuizzes.includes(quizId) ? state.pinnedQuizzes = state.pinnedQuizzes.filter(id => id !== quizId) : state.pinnedQuizzes.push(quizId);
+                    saveState(); renderEngine.pages['study-page'](); lucide.createIcons();
+                }
+                
+                const filterBtn = e.target.closest('.filter-btn');
+                if(filterBtn) {
+                     $$('#filter-container .filter-btn').forEach(b => {
+                        b.classList.remove('active', 'primary-bg', 'text-white');
+                        b.classList.add('bg-gray-200', 'dark:bg-gray-600');
+                     });
+                     filterBtn.classList.add('active', 'primary-bg', 'text-white');
+                     filterBtn.classList.remove('bg-gray-200', 'dark:bg-gray-600');
+                     renderEngine.pages['study-page']();
+                     lucide.createIcons();
+                }
+
+                const closeModalBtn = e.target.closest('.close-modal-btn');
+                if (closeModalBtn) {
+                    const modal = $(`#${closeModalBtn.dataset.modal}`);
+                    modal.style.display = 'none';
+                    if (closeModalBtn.dataset.modal === 'quiz-modal') {
+                        $('#assessment-modal').dataset.quizId = modal.dataset.currentQuiz;
+                        $('#assessment-modal').style.display = 'flex';
+                        if(quizTimer.startTime) {
+                            const elapsed = Math.round((Date.now() - quizTimer.startTime) / 1000);
+                            logStudyTime('quiz', elapsed);
+                            quizTimer.startTime = null;
+                            saveState();
+                        }
+                    }
+                }
+                
+                const assessmentBtn = e.target.closest('.assessment-btn');
+                if(assessmentBtn) {
+                    const level = parseInt(assessmentBtn.dataset.level);
+                    const quizId = $('#assessment-modal').dataset.quizId;
+                    state.progress[quizId] = { level, date: new Date().toISOString() };
+                    addLP(level * 5, 'クイズ評価');
+                    scheduleReview(quizId); checkTitles(); saveState();
+                    renderEngine.renderAll();
+                    $('#assessment-modal').style.display = 'none';
+                }
+
+                const themeBtn = e.target.closest('.theme-btn');
+                if(themeBtn){
+                    const themeId = themeBtn.dataset.theme;
+                    if(state.profile.unlockedThemes.includes(themeId)) {
+                        state.profile.activeTheme = themeId;
+                    } else {
+                        const theme = initialData.themes[themeId];
+                        $('#theme-purchase-title').textContent = `「${theme.name}」を交換しますか？`;
+                        $('#theme-purchase-cost').textContent = `必要なポイント: ${theme.cost} LP`;
+                        $('#theme-purchase-confirm').dataset.themeId = themeId;
+                        $('#theme-purchase-modal').style.display = 'flex';
+                    }
+                    saveState(); renderEngine.renderAll();
+                }
             });
 
-            // --- レンダリング関数群 ---
-            const renderAll = () => {
-                renderQuizzes();
-                renderCountdowns();
-                renderSettings();
-            };
-
-            const renderQuizzes = () => {
-                const allQuizzesContainer = $('#all-quizzes');
-                const pinnedQuizzesContainer = $('#pinned-quizzes');
-                const noPinsMessage = $('#no-pins-message');
-                const noQuizzesMessage = $('#no-quizzes-message');
-                allQuizzesContainer.innerHTML = '';
-                pinnedQuizzesContainer.innerHTML = '';
-
-                let quizzesToDisplay = state.quizzes;
-                if (state.currentFilter !== 'all') {
-                    quizzesToDisplay = quizzesToDisplay.filter(q => q.subject === state.currentFilter);
-                }
-                if (state.searchQuery) {
-                    quizzesToDisplay = quizzesToDisplay.filter(q => 
-                        q.title.toLowerCase().includes(state.searchQuery) ||
-                        q.subject.toLowerCase().includes(state.searchQuery) ||
-                        q.genre.toLowerCase().includes(state.searchQuery)
-                    );
-                }
-
-                if(quizzesToDisplay.length === 0) {
-                    noQuizzesMessage.classList.remove('hidden');
+            $('#theme-purchase-confirm').addEventListener('click', e => {
+                const themeId = e.target.dataset.themeId;
+                const theme = initialData.themes[themeId];
+                if(state.profile.lp >= theme.cost) {
+                    state.profile.lp -= theme.cost;
+                    state.profile.unlockedThemes.push(themeId);
+                    state.profile.activeTheme = themeId;
+                    showToast(`「${theme.name}」を解放しました！`);
+                    saveState(); renderEngine.renderAll();
                 } else {
-                    noQuizzesMessage.classList.add('hidden');
+                    showToast('LPが足りません！');
                 }
+                $('#theme-purchase-modal').style.display = 'none';
+            });
+            $('#theme-purchase-cancel').addEventListener('click', () => $('#theme-purchase-modal').style.display = 'none');
 
-                quizzesToDisplay.forEach(quiz => {
-                    const isPinned = state.pinnedQuizzes.includes(quiz.id);
-                    const card = createQuizCard(quiz, isPinned);
-                    allQuizzesContainer.insertAdjacentHTML('beforeend', card);
-                });
-                
-                if (state.pinnedQuizzes.length > 0) {
-                    noPinsMessage.classList.add('hidden');
-                    const pinnedQuizObjects = state.pinnedQuizzes.map(id => state.quizzes.find(q => q.id === id)).filter(Boolean);
-                    pinnedQuizObjects.forEach(quiz => {
-                        const card = createQuizCard(quiz, true);
-                        pinnedQuizzesContainer.insertAdjacentHTML('beforeend', card);
-                    });
+            $('#focus-start-btn').addEventListener('click', () => {
+                focusTimer.isRunning = true;
+                focusTimer.interval = setInterval(updateFocusTimer, 1000);
+                $('#focus-start-btn').classList.add('hidden');
+                $('#focus-controls').classList.remove('hidden');
+                $('#focus-controls').classList.add('flex');
+            });
+            $('#focus-pause-btn').addEventListener('click', () => {
+                const btn = $('#focus-pause-btn');
+                if(focusTimer.isRunning) {
+                    clearInterval(focusTimer.interval);
+                    btn.innerHTML = `<i data-lucide="play" class="w-6 h-6 mr-2"></i>再開`;
                 } else {
-                    noPinsMessage.classList.remove('hidden');
+                    focusTimer.interval = setInterval(updateFocusTimer, 1000);
+                    btn.innerHTML = `<i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止`;
                 }
+                focusTimer.isRunning = !focusTimer.isRunning;
                 lucide.createIcons();
-            };
-
-            const createQuizCard = (quiz, isPinned) => `
-                <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 flex items-center justify-between quiz-card" data-url="${quiz.url}" data-title="${quiz.title}">
-                    <div>
-                        <h3 class="font-semibold text-gray-800 dark:text-gray-200">${quiz.title}</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">${quiz.subject} - ${quiz.genre}</p>
-                    </div>
-                    <button class="pin-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600" data-id="${quiz.id}">
-                        <i data-lucide="pin" class="w-5 h-5 ${isPinned ? 'text-blue-500 fill-current' : 'text-gray-400'}"></i>
-                    </button>
-                </div>`;
+            });
+            $('#focus-end-btn').addEventListener('click', () => {
+                clearInterval(focusTimer.interval);
+                const elapsed = 1500 - focusTimer.timeLeft;
+                if(elapsed > 0) {
+                     logStudyTime('focus', elapsed);
+                     addLP(Math.floor(elapsed/60), '集中モード');
+                     state.focus.totalTime += elapsed;
+                     checkTitles();
+                     saveState();
+                }
+                focusTimer.timeLeft = 1500;
+                focusTimer.isRunning = false;
+                $('#focus-timer-display').textContent = formatTime(1500);
+                $('#focus-start-btn').classList.remove('hidden');
+                $('#focus-controls').classList.add('hidden');
+                $('#focus-controls').classList.remove('flex');
+            });
             
-            const renderCountdowns = () => {
-                const list = $('#countdown-list');
-                const noCountdownMessage = $('#no-countdown-message');
-                list.innerHTML = '';
-                
-                const allCountdowns = [
-                    ...state.adminCountdowns
-                        .filter(ac => !state.dismissedAdminCountdowns.includes(ac.id))
-                        .map(c => ({...c, isAdmin: true})),
-                    ...state.userCountdowns.map(c => ({...c, isAdmin: false}))
-                ];
-
-                if(allCountdowns.length === 0) {
-                    noCountdownMessage.style.display = 'block';
-                    return;
-                }
-                noCountdownMessage.style.display = 'none';
-
-                allCountdowns.sort((a,b) => new Date(a.date) - new Date(b.date));
-
-                allCountdowns.forEach(cd => {
-                    const targetDate = new Date(cd.date + 'T23:59:59');
-                    const now = new Date();
-                    const diffTime = targetDate - now;
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    
-                    let timeLeftStr = `あと ${diffDays} 日`;
-                    if (diffDays === 0) timeLeftStr = '今日です！';
-                    if (diffDays < 0) timeLeftStr = `${Math.abs(diffDays)}日前に終了`;
-
-                    const card = `
-                    <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h3 class="font-semibold text-lg text-gray-800 dark:text-gray-200">${cd.title}</h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">${cd.date.replace(/-/g, '/')}</p>
-                            </div>
-                            <p class="text-2xl font-bold text-blue-500">${timeLeftStr}</p>
-                        </div>
-                         <div class="text-right mt-2">
-                            ${!cd.isAdmin ? `<button class="edit-countdown-btn text-sm text-gray-500 mr-2" data-id="${cd.id}">編集</button>` : ''}
-                            <button class="delete-countdown-btn text-sm text-red-500" data-id="${cd.id}" data-is-admin="${cd.isAdmin}">削除</button>
-                        </div>
-                    </div>`;
-                    list.insertAdjacentHTML('beforeend', card);
-                });
-            };
-
-            const renderAdminPanel = () => {
-                const list = $('#admin-quiz-list');
-                list.innerHTML = '';
-                state.quizzes.forEach(quiz => {
-                    const item = `
-                    <div class="bg-white dark:bg-gray-700 p-2 rounded flex justify-between items-center">
-                        <span class="truncate">${quiz.title}</span>
-                        <div>
-                            <button class="admin-edit-quiz-btn p-1" data-id="${quiz.id}"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                            <button class="admin-delete-quiz-btn p-1" data-id="${quiz.id}"><i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i></button>
-                        </div>
-                    </div>`;
-                    list.insertAdjacentHTML('beforeend', item);
-                });
-                lucide.createIcons();
-            };
-
-            const renderSettings = () => {
-                $('#countdown-notification-toggle').checked = state.settings.countdownNotifications;
-            };
-
-            // --- ヘルパー関数 ---
-            const showToast = (message) => {
-                $('#toast-message').textContent = message;
-                $('#toast').classList.remove('opacity-0');
-                setTimeout(() => $('#toast').classList.add('opacity-0'), 2000);
-            };
-
-            const openModal = (modalId) => $(`#${modalId}`).style.display = 'flex';
-            const closeModal = (modalId) => $(`#${modalId}`).style.display = 'none';
-
-            // --- イベントハンドラ ---
-            const handlePageChange = (e) => {
-                const target = e.currentTarget;
+            $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                 $$('.page').forEach(p => p.classList.remove('active'));
-                $(`#${target.dataset.page}`).classList.add('active');
+                $(`#${e.currentTarget.dataset.page}`).classList.add('active');
+                $$('.tab-btn').forEach(b => b.classList.replace('primary-text', 'text-gray-500'));
+                e.currentTarget.classList.replace('text-gray-500', 'primary-text');
+                $('#header-title').textContent = e.currentTarget.dataset.title;
+                if(e.currentTarget.dataset.page === 'my-chart-page') renderEngine.pages['my-chart-page']();
+            }));
 
-                $$('.tab-btn').forEach(btn => btn.classList.replace('text-blue-500', 'text-gray-500'));
-                target.classList.replace('text-gray-500', 'text-blue-500');
-
-                $('#header-title').textContent = target.dataset.title;
-                $('#search-button').style.display = (target.dataset.page === 'materials-page') ? 'block' : 'none';
-            };
-
-            const handleQuizClick = (e) => {
-                const card = e.target.closest('.quiz-card');
-                if (!card) return;
-                if (e.target.closest('.pin-btn')) {
-                    e.stopPropagation();
-                    const id = parseInt(e.target.closest('.pin-btn').dataset.id, 10);
-                    if (state.pinnedQuizzes.includes(id)) {
-                        state.pinnedQuizzes = state.pinnedQuizzes.filter(pId => pId !== id);
-                        showToast('ピン留めを解除しました');
-                    } else {
-                        state.pinnedQuizzes.push(id);
-                        showToast('クイズをピン留めしました！');
-                    }
-                    saveData();
-                    renderQuizzes();
-                } else {
-                    $('#quiz-title').textContent = card.dataset.title;
-                    $('#quiz-iframe').src = 'about:blank';
-                    $('#loader-container').style.display = 'flex';
-                    $('#quiz-iframe').style.visibility = 'hidden';
-                    openModal('quiz-modal');
-                    $('#quiz-iframe').src = card.dataset.url;
-                    $('#quiz-iframe').onload = () => {
-                        $('#loader-container').style.display = 'none';
-                        $('#quiz-iframe').style.visibility = 'visible';
-                    };
-                }
-            };
-            
-            // --- 初期化 & メインロジック ---
             const init = () => {
-                renderAll();
-                lucide.createIcons();
-
-                // 日付表示
-                const today = new Date();
-                $('#current-date').textContent = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日 (${'日月火水木金土'[today.getDay()]}曜日)`;
-                
-                // カウントダウンタイマー
-                setInterval(renderCountdowns, 1000 * 60); // 1分ごとに更新
-
-                // 通知チェック
-                checkCountdownNotifications();
-
-                // イベントリスナー設定
-                $$('.tab-btn').forEach(btn => btn.addEventListener('click', handlePageChange));
-                $$('.close-modal-btn').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.modal)));
-                $('#all-quizzes').addEventListener('click', handleQuizClick);
-                $('#pinned-quizzes').addEventListener('click', handleQuizClick);
-                $('.flex.space-x-2').addEventListener('click', (e) => {
-                     const target = e.target.closest('.filter-btn');
-                     if (!target) return;
-                     state.currentFilter = target.dataset.filter;
-                     $$('.filter-btn').forEach(btn => btn.classList.remove('active', 'bg-blue-500', 'text-white'));
-                     target.classList.add('active', 'bg-blue-500', 'text-white');
-                     renderQuizzes();
-                });
-
-                // 検索機能
-                $('#search-button').addEventListener('click', () => {
-                    $('#search-container').classList.remove('hidden');
-                    $('#search-input').focus();
-                });
-                $('#close-search-btn').addEventListener('click', () => {
-                    $('#search-container').classList.add('hidden');
-                    $('#search-input').value = '';
-                    state.searchQuery = '';
-                    renderQuizzes();
-                });
-                $('#search-input').addEventListener('input', (e) => {
-                    state.searchQuery = e.target.value.toLowerCase();
-                    renderQuizzes();
-                });
-
-                // カウントダウン機能
-                $('#add-countdown-btn').addEventListener('click', () => {
-                    $('#countdown-form').reset();
-                    $('#countdown-id').value = '';
-                    openModal('countdown-modal');
-                });
-
-                $('#countdown-form').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const id = $('#countdown-id').value;
-                    const newCountdown = {
-                        id: id || crypto.randomUUID(),
-                        title: $('#countdown-name').value,
-                        date: $('#countdown-date').value
-                    };
-                    if (id) { //編集
-                        state.userCountdowns = state.userCountdowns.map(cd => cd.id === id ? newCountdown : cd);
-                    } else { //新規
-                        state.userCountdowns.push(newCountdown);
-                    }
-                    saveData();
-                    renderCountdowns();
-                    closeModal('countdown-modal');
-                });
-                
-                $('#countdown-list').addEventListener('click', (e) => {
-                    const target = e.target;
-                    if(target.classList.contains('delete-countdown-btn')){
-                        const id = target.dataset.id;
-                        const isAdmin = target.dataset.isAdmin === 'true';
-                        if(isAdmin) {
-                            state.dismissedAdminCountdowns.push(parseInt(id));
-                        } else {
-                            state.userCountdowns = state.userCountdowns.filter(cd => cd.id !== id);
-                        }
-                    }
-                    if(target.classList.contains('edit-countdown-btn')){
-                        const id = target.dataset.id;
-                        const countdown = state.userCountdowns.find(cd => cd.id === id);
-                        if(countdown){
-                            $('#countdown-id').value = countdown.id;
-                            $('#countdown-name').value = countdown.title;
-                            $('#countdown-date').value = countdown.date;
-                            openModal('countdown-modal');
-                        }
-                    }
-                    saveData();
-                    renderCountdowns();
-                });
-
-                // 設定
-                $('#notification-permission-button').addEventListener('click', () => Notification.requestPermission().then(p => showToast(p === "granted" ? '通知が許可されました！' : '通知が拒否されました')));
-                $('#countdown-notification-toggle').addEventListener('change', (e) => {
-                    state.settings.countdownNotifications = e.target.checked;
-                    saveData();
-                });
-
-                // 管理者パネル
-                let tapState = { home: 0, settings: 0, timer: null };
-                const resetTapState = () => { tapState = { home: 0, settings: 0, timer: null }; };
-                $$('.tab-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const page = e.currentTarget.dataset.page;
-                        if(page === 'home-page') tapState.home++;
-                        if(page === 'settings-page') tapState.settings++;
-                        
-                        clearTimeout(tapState.timer);
-                        tapState.timer = setTimeout(resetTapState, 1000);
-
-                        if(tapState.home >= 5 && tapState.settings >= 5) {
-                            resetTapState();
-                            const pass = prompt('管理者パスワードを入力してください:');
-                            if(pass === '1234') {
-                                renderAdminPanel();
-                                openModal('admin-modal');
-                            } else if (pass) {
-                                alert('パスワードが違います。');
-                            }
-                        }
-                    });
-                });
-
-                $('#admin-add-quiz-btn').addEventListener('click', () => {
-                    $('#quiz-edit-form').reset();
-                    $('#quiz-edit-id').value = '';
-                    $('#quiz-edit-title').textContent = '新しいクイズを追加';
-                    openModal('quiz-edit-modal');
-                });
-                
-                $('#admin-quiz-list').addEventListener('click', (e) => {
-                     const editBtn = e.target.closest('.admin-edit-quiz-btn');
-                     const deleteBtn = e.target.closest('.admin-delete-quiz-btn');
-                     if(editBtn) {
-                         const id = parseInt(editBtn.dataset.id);
-                         const quiz = state.quizzes.find(q => q.id === id);
-                         $('#quiz-edit-id').value = quiz.id;
-                         $('#quiz-edit-name').value = quiz.title;
-                         $('#quiz-edit-subject').value = quiz.subject;
-                         $('#quiz-edit-genre').value = quiz.genre;
-                         $('#quiz-edit-url').value = quiz.url;
-                         $('#quiz-edit-title').textContent = 'クイズを編集';
-                         openModal('quiz-edit-modal');
-                     }
-                     if(deleteBtn) {
-                         const id = parseInt(deleteBtn.dataset.id);
-                         if(confirm('本当にこのクイズを削除しますか？')) {
-                            state.quizzes = state.quizzes.filter(q => q.id !== id);
-                            saveData();
-                            renderAdminPanel();
-                            renderQuizzes();
-                         }
-                     }
-                });
-
-                $('#quiz-edit-form').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const id = parseInt($('#quiz-edit-id').value);
-                    const quizData = {
-                        title: $('#quiz-edit-name').value,
-                        subject: $('#quiz-edit-subject').value,
-                        genre: $('#quiz-edit-genre').value,
-                        url: $('#quiz-edit-url').value,
-                    };
-                    if(id) { //編集
-                        state.quizzes = state.quizzes.map(q => q.id === id ? {...q, ...quizData} : q);
-                    } else { //新規
-                        quizData.id = state.quizzes.length > 0 ? Math.max(...state.quizzes.map(q => q.id)) + 1 : 1;
-                        state.quizzes.push(quizData);
-                    }
-                    saveData();
-                    renderAdminPanel();
-                    renderQuizzes();
-                    closeModal('quiz-edit-modal');
-                });
-                
-                $('#admin-countdown-form').addEventListener('submit', e => {
-                    e.preventDefault();
-                    const title = $('#admin-countdown-name').value;
-                    const date = $('#admin-countdown-date').value;
-                    if (title && date) {
-                        state.adminCountdowns = [{ id: 1, title, date }]; // 現在は1つのみ設定可能
-                        saveData();
-                        renderCountdowns();
-                        showToast('管理者カウントダウンを設定しました。');
-                    }
+                loadState();
+                renderEngine.renderAll();
+                let deferredPrompt;
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault(); deferredPrompt = e;
+                    $('#install-button').classList.remove('hidden');
+                    $('#install-button').onclick = () => deferredPrompt.prompt();
                 });
             };
-
-            const checkCountdownNotifications = () => {
-                if (!state.settings.countdownNotifications || Notification.permission !== 'granted') return;
-                
-                const allCountdowns = [
-                    ...state.adminCountdowns.filter(ac => !state.dismissedAdminCountdowns.includes(ac.id)),
-                    ...state.userCountdowns
-                ];
-
-                allCountdowns.forEach(cd => {
-                    const targetDate = new Date(cd.date + 'T00:00:00');
-                    const now = new Date();
-                    const diffDays = Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24));
-                    
-                    if([7, 3, 1].includes(diffDays)){
-                         new Notification(`${cd.title} まであと ${diffDays} 日です！`, {
-                            body: "準備は順調ですか？頑張りましょう！",
-                            icon: "https://placehold.co/192x192/4a90e2/ffffff?text=Q"
-                        });
-                    }
-                });
-            };
-            
             init();
         });
     </script>
