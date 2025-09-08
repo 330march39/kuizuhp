@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>クイズHP - 究極の学習パートナー</title>
 
     <!-- PWA関連 -->
@@ -67,6 +67,19 @@
             color: white;
             border-color: var(--primary-color);
         }
+        /* iPhoneなどのノッチやホームバーに対応 */
+        nav {
+            height: calc(4rem + env(safe-area-inset-bottom)); /* 4rem = h-16 */
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        main {
+            /* 5rem = pb-20 */
+            padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+        }
+        #mini-timer-container {
+            /* 5rem = bottom-20 */
+            bottom: calc(5rem + env(safe-area-inset-bottom));
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen antialiased">
@@ -81,7 +94,7 @@
             </button>
         </header>
 
-        <main class="flex-grow overflow-y-auto pb-20">
+        <main class="flex-grow overflow-y-auto">
             <div id="home-page" class="page active p-4 space-y-6">
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm text-center">
                     <p id="today-date" class="text-lg font-semibold text-gray-600 dark:text-gray-300"></p>
@@ -195,7 +208,7 @@
             </div>
         </main>
 
-        <div id="mini-timer-container" class="fixed bottom-20 left-0 right-0 max-w-lg mx-auto px-4 z-20">
+        <div id="mini-timer-container" class="fixed left-0 right-0 max-w-lg mx-auto px-4 z-20">
              <div id="mini-timer-bar" class="w-full bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg flex items-center p-2 space-x-3 cursor-pointer">
                 <div class="flex items-center space-x-3 flex-grow min-w-0">
                     <i data-lucide="timer" class="w-5 h-5 primary-text flex-shrink-0"></i>
@@ -210,7 +223,7 @@
             </div>
         </div>
 
-        <nav class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto h-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
+        <nav class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full primary-text" data-page="home-page" data-title="ホーム"><i data-lucide="home" class="w-6 h-6"></i><span class="text-xs mt-1">ホーム</span></button>
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="study-page" data-title="学習"><i data-lucide="book-marked" class="w-6 h-6"></i><span class="text-xs mt-1">学習</span></button>
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="focus-page" data-title="集中"><i data-lucide="timer" class="w-6 h-6"></i><span class="text-xs mt-1">集中</span></button>
@@ -980,4 +993,5 @@
     </script>
 </body>
 </html>
+
 
