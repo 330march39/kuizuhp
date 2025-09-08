@@ -25,7 +25,17 @@
             --primary-color: #4f46e5;
             --primary-color-hover: #4338ca;
         }
-        body { font-family: 'Inter', 'Noto Sans JP', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Inter', 'Noto Sans JP', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10+ */
+            user-select: none; /* Standard syntax */
+        }
+        img {
+            -webkit-touch-callout: none; /* iOS Safari */
+            pointer-events: none; /* Disables right click */
+        }
         .page { display: none; }
         .page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -67,7 +77,10 @@
             color: white;
             border-color: var(--primary-color);
         }
-        /* iPhoneなどのノッチやホームバーに対応 */
+        /* iPhoneなどのノッチやホームバーに対応 (Safe Area) */
+        header {
+            padding-top: env(safe-area-inset-top);
+        }
         nav {
             height: calc(4rem + env(safe-area-inset-bottom)); /* 4rem = h-16 */
             padding-bottom: env(safe-area-inset-bottom);
@@ -245,6 +258,9 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Disable right-click context menu
+            document.addEventListener('contextmenu', event => event.preventDefault());
+
             const initialData = {
                 quizzes: [
                     { id: 'math1', title: "数学 - 正負の数", subject: "数学", genre: "中1", tags: ['english1'], url: "https://docs.google.com/forms/d/e/1FAIpQLScsC0BFa_3gY-f-u4pW8Q22o_l3c0T-t_9c3z-q8pY6X-u8qQ/viewform?usp=sf_link" },
@@ -993,5 +1009,4 @@
     </script>
 </body>
 </html>
-
 
