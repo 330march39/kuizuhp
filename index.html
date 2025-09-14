@@ -317,31 +317,34 @@
                 const activeBg = initialData.backgrounds[state.profile.activeBackground];
                 const isGlobal = state.settings.backgroundScopeGlobal;
                 const hasImage = activeBg && activeBg.url;
-            
-                // 1. 最初に必ずリセット（darkクラス削除）
-                document.documentElement.classList.remove('dark');
-            
-                // 2. 壁紙tone判定
-                let effectiveTone = 'system';
-                if (isGlobal && activeBg.tone && activeBg.tone !== 'system') {
+                
+                // --- 1. テーマ（Light/Dark）の決定ロジック ---
+                let effectiveTone = 'system'; // デフォルトはOS設定に追従
+                
+                // 「全体適用」がオン、かつ壁紙に 'light' か 'dark' の指定がある場合
+                if (isGlobal && hasImage && activeBg.tone && activeBg.tone !== 'system') {
                     effectiveTone = activeBg.tone;
                 }
-            
+    
+                // <html>要素から一旦darkクラスを削除してリセット
+                document.documentElement.classList.remove('dark');
+    
                 if (effectiveTone === 'dark') {
                     document.documentElement.classList.add('dark');
                 } else if (effectiveTone === 'light') {
-                    // 何もしない（Tailwindのlightはクラス不要）
-                } else { // 'system'
+                    // lightの場合はクラス不要なので何もしない
+                } else { // 'system' の場合
                     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                         document.documentElement.classList.add('dark');
                     }
-                    // else時はlight状態になる
                 }
-            
-                // 3. 背景画像反映
+    
+                // --- 2. 背景画像の適用ロジック ---
                 if (isGlobal && hasImage) {
+                    // 全体適用の場合は#app-containerに背景を設定
                     appContainer.style.backgroundImage = `url(${activeBg.url})`;
                 } else {
+                    // 全体適用でない場合は#app-containerの背景をクリア
                     appContainer.style.backgroundImage = 'none';
                 }
             };
@@ -399,17 +402,17 @@
                         pinnedContainer.innerHTML = pinnedQuizzes.length ? pinnedQuizzes.map(q => createQuizCard(q, true)).join('') : `<p class="text-sm text-gray-500">クイズをピン留めしてすぐアクセス！</p>`;
                     },
                     // 変更後
-                    'focus-page': () => {
+                   'focus-page': () => {
                         const activeBg = initialData.backgrounds[state.profile.activeBackground];
                         const hasImage = activeBg && activeBg.url;
                         const isGlobal = state.settings.backgroundScopeGlobal;
                         
                         $$('.focus-view-bg').forEach(el => {
+                            // 「全体適用」がオフで、かつ画像がある場合のみ、集中モードの要素に直接背景を設定
                             if (!isGlobal && hasImage) {
-                                // 「全体適用」がOFFの時だけ、集中モードの要素に直接背景を設定
                                 el.style.backgroundImage = `url(${activeBg.url})`;
                             } else {
-                                // 「全体適用」がONの場合は、#app-containerの背景が見えるように自身の背景を消す
+                                // 「全体適用」がオンの場合は、#app-containerの背景が見えるように自身の背景を消す
                                 el.style.backgroundImage = 'none';
                             }
                         });
@@ -608,9 +611,9 @@
                         const bgId = backgroundBtn.dataset.bg;
                         if(state.profile.unlockedBackgrounds.includes(bgId)) {
                             state.profile.activeBackground = bgId;
-                            saveState(); 
-                            updateAppearance(); // 外観を更新
-                            renderEngine.pages['settings-page'](); // 設定ページを再描画して選択状態を反映
+                            saveState();
+                            updateAppearance(); // 新しい関数を呼び出す
+                            renderEngine.pages['settings-page'](); // 選択状態のUIを更新するために再描画
                             lucide.createIcons();
                     } else {
                         const bg = initialData.backgrounds[bgId];
@@ -641,6 +644,16 @@
                     setTimer(time);
                      $$('.timer-duration-btn').forEach(btn => btn.classList.replace('bg-white/40', 'bg-white/20'));
                     timerDurationBtn.classList.replace('bg-white/20', 'bg-white/40');
+                }
+            });
+            
+            $('#background-scope-toggle').addEventListener('change', (e) => {
+                state.settings.backgroundScopeGlobal = e.target.checked;
+                saveState();
+                updateAppearance();
+                // 集中タブが表示されている場合に備えて再描画
+                if ($('#focus-page').classList.contains('active')) {
+                    renderEngine.pages['focus-page']();
                 }
             });
             /* 変更後 (新しいイベントリスナーとして追加) */
