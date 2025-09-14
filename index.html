@@ -266,7 +266,7 @@
                     teal: { name: 'オーシャン', color: '#0d9488', hover: '#0f766e', cost: 350 },
                 },
                 backgrounds: {
-                    default: { name: 'デフォルト', url: '', cost: 0 },
+                    default: { name: 'デフォルト', url: '', cost: 0 , tone: 'system' },
                     sky: { name: '青空と流れ星', url: 'okumono_hosisoratate8.png', cost: 500, tone: 'light' },
                     night: { name: '手書きゆるドット', url: 'https://sozaino.site/wp-content/uploads/2022/01/yurudot32.png', cost: 700, tone: 'light' },
                     sdotb: { name: 'シャワードット(ブルー)', url: 'https://sozaino.site/wp-content/uploads/2020/11/sai-4.png', cost: 700, tone: 'light' },
@@ -311,8 +311,6 @@
                 }
             };
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
-
-            // ▼▼▼ 既存の applyTheme や applyAppBackground 関連のコードをすべて削除し、以下に置き換える ▼▼▼
             
             const updateAppearance = () => {
                 const appContainer = $('#app-container');
@@ -321,9 +319,10 @@
                 const hasImage = activeBg && activeBg.url;
             
                 // --- 1. アプリ全体のテーマ（ライト/ダーク）を決定 ---
-                let effectiveTone = null;
-                if (isGlobal && hasImage && activeBg.tone) {
-                    // 「全体適用」がONで、かつ壁紙にトーンが設定されている場合、そのトーンを優先する
+                let effectiveTone = 'system'; // デフォルトは'system'
+                if (isGlobal && activeBg.tone) {
+                    // 「全体適用」がONで、かつ壁紙にtoneが設定されていれば、その値を採用
+                    // (hasImage条件を削除し、'default'の場合もtoneを読めるようにする)
                     effectiveTone = activeBg.tone;
                 }
             
@@ -331,8 +330,7 @@
                     document.documentElement.classList.add('dark');
                 } else if (effectiveTone === 'light') {
                     document.documentElement.classList.remove('dark');
-                } else {
-                    // 壁紙の指定がない場合は、OSの設定に従う
+                } else { // 'system' または想定外の値の場合はOS設定に従う
                     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                         document.documentElement.classList.add('dark');
                     } else {
@@ -342,10 +340,8 @@
             
                 // --- 2. アプリ全体の壁紙画像を適用 ---
                 if (isGlobal && hasImage) {
-                    // 「全体適用」がONなら、#app-container に背景画像を設定
                     appContainer.style.backgroundImage = `url(${activeBg.url})`;
                 } else {
-                    // OFFなら背景画像を削除
                     appContainer.style.backgroundImage = 'none';
                 }
             };
