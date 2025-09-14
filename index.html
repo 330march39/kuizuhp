@@ -312,7 +312,8 @@
             };
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
             
-            // 既存の updateAppearance 関数を、この新しいコードで完全に置き換えてください。
+            // 既存の updateAppearance 関数を、この最終版のコードで完全に置き換えてください。
+    
             const updateAppearance = () => {
                 const appContainer = $('#app-container');
                 const activeBgId = state.profile.activeBackground;
@@ -320,16 +321,17 @@
                 const isGlobal = state.settings.backgroundScopeGlobal;
                 const hasImage = activeBg && activeBg.url;
     
-                // --- 1. テーマ（Light/Dark）の決定ロジック ---
+                // --- 1. テーマ（Light/Dark）の決定ロジック【最終修正版】 ---
                 let effectiveTone;
     
                 // ■ 修正点：
-                // デフォルトの壁紙が選択されている場合のみ、OSのテーマ設定('system')に連動させます。
-                if (activeBgId === 'default') {
+                // デフォルト壁紙が選択されている場合、または「壁紙をアプリ全体に適用」がオフの場合
+                // この2つのケースでは、OS（端末）のテーマ設定('system')を適用します。
+                if (activeBgId === 'default' || !isGlobal) {
                     effectiveTone = 'system';
                 } else {
-                    // デフォルト以外の壁紙（画像あり）が選択されている場合は、
-                    // 「全体適用」がオフでも、壁紙が持つ 'tone' (light/dark) をアプリ全体のテーマとして優先します。
+                    // 上記以外（＝カスタム壁紙が選択され、かつ「全体適用」がオン）の場合のみ、
+                    // 壁紙が持つ 'tone' (light/dark) をアプリ全体のテーマとして優先します。
                     effectiveTone = activeBg.tone;
                 }
     
@@ -347,14 +349,15 @@
                     }
                 }
     
-                // --- 3. 背景画像の適用ロジック（ここは変更ありません） ---
-                // 「壁紙をアプリ全体に適用」がオンの場合のみ、コンテナ全体に背景画像を設定します。
+                // --- 3. 背景画像の適用ロジック ---
+                // 「全体適用」がオンで、かつ画像がある場合のみコンテナに背景画像を設定します
                 if (isGlobal && hasImage) {
                     appContainer.style.backgroundImage = `url(${activeBg.url})`;
                 } else {
                     appContainer.style.backgroundImage = 'none';
                 }
             };
+            
             // OSのテーマ変更を検知するリスナー
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
                 updateAppearance();
