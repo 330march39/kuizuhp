@@ -74,9 +74,20 @@
             background-position: center;
             background-repeat: no-repeat;
         }
+        /* OSやブラウザのプリファレンスによる自動ダークモード適用を無効化 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                color-scheme: light !important;
+            }
+            body {
+                background-color: #fff !important; /* ライトモードの背景色 */
+                color: #000 !important; /* ライトモードの文字色 */
+            }
+        }
+
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen antialiased">
+<body class="bg-gray-100 text-gray-800 overflow-hidden h-screen antialiased">
 
     <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto shadow-2xl">
         
@@ -333,34 +344,36 @@
                 // --- 1. テーマ決定ロジック ---
                 let effectiveTone;
             
-                // 手動テーマ設定が有効になる条件（＝トグルが表示される条件）を定義
+                // 手動テーマ設定が有効になる条件（＝トグルが表示される条件）
                 const isManualThemeMode = (activeBgId === 'default' || !isGlobal);
             
                 if (isManualThemeMode) {
-                    // 条件に合致する場合、手動設定トグルの状態に従う (trueならdark, falseならlight)
                     effectiveTone = state.settings.manualDarkMode ? 'dark' : 'light';
                 } else {
-                    // 条件外（カスタム壁紙で「全体適用」オン）の場合、壁紙のtoneに従う
                     effectiveTone = activeBg.tone;
                 }
             
-                // --- 2. 決定したテーマをHTML要素に適用 ---
+                // --- 2. 端末の prefers-color-scheme の影響を排除（一時的に解除） ---
+                // ここで HTML の classList の dark をリセットし、JS制御のみにする
                 document.documentElement.classList.remove('dark');
+                document.documentElement.style.colorScheme = '';
+            
+                // --- 3. 決定したテーマをHTML要素に適用 ---
                 if (effectiveTone === 'dark') {
                     document.documentElement.classList.add('dark');
-                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.style.colorScheme = 'dark';
                 } else {
-                    document.documentElement.classList.remove('dark');
-                    document.documentElement.setAttribute('data-theme', 'light');
+                    document.documentElement.style.colorScheme = 'light';
                 }
             
-                // --- 3. 背景画像の適用ロジック ---
+                // --- 4. 背景画像の適用ロジック ---
                 if (isGlobal && hasImage) {
                     appContainer.style.backgroundImage = `url(${activeBg.url})`;
                 } else {
                     appContainer.style.backgroundImage = 'none';
                 }
             };
+
 
             const updateLpDisplay = () => {
                 $('#lp-display').textContent = `${state.profile.lp} LP`;
