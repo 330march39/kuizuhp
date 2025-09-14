@@ -318,32 +318,27 @@
                 const isGlobal = state.settings.backgroundScopeGlobal;
                 const hasImage = activeBg && activeBg.url;
             
-                // --- 1. アプリ全体のテーマ（ライト/ダーク）を決定 ---
-                let effectiveTone = 'system'; // システム設定デフォルト
+                // 1. 最初に必ずリセット（darkクラス削除）
+                document.documentElement.classList.remove('dark');
             
-                // 画像壁紙&全体適用ONなら、toneで上書き（system以外）
+                // 2. 壁紙tone判定
+                let effectiveTone = 'system';
                 if (isGlobal && activeBg.tone && activeBg.tone !== 'system') {
                     effectiveTone = activeBg.tone;
                 }
             
-                // <--- ここを必ず毎回リセットするように修正 --->
-                document.documentElement.classList.remove('dark');
-                document.documentElement.classList.remove('light'); // 明示的にlight除去したい場合
                 if (effectiveTone === 'dark') {
                     document.documentElement.classList.add('dark');
                 } else if (effectiveTone === 'light') {
-                    document.documentElement.classList.remove('dark');
-                    // ここはTailwindではlightクラス不要だが、明示したい場合はadd('light')
-                } else {
-                    // systemの場合
+                    // 何もしない（Tailwindのlightはクラス不要）
+                } else { // 'system'
                     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                         document.documentElement.classList.add('dark');
-                    } else {
-                        document.documentElement.classList.remove('dark');
                     }
+                    // else時はlight状態になる
                 }
             
-                // --- 2. アプリ全体の壁紙画像を適用 ---
+                // 3. 背景画像反映
                 if (isGlobal && hasImage) {
                     appContainer.style.backgroundImage = `url(${activeBg.url})`;
                 } else {
@@ -351,7 +346,6 @@
                 }
             };
 
-            
             // OSのテーマ変更を検知するリスナー
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
                 updateAppearance();
