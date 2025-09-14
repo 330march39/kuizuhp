@@ -204,17 +204,6 @@
             <div id="settings-page" class="page p-4 space-y-4">
                 <h2 class="text-2xl font-bold mb-2">設定</h2>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
-                    <h3 class="font-semibold mb-2">外観</h3>
-                    <div class="flex items-center justify-between">
-                        <label for="theme-selector-dropdown" class="text-gray-700 dark:text-gray-300">表示モード</label>
-                        <select id="theme-selector-dropdown" class="p-2 border rounded dark:bg-gray-800 dark:border-gray-600">
-                            <option value="system">端末に合わせる</option>
-                            <option value="light">ライト</option>
-                            <option value="dark">ダーク</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                     <h3 class="font-semibold mb-2">通知設定</h3>
                     <button id="notification-permission-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center mb-4"><i data-lucide="bell-ring" class="w-5 h-5 mr-2"></i>ブラウザ通知を許可</button>
                     <div class="flex items-center justify-between"><p>復習リマインダー通知</p><input type="checkbox" id="review-notification-toggle" class="toggle-checkbox"></div>
@@ -345,57 +334,46 @@
             };
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
 
-            // 変更後
-            const applyAppBackground = () => {
+            // ▼▼▼ 既存の applyTheme と applyAppBackground を削除し、以下を設置 ▼▼▼
+            const updateAppearance = () => {
+                // 現在の状態を取得
                 const appContainer = $('#app-container');
                 const activeBg = initialData.backgrounds[state.profile.activeBackground];
-                const imageUrl = (activeBg && activeBg.url) ? `url(${activeBg.url})` : 'none';
-            
-                // 既存の文字色クラスを一旦リセット
-                appContainer.classList.remove('text-on-dark-bg', 'text-on-light-bg');
-            
-                if (state.settings.backgroundScopeGlobal && activeBg && activeBg.url) {
-                    // グローバル設定ON かつ 背景画像がある場合
-                    appContainer.style.backgroundImage = imageUrl;
-                    // toneに基づいて文字色クラスを付与
-                    if (activeBg.tone === 'dark') {
-                        appContainer.classList.add('text-on-dark-bg');
-                    } else {
-                        appContainer.classList.add('text-on-light-bg');
-                    }
-                    $$('.focus-view-bg').forEach(el => el.style.backgroundImage = 'none');
-                } else {
-                    // それ以外の場合は背景画像を解除
-                    appContainer.style.backgroundImage = 'none';
-                }
-            };
-            /* 変更後 (applyAppBackground 関数の後あたりに追加) */
-            const applyTheme = () => {
-                const theme = state.settings.theme;
+                const isGlobal = state.settings.backgroundScopeGlobal;
                 const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const hasImage = activeBg && activeBg.url;
             
-                if (theme === 'dark') {
-                    // 'ダーク'が選択された場合
+                // --- 1. テーマ（ライト/ダーク）を決定して適用 ---
+                let themeToApply = 'system'; // デフォルトは端末設定
+                if (isGlobal && hasImage) {
+                    // 全体に適用ON かつ 画像壁紙の場合、壁紙のトーンを優先
+                    themeToApply = activeBg.tone;
+                }
+            
+                if (themeToApply === 'dark') {
                     document.documentElement.classList.add('dark');
-                } else if (theme === 'light') {
-                    // 'ライト'が選択された場合
+                } else if (themeToApply === 'light') {
                     document.documentElement.classList.remove('dark');
-                } else {
-                    // '端末に合わせる'が選択された場合
+                } else { // 'system' の場合
                     if (isSystemDark) {
                         document.documentElement.classList.add('dark');
                     } else {
                         document.documentElement.classList.remove('dark');
                     }
                 }
-            };
             
-            // プルダウン操作時のリスナー
-            $('#theme-selector-dropdown').addEventListener('change', (e) => {
-                state.settings.theme = e.target.value;
-                saveState();
-                applyTheme();
-            });
+                // --- 2. 壁紙と文字色を適用 ---
+                appContainer.classList.remove('text-on-dark-bg', 'text-on-light-bg');
+            
+                if (isGlobal && hasImage) {
+                    // 全体に適用ONなら、壁紙と専用文字色を適用
+                    appContainer.style.backgroundImage = `url(${activeBg.url})`;
+                    appContainer.classList.add(activeBg.tone === 'dark' ? 'text-on-dark-bg' : 'text-on-light-bg');
+                } else {
+                    // それ以外は、アプリ全体の壁紙は解除
+                    appContainer.style.backgroundImage = 'none';
+                }
+            };
             
             // OSのテーマ変更を検知するリスナー
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
@@ -1095,8 +1073,6 @@
                     installBtn.onclick = () => deferredPrompt.prompt();
                 });
                 $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
-                $('#theme-selector-dropdown').value = state.settings.theme; // ← 追加
-                applyTheme(); // ← 追加
                 applyAppBackground();
             };
             init();
