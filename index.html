@@ -372,10 +372,21 @@
             /* 変更後 (applyAppBackground 関数の後あたりに追加) */
             const applyTheme = () => {
                 const theme = state.settings.theme;
-                if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+                if (theme === 'dark') {
+                    // 'ダーク'が選択された場合
                     document.documentElement.classList.add('dark');
-                } else {
+                } else if (theme === 'light') {
+                    // 'ライト'が選択された場合
                     document.documentElement.classList.remove('dark');
+                } else {
+                    // '端末に合わせる'が選択された場合
+                    if (isSystemDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
                 }
             };
             
