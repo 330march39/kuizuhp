@@ -348,6 +348,10 @@
                 document.documentElement.classList.remove('dark');
                 if (effectiveTone === 'dark') {
                     document.documentElement.classList.add('dark');
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.setAttribute('data-theme', 'light');
                 }
             
                 // --- 3. 背景画像の適用ロジック ---
@@ -667,17 +671,6 @@
                 state.settings.manualDarkMode = e.target.checked;
                 saveState();
                 updateAppearance(); // 外観を即時更新
-            });
-            
-            $('#background-scope-toggle').addEventListener('change', (e) => {
-                state.settings.backgroundScopeGlobal = e.target.checked;
-                saveState();
-                updateAppearance();
-                renderEngine.pages['settings-page'](); // トグルの表示/非表示を更新
-                // 集中タブが表示されている場合に備えて再描画
-                if ($('#focus-page').classList.contains('active')) {
-                    renderEngine.pages['focus-page']();
-                }
             });
             
             /* 変更後 (新しいイベントリスナーとして追加) */
