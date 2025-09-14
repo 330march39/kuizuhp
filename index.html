@@ -319,19 +319,23 @@
                 const hasImage = activeBg && activeBg.url;
             
                 // --- 1. アプリ全体のテーマ（ライト/ダーク）を決定 ---
-                let effectiveTone = 'system'; // まずOS設定に従うのを基本とする
+                let effectiveTone = 'system'; // システム設定デフォルト
             
-                // 「全体適用」がONで、かつ壁紙のテーマ指定が 'system' 以外の場合のみ上書きする
+                // 画像壁紙&全体適用ONなら、toneで上書き（system以外）
                 if (isGlobal && activeBg.tone && activeBg.tone !== 'system') {
                     effectiveTone = activeBg.tone;
                 }
             
-                // --- テーマの適用 ---
+                // <--- ここを必ず毎回リセットするように修正 --->
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.remove('light'); // 明示的にlight除去したい場合
                 if (effectiveTone === 'dark') {
                     document.documentElement.classList.add('dark');
                 } else if (effectiveTone === 'light') {
                     document.documentElement.classList.remove('dark');
-                } else { // 'system' の場合
+                    // ここはTailwindではlightクラス不要だが、明示したい場合はadd('light')
+                } else {
+                    // systemの場合
                     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                         document.documentElement.classList.add('dark');
                     } else {
@@ -346,6 +350,7 @@
                     appContainer.style.backgroundImage = 'none';
                 }
             };
+
             
             // OSのテーマ変更を検知するリスナー
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
