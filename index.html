@@ -357,11 +357,6 @@
                     appContainer.style.backgroundImage = 'none';
                 }
             };
-            
-            // OSのテーマ変更を検知するリスナー
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-                updateAppearance();
-            });
 
             const updateLpDisplay = () => {
                 $('#lp-display').textContent = `${state.profile.lp} LP`;
@@ -673,15 +668,6 @@
                 updateAppearance(); // 外観を即時更新
             });
             
-            $('#background-scope-toggle').addEventListener('change', (e) => {
-                state.settings.backgroundScopeGlobal = e.target.checked;
-                saveState();
-                updateAppearance();
-                // 集中タブが表示されている場合に備えて再描画
-                if ($('#focus-page').classList.contains('active')) {
-                    renderEngine.pages['focus-page']();
-                }
-            });
             /* 変更後 (新しいイベントリスナーとして追加) */
             $('#background-scope-toggle').addEventListener('change', (e) => {
                 state.settings.backgroundScopeGlobal = e.target.checked;
