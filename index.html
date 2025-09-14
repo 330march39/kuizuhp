@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>クイズHP - 究極の学習パートナー</title>
 
     <!-- PWA関連 -->
@@ -21,24 +21,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        main {
-            min-height: 0;
-        }
         :root {
             --primary-color: #4f46e5;
             --primary-color-hover: #4338ca;
         }
-        body { 
-            font-family: 'Inter', 'Noto Sans JP', sans-serif; 
-            -webkit-tap-highlight-color: transparent;
-            -webkit-user-select: none; /* Safari */
-            -ms-user-select: none; /* IE 10+ */
-            user-select: none; /* Standard syntax */
-        }
-        img {
-            -webkit-touch-callout: none; /* iOS Safari */
-            pointer-events: none; /* Disables right click */
-        }
+        body { font-family: 'Inter', 'Noto Sans JP', sans-serif; -webkit-tap-highlight-color: transparent; }
         .page { display: none; }
         .page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -80,29 +67,6 @@
             color: white;
             border-color: var(--primary-color);
         }
-        /* iPhoneなどのノッチやホームバーに対応 (Safe Area) */
-        header {
-            padding-top: env(safe-area-inset-top);
-        }
-        /* --- 修正点: 上部セーフエリア --- */
-        #quiz-modal header {
-            /* p-3(0.75rem)の余白に加えてセーフエリア分を確保します */
-            padding-top: calc(0.75rem + env(safe-area-inset-top));
-        }
-        /* --- 修正点: 下部タブバー --- */
-        nav {
-            /* heightを削除し、paddingで高さを制御 */
-            padding-top: 0.5rem;
-            padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
-        }
-        main {
-            /* navの高さ変更に合わせて調整 (旧5rem) */
-            padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
-        }
-        #mini-timer-container {
-            /* navの高さ変更に合わせて調整 (旧5rem) */
-            bottom: calc(4.5rem + env(safe-area-inset-bottom));
-        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen antialiased">
@@ -117,7 +81,7 @@
             </button>
         </header>
 
-        <main class="flex-grow overflow-y-auto">
+        <main class="flex-grow overflow-y-auto pb-20">
             <div id="home-page" class="page active p-4 space-y-6">
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm text-center">
                     <p id="today-date" class="text-lg font-semibold text-gray-600 dark:text-gray-300"></p>
@@ -231,7 +195,7 @@
             </div>
         </main>
 
-        <div id="mini-timer-container" class="fixed left-0 right-0 max-w-lg mx-auto px-4 z-20">
+        <div id="mini-timer-container" class="fixed bottom-20 left-0 right-0 max-w-lg mx-auto px-4 z-20">
              <div id="mini-timer-bar" class="w-full bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg flex items-center p-2 space-x-3 cursor-pointer">
                 <div class="flex items-center space-x-3 flex-grow min-w-0">
                     <i data-lucide="timer" class="w-5 h-5 primary-text flex-shrink-0"></i>
@@ -246,7 +210,7 @@
             </div>
         </div>
 
-        <nav class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
+        <nav class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto h-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full primary-text" data-page="home-page" data-title="ホーム"><i data-lucide="home" class="w-6 h-6"></i><span class="text-xs mt-1">ホーム</span></button>
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="study-page" data-title="学習"><i data-lucide="book-marked" class="w-6 h-6"></i><span class="text-xs mt-1">学習</span></button>
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="focus-page" data-title="集中"><i data-lucide="timer" class="w-6 h-6"></i><span class="text-xs mt-1">集中</span></button>
@@ -268,9 +232,6 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Disable right-click context menu
-            document.addEventListener('contextmenu', event => event.preventDefault());
-
             const initialData = {
                 quizzes: [
                     { id: 'math1', title: "数学 - 正負の数", subject: "数学", genre: "中1", tags: ['english1'], url: "https://docs.google.com/forms/d/e/1FAIpQLScsC0BFa_3gY-f-u4pW8Q22o_l3c0T-t_9c3z-q8pY6X-u8qQ/viewform?usp=sf_link" },
@@ -433,9 +394,9 @@
                             const bg = initialData.backgrounds[id];
                             const isActive = state.profile.activeBackground === id;
                              return `<div class="text-center">
-                                 <button class="background-btn w-full h-20 rounded-lg border-4 ${isActive ? 'border-blue-500' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}"></button>
-                                 <p class="text-xs mt-1">${bg.name}</p>
-                             </div>`;
+                                <button class="background-btn w-full h-20 rounded-lg border-4 ${isActive ? 'border-blue-500' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}"></button>
+                                <p class="text-xs mt-1">${bg.name}</p>
+                            </div>`;
                         }).join('') || `<p class="text-sm text-gray-500">マイステータスから背景を交換できます。</p>`;
                     }
                 },
@@ -637,11 +598,11 @@
                 $('#modal-background-selector').innerHTML = Object.entries(initialData.backgrounds).map(([id, bg]) => {
                      const isUnlocked = state.profile.unlockedBackgrounds.includes(id);
                      return `<div class="text-center">
-                             <button class="background-btn w-full h-16 rounded-lg border-2 ${isUnlocked ? 'border-green-400' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}">
-                                  ${!isUnlocked ? `<div class="absolute inset-0 bg-black/60 flex items-center justify-center rounded-md"><i data-lucide="lock" class="w-6 h-6 text-white"></i></div>` : ''}
-                             </button>
-                             <p class="text-xs mt-1">${isUnlocked ? bg.name : `${bg.cost} LP`}</p>
-                         </div>`;
+                                <button class="background-btn w-full h-16 rounded-lg border-2 ${isUnlocked ? 'border-green-400' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}">
+                                     ${!isUnlocked ? `<div class="absolute inset-0 bg-black/60 flex items-center justify-center rounded-md"><i data-lucide="lock" class="w-6 h-6 text-white"></i></div>` : ''}
+                                </button>
+                                <p class="text-xs mt-1">${isUnlocked ? bg.name : `${bg.cost} LP`}</p>
+                            </div>`;
                 }).join('');
                 
                 const titlesList = $('#modal-titles-list');
