@@ -74,6 +74,28 @@
             background-position: center;
             background-repeat: no-repeat;
         }
+        /* 変更後*/
+        .text-on-dark-bg,
+        .text-on-dark-bg h1, .text-on-dark-bg h2, .text-on-dark-bg h3 {
+            color: #f1f5f9; /* slate-100 */
+        }
+        .text-on-dark-bg p, .text-on-dark-bg span, .text-on-dark-bg label {
+            color: #cbd5e1; /* slate-300 */
+        }
+        .text-on-dark-bg .primary-text {
+            color: #a5b4fc !important; /* indigo-300 */
+        }
+        
+        .text-on-light-bg,
+        .text-on-light-bg h1, .text-on-light-bg h2, .text-on-light-bg h3 {
+            color: #1e293b; /* slate-800 */
+        }
+        .text-on-light-bg p, .text-on-light-bg span, .text-on-light-bg label {
+            color: #475569; /* slate-600 */
+        }
+        .text-on-light-bg .primary-text {
+            /* デフォルトのprimary-colorを使用するため指定なし */
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen antialiased">
@@ -182,6 +204,17 @@
             <div id="settings-page" class="page p-4 space-y-4">
                 <h2 class="text-2xl font-bold mb-2">設定</h2>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
+                    <h3 class="font-semibold mb-2">外観</h3>
+                    <div class="flex items-center justify-between">
+                        <label for="theme-selector-dropdown" class="text-gray-700 dark:text-gray-300">表示モード</label>
+                        <select id="theme-selector-dropdown" class="p-2 border rounded dark:bg-gray-800 dark:border-gray-600">
+                            <option value="system">端末に合わせる</option>
+                            <option value="light">ライト</option>
+                            <option value="dark">ダーク</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                     <h3 class="font-semibold mb-2">通知設定</h3>
                     <button id="notification-permission-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center mb-4"><i data-lucide="bell-ring" class="w-5 h-5 mr-2"></i>ブラウザ通知を許可</button>
                     <div class="flex items-center justify-between"><p>復習リマインダー通知</p><input type="checkbox" id="review-notification-toggle" class="toggle-checkbox"></div>
@@ -267,10 +300,10 @@
                 },
                 backgrounds: {
                     default: { name: 'デフォルト', url: '', cost: 0 },
-                    sky: { name: '青空と流れ星', url: 'okumono_hosisoratate8.png', cost: 500 },
-                    night: { name: '手書きゆるドット', url: 'https://sozaino.site/wp-content/uploads/2022/01/yurudot32.png', cost: 700 },
-                    sdotb: { name: 'シャワードット(ブルー)', url: 'https://sozaino.site/wp-content/uploads/2020/11/sai-4.png', cost: 700 },
-                    utyuu: { name: '壮大な宇宙', url: 'https://sozaino.site/wp-content/uploads/2021/02/utyuu.jpg', cost: 700 },
+                    sky: { name: '青空と流れ星', url: 'okumono_hosisoratate8.png', cost: 500, tone: 'light' },
+                    night: { name: '手書きゆるドット', url: 'https://sozaino.site/wp-content/uploads/2022/01/yurudot32.png', cost: 700, tone: 'light' },
+                    sdotb: { name: 'シャワードット(ブルー)', url: 'https://sozaino.site/wp-content/uploads/2020/11/sai-4.png', cost: 700, tone: 'light' },
+                    utyuu: { name: '壮大な宇宙', url: 'https://sozaino.site/wp-content/uploads/2021/02/utyuu.jpg', cost: 700, tone: 'dark' },
                 }
             };
 
@@ -299,7 +332,7 @@
                     countdowns: [],
                     focus: { totalTime: 0, mode: 'timer' },
                     studyLog: {}, 
-                    settings: { reviewNotifications: true, backgroundScopeGlobal: true },
+                    settings: { reviewNotifications: true, backgroundScopeGlobal: true, theme: 'system' },
                     lastLogin: null,
                     lastNotificationCheck: new Date().toISOString(),
                 };
@@ -318,16 +351,47 @@
                 const activeBg = initialData.backgrounds[state.profile.activeBackground];
                 const imageUrl = (activeBg && activeBg.url) ? `url(${activeBg.url})` : 'none';
             
-                if (state.settings.backgroundScopeGlobal) {
-                    // スイッチがONならアプリ全体に適用
+                // 既存の文字色クラスを一旦リセット
+                appContainer.classList.remove('text-on-dark-bg', 'text-on-light-bg');
+            
+                if (state.settings.backgroundScopeGlobal && activeBg && activeBg.url) {
+                    // グローバル設定ON かつ 背景画像がある場合
                     appContainer.style.backgroundImage = imageUrl;
-                    // 集中タブ側の背景はクリアする
+                    // toneに基づいて文字色クラスを付与
+                    if (activeBg.tone === 'dark') {
+                        appContainer.classList.add('text-on-dark-bg');
+                    } else {
+                        appContainer.classList.add('text-on-light-bg');
+                    }
                     $$('.focus-view-bg').forEach(el => el.style.backgroundImage = 'none');
                 } else {
-                    // スイッチがOFFならアプリ全体の背景は解除
+                    // それ以外の場合は背景画像を解除
                     appContainer.style.backgroundImage = 'none';
                 }
             };
+            /* 変更後 (applyAppBackground 関数の後あたりに追加) */
+            const applyTheme = () => {
+                const theme = state.settings.theme;
+                if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            };
+            
+            // プルダウン操作時のリスナー
+            $('#theme-selector-dropdown').addEventListener('change', (e) => {
+                state.settings.theme = e.target.value;
+                saveState();
+                applyTheme();
+            });
+            
+            // OSのテーマ変更を検知するリスナー
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                if (state.settings.theme === 'system') {
+                    applyTheme();
+                }
+            });
 
             const updateLpDisplay = () => {
                 $('#lp-display').textContent = `${state.profile.lp} LP`;
@@ -1020,6 +1084,8 @@
                     installBtn.onclick = () => deferredPrompt.prompt();
                 });
                 $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
+                $('#theme-selector-dropdown').value = state.settings.theme; // ← 追加
+                applyTheme(); // ← 追加
                 applyAppBackground();
             };
             init();
