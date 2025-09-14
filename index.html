@@ -257,7 +257,7 @@
                 },
                 backgrounds: {
                     default: { name: 'デフォルト', url: '', cost: 0 },
-                    sky: { name: '青空と流れ星', url: 'image_542fdb.png', cost: 500 },
+                    sky: { name: '青空と流れ星', url: 'okumono_hosisoratate8.png', cost: 500 },
                     night: { name: '静かな夜', url: 'https://placehold.co/500x900/0f172a/e2e8f0?text=Night', cost: 700 },
                 }
             };
@@ -293,7 +293,7 @@
                 };
                 state = JSON.parse(localStorage.getItem('quizAppUltimateV8')) || defaultState;
                 if(state.lastLogin !== new Date().toDateString()){
-                    addLP(10, 'ログインボーナス', false);
+                    addLP(10000, 'ログインボーナス', false);
                     state.lastLogin = new Date().toDateString();
                     saveState();
                 }
