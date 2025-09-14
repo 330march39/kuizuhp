@@ -312,43 +312,43 @@
             };
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
 
-            // ▼▼▼ 既存の applyTheme と applyAppBackground を削除し、以下を設置 ▼▼▼
+            // ▼▼▼ 既存の applyTheme や applyAppBackground 関連のコードをすべて削除し、以下に置き換える ▼▼▼
+            
             const updateAppearance = () => {
-                // 現在の状態を取得
                 const appContainer = $('#app-container');
                 const activeBg = initialData.backgrounds[state.profile.activeBackground];
                 const isGlobal = state.settings.backgroundScopeGlobal;
-                const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 const hasImage = activeBg && activeBg.url;
             
-                // --- 1. テーマ（ライト/ダーク）を決定して適用 ---
-                let themeToApply = 'system'; // デフォルトは端末設定
-                if (isGlobal && hasImage) {
-                    // 全体に適用ON かつ 画像壁紙の場合、壁紙のトーンを優先
-                    themeToApply = activeBg.tone;
+                // --- 1. アプリ全体のテーマ（ライト/ダーク）を決定 ---
+                let effectiveTone = null;
+                if (isGlobal && hasImage && activeBg.tone) {
+                    // 「全体適用」がONで、かつ壁紙にトーンが設定されている場合、そのトーンを優先する
+                    effectiveTone = activeBg.tone;
                 }
             
-                if (themeToApply === 'dark') {
+                if (effectiveTone === 'dark') {
                     document.documentElement.classList.add('dark');
-                } else if (themeToApply === 'light') {
+                } else if (effectiveTone === 'light') {
                     document.documentElement.classList.remove('dark');
-                } else { // 'system' の場合
-                    if (isSystemDark) {
+                } else {
+                    // 壁紙の指定がない場合は、OSの設定に従う
+                    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                         document.documentElement.classList.add('dark');
                     } else {
                         document.documentElement.classList.remove('dark');
                     }
                 }
             
-                // --- 2. 壁紙画像を適用 ---
-                    if (isGlobal && hasImage) {
-                        // 「全体に適用」がONなら、壁紙を表示
-                        appContainer.style.backgroundImage = `url(${activeBg.url})`;
-                    } else {
-                        // それ以外は、アプリ全体の壁紙は表示しない
-                        appContainer.style.backgroundImage = 'none';
-                    }
-                };
+                // --- 2. アプリ全体の壁紙画像を適用 ---
+                if (isGlobal && hasImage) {
+                    // 「全体適用」がONなら、#app-container に背景画像を設定
+                    appContainer.style.backgroundImage = `url(${activeBg.url})`;
+                } else {
+                    // OFFなら背景画像を削除
+                    appContainer.style.backgroundImage = 'none';
+                }
+            };
             
             // OSのテーマ変更を検知するリスナー
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
@@ -404,14 +404,19 @@
                     },
                     // 変更後
                     'focus-page': () => {
-                        // スイッチがOFFの時だけ、集中タブに背景を適用する
-                        if (!state.settings.backgroundScopeGlobal) {
-                            const activeBg = initialData.backgrounds[state.profile.activeBackground];
-                            const imageUrl = (activeBg && activeBg.url) ? `url(${activeBg.url})` : 'none';
-                            $$('.focus-view-bg').forEach(el => {
-                                el.style.backgroundImage = imageUrl;
-                            });
-                        }
+                        const activeBg = initialData.backgrounds[state.profile.activeBackground];
+                        const hasImage = activeBg && activeBg.url;
+                        const isGlobal = state.settings.backgroundScopeGlobal;
+                        
+                        $$('.focus-view-bg').forEach(el => {
+                            if (!isGlobal && hasImage) {
+                                // 「全体適用」がOFFの時だけ、集中モードの要素に直接背景を設定
+                                el.style.backgroundImage = `url(${activeBg.url})`;
+                            } else {
+                                // 「全体適用」がONの場合は、#app-containerの背景が見えるように自身の背景を消す
+                                el.style.backgroundImage = 'none';
+                            }
+                        });
                     },
                     'my-chart-page': () => {
                         const subjects = [...new Set(initialData.quizzes.map(q => q.subject))];
@@ -608,8 +613,8 @@
                         if(state.profile.unlockedBackgrounds.includes(bgId)) {
                             state.profile.activeBackground = bgId;
                             saveState(); 
-                            updateAppearance(); // ← 新しい関数名に修正
-                            renderEngine.pages['settings-page']();
+                            updateAppearance(); // 外観を更新
+                            renderEngine.pages['settings-page'](); // 設定ページを再描画して選択状態を反映
                             lucide.createIcons();
                     } else {
                         const bg = initialData.backgrounds[bgId];
