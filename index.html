@@ -191,8 +191,13 @@
                      <div id="theme-selector" class="grid grid-cols-4 gap-4"></div>
                 </div>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
-                     <h3 class="font-semibold mb-2">アプリの壁紙を選択</h3>
-                     <div id="background-selector" class="grid grid-cols-3 gap-4"></div>
+                    <h3 class="font-semibold mb-2">アプリの壁紙を選択</h3>
+                    <div id="background-selector" class="grid grid-cols-3 gap-4"></div>
+                    <hr class="my-4 border-gray-200 dark:border-gray-600">
+                    <div class="flex items-center justify-between">
+                        <p class="font-semibold">壁紙をアプリ全体に適用</p>
+                        <input type="checkbox" id="background-scope-toggle" class="toggle-checkbox">
+                    </div>
                 </div>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                     <h3 class="font-semibold mb-2">アプリのインストール</h3>
@@ -292,7 +297,7 @@
                     countdowns: [],
                     focus: { totalTime: 0, mode: 'timer' },
                     studyLog: {}, 
-                    settings: { reviewNotifications: true },
+                    settings: { reviewNotifications: true, backgroundScopeGlobal: true },
                     lastLogin: null,
                     lastNotificationCheck: new Date().toISOString(),
                 };
@@ -305,12 +310,19 @@
             };
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
 
+            // 変更後
             const applyAppBackground = () => {
                 const appContainer = $('#app-container');
                 const activeBg = initialData.backgrounds[state.profile.activeBackground];
-                if (activeBg && activeBg.url) {
-                    appContainer.style.backgroundImage = `url(${activeBg.url})`;
+                const imageUrl = (activeBg && activeBg.url) ? `url(${activeBg.url})` : 'none';
+            
+                if (state.settings.backgroundScopeGlobal) {
+                    // スイッチがONならアプリ全体に適用
+                    appContainer.style.backgroundImage = imageUrl;
+                    // 集中タブ側の背景はクリアする
+                    $$('.focus-view-bg').forEach(el => el.style.backgroundImage = 'none');
                 } else {
+                    // スイッチがOFFならアプリ全体の背景は解除
                     appContainer.style.backgroundImage = 'none';
                 }
             };
@@ -361,6 +373,17 @@
                         
                         const pinnedQuizzes = state.pinnedQuizzes.map(id => initialData.quizzes.find(q => q.id === id)).filter(Boolean);
                         pinnedContainer.innerHTML = pinnedQuizzes.length ? pinnedQuizzes.map(q => createQuizCard(q, true)).join('') : `<p class="text-sm text-gray-500">クイズをピン留めしてすぐアクセス！</p>`;
+                    },
+                    // 変更後
+                    'focus-page': () => {
+                        // スイッチがOFFの時だけ、集中タブに背景を適用する
+                        if (!state.settings.backgroundScopeGlobal) {
+                            const activeBg = initialData.backgrounds[state.profile.activeBackground];
+                            const imageUrl = (activeBg && activeBg.url) ? `url(${activeBg.url})` : 'none';
+                            $$('.focus-view-bg').forEach(el => {
+                                el.style.backgroundImage = imageUrl;
+                            });
+                        }
                     },
                     'my-chart-page': () => {
                         const subjects = [...new Set(initialData.quizzes.map(q => q.subject))];
@@ -589,6 +612,16 @@
                     setTimer(time);
                      $$('.timer-duration-btn').forEach(btn => btn.classList.replace('bg-white/40', 'bg-white/20'));
                     timerDurationBtn.classList.replace('bg-white/20', 'bg-white/40');
+                }
+            });
+            /* 変更後 (新しいイベントリスナーとして追加) */
+            $('#background-scope-toggle').addEventListener('change', (e) => {
+                state.settings.backgroundScopeGlobal = e.target.checked;
+                saveState();
+                applyAppBackground(); // 背景設定を再適用
+                // 集中タブが表示されている場合に備えて再描画
+                if ($('#focus-page').classList.contains('active')) {
+                    renderEngine.pages['focus-page']();
                 }
             });
             
@@ -984,6 +1017,7 @@
                     installBtn.classList.remove('hidden');
                     installBtn.onclick = () => deferredPrompt.prompt();
                 });
+                $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
                 applyAppBackground();
             };
             init();
