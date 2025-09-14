@@ -377,9 +377,7 @@
             
             // OSのテーマ変更を検知するリスナー
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-                if (state.settings.theme === 'system') {
-                    applyTheme();
-                }
+                updateAppearance();
             });
 
             const updateLpDisplay = () => {
@@ -635,7 +633,7 @@
                         if(state.profile.unlockedBackgrounds.includes(bgId)) {
                             state.profile.activeBackground = bgId;
                             saveState(); 
-                            applyAppBackground(); // ← 呼び出しを追加
+                            updateAppearance(); // ← 新しい関数名に修正
                             renderEngine.pages['settings-page']();
                             lucide.createIcons();
                     } else {
@@ -673,7 +671,7 @@
             $('#background-scope-toggle').addEventListener('change', (e) => {
                 state.settings.backgroundScopeGlobal = e.target.checked;
                 saveState();
-                applyAppBackground(); // 背景設定を再適用
+                updateAppearance();
                 // 集中タブが表示されている場合に備えて再描画
                 if ($('#focus-page').classList.contains('active')) {
                     renderEngine.pages['focus-page']();
@@ -1073,7 +1071,7 @@
                     installBtn.onclick = () => deferredPrompt.prompt();
                 });
                 $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
-                applyAppBackground();
+                updateAppearance();
             };
             init();
         });
