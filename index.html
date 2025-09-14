@@ -74,28 +74,6 @@
             background-position: center;
             background-repeat: no-repeat;
         }
-        /* 変更後*/
-        .text-on-dark-bg,
-        .text-on-dark-bg h1, .text-on-dark-bg h2, .text-on-dark-bg h3 {
-            color: #f1f5f9; /* slate-100 */
-        }
-        .text-on-dark-bg p, .text-on-dark-bg span, .text-on-dark-bg label {
-            color: #cbd5e1; /* slate-300 */
-        }
-        .text-on-dark-bg .primary-text {
-            color: #a5b4fc !important; /* indigo-300 */
-        }
-        
-        .text-on-light-bg,
-        .text-on-light-bg h1, .text-on-light-bg h2, .text-on-light-bg h3 {
-            color: #1e293b; /* slate-800 */
-        }
-        .text-on-light-bg p, .text-on-light-bg span, .text-on-light-bg label {
-            color: #475569; /* slate-600 */
-        }
-        .text-on-light-bg .primary-text {
-            /* デフォルトのprimary-colorを使用するため指定なし */
-        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen antialiased">
@@ -362,18 +340,15 @@
                     }
                 }
             
-                // --- 2. 壁紙と文字色を適用 ---
-                appContainer.classList.remove('text-on-dark-bg', 'text-on-light-bg');
-            
-                if (isGlobal && hasImage) {
-                    // 全体に適用ONなら、壁紙と専用文字色を適用
-                    appContainer.style.backgroundImage = `url(${activeBg.url})`;
-                    appContainer.classList.add(activeBg.tone === 'dark' ? 'text-on-dark-bg' : 'text-on-light-bg');
-                } else {
-                    // それ以外は、アプリ全体の壁紙は解除
-                    appContainer.style.backgroundImage = 'none';
-                }
-            };
+                // --- 2. 壁紙画像を適用 ---
+                    if (isGlobal && hasImage) {
+                        // 「全体に適用」がONなら、壁紙を表示
+                        appContainer.style.backgroundImage = `url(${activeBg.url})`;
+                    } else {
+                        // それ以外は、アプリ全体の壁紙は表示しない
+                        appContainer.style.backgroundImage = 'none';
+                    }
+                };
             
             // OSのテーマ変更を検知するリスナー
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
