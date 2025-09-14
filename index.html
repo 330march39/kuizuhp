@@ -322,20 +322,20 @@
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
             
            // 既存の updateAppearance 関数を、この新しいコードで完全に置き換えてください。
-    
+            
             const updateAppearance = () => {
                 const appContainer = $('#app-container');
                 const activeBgId = state.profile.activeBackground;
                 const activeBg = initialData.backgrounds[activeBgId];
                 const isGlobal = state.settings.backgroundScopeGlobal;
                 const hasImage = activeBg && activeBg.url;
-    
-                // --- 1. テーマ決定ロジック【新仕様版】 ---
+            
+                // --- 1. テーマ決定ロジック ---
                 let effectiveTone;
-    
-                // 手動テーマ設定が有効になる条件（＝トグルが表示される条件）を判定
+            
+                // 手動テーマ設定が有効になる条件（＝トグルが表示される条件）を定義
                 const isManualThemeMode = (activeBgId === 'default' || !isGlobal);
-    
+            
                 if (isManualThemeMode) {
                     // 条件に合致する場合、手動設定トグルの状態に従う (trueならdark, falseならlight)
                     effectiveTone = state.settings.manualDarkMode ? 'dark' : 'light';
@@ -343,14 +343,14 @@
                     // 条件外（カスタム壁紙で「全体適用」オン）の場合、壁紙のtoneに従う
                     effectiveTone = activeBg.tone;
                 }
-    
+            
                 // --- 2. 決定したテーマをHTML要素に適用 ---
                 document.documentElement.classList.remove('dark');
                 if (effectiveTone === 'dark') {
                     document.documentElement.classList.add('dark');
                 }
-    
-                // --- 3. 背景画像の適用ロジック（変更なし） ---
+            
+                // --- 3. 背景画像の適用ロジック ---
                 if (isGlobal && hasImage) {
                     appContainer.style.backgroundImage = `url(${activeBg.url})`;
                 } else {
@@ -406,7 +406,7 @@
                         pinnedContainer.innerHTML = pinnedQuizzes.length ? pinnedQuizzes.map(q => createQuizCard(q, true)).join('') : `<p class="text-sm text-gray-500">クイズをピン留めしてすぐアクセス！</p>`;
                     },
                     // 変更後
-                   'focus-page': () => {
+                  'focus-page': () => {
                         const activeBg = initialData.backgrounds[state.profile.activeBackground];
                         const hasImage = activeBg && activeBg.url;
                         const isGlobal = state.settings.backgroundScopeGlobal;
@@ -451,7 +451,7 @@
                         const manualThemeContainer = $('#manual-theme-container');
                         const activeBgId = state.profile.activeBackground;
                         const isGlobal = state.settings.backgroundScopeGlobal;
-            
+                    
                         // デフォルト壁紙、または「全体適用」がオフの時にだけトグルを表示する
                         if (activeBgId === 'default' || !isGlobal) {
                             manualThemeContainer.classList.remove('hidden');
@@ -459,6 +459,7 @@
                         } else {
                             manualThemeContainer.classList.add('hidden');
                         }
+
                         $('#review-notification-toggle').checked = state.settings.reviewNotifications;
                         
                         $('#theme-selector').innerHTML = state.profile.unlockedThemes.map(id => {
@@ -666,6 +667,17 @@
                 state.settings.manualDarkMode = e.target.checked;
                 saveState();
                 updateAppearance(); // 外観を即時更新
+            });
+            
+            $('#background-scope-toggle').addEventListener('change', (e) => {
+                state.settings.backgroundScopeGlobal = e.target.checked;
+                saveState();
+                updateAppearance();
+                renderEngine.pages['settings-page'](); // トグルの表示/非表示を更新
+                // 集中タブが表示されている場合に備えて再描画
+                if ($('#focus-page').classList.contains('active')) {
+                    renderEngine.pages['focus-page']();
+                }
             });
             
             /* 変更後 (新しいイベントリスナーとして追加) */
