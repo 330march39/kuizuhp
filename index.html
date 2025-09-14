@@ -319,18 +319,19 @@
                 const hasImage = activeBg && activeBg.url;
             
                 // --- 1. アプリ全体のテーマ（ライト/ダーク）を決定 ---
-                let effectiveTone = 'system'; // デフォルトは'system'
-                if (isGlobal && activeBg.tone) {
-                    // 「全体適用」がONで、かつ壁紙にtoneが設定されていれば、その値を採用
-                    // (hasImage条件を削除し、'default'の場合もtoneを読めるようにする)
+                let effectiveTone = 'system'; // まずOS設定に従うのを基本とする
+            
+                // 「全体適用」がONで、かつ壁紙のテーマ指定が 'system' 以外の場合のみ上書きする
+                if (isGlobal && activeBg.tone && activeBg.tone !== 'system') {
                     effectiveTone = activeBg.tone;
                 }
             
+                // --- テーマの適用 ---
                 if (effectiveTone === 'dark') {
                     document.documentElement.classList.add('dark');
                 } else if (effectiveTone === 'light') {
                     document.documentElement.classList.remove('dark');
-                } else { // 'system' または想定外の値の場合はOS設定に従う
+                } else { // 'system' の場合
                     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                         document.documentElement.classList.add('dark');
                     } else {
