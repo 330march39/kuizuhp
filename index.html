@@ -312,43 +312,49 @@
             };
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
             
+            // 既存の updateAppearance 関数を、この新しいコードで完全に置き換えてください。
             const updateAppearance = () => {
                 const appContainer = $('#app-container');
-                const activeBg = initialData.backgrounds[state.profile.activeBackground];
+                const activeBgId = state.profile.activeBackground;
+                const activeBg = initialData.backgrounds[activeBgId];
                 const isGlobal = state.settings.backgroundScopeGlobal;
                 const hasImage = activeBg && activeBg.url;
-                
+    
                 // --- 1. テーマ（Light/Dark）の決定ロジック ---
-                let effectiveTone = 'system'; // デフォルトはOS設定に追従
-                
-                // 「全体適用」がオン、かつ壁紙に 'light' か 'dark' の指定がある場合
-                if (isGlobal && hasImage && activeBg.tone && activeBg.tone !== 'system') {
+                let effectiveTone;
+    
+                // ■ 修正点：
+                // デフォルトの壁紙が選択されている場合のみ、OSのテーマ設定('system')に連動させます。
+                if (activeBgId === 'default') {
+                    effectiveTone = 'system';
+                } else {
+                    // デフォルト以外の壁紙（画像あり）が選択されている場合は、
+                    // 「全体適用」がオフでも、壁紙が持つ 'tone' (light/dark) をアプリ全体のテーマとして優先します。
                     effectiveTone = activeBg.tone;
                 }
     
-                // <html>要素から一旦darkクラスを削除してリセット
+                // --- 2. 決定したテーマをHTML要素に適用 ---
+                // 最初に必ずリセットします
                 document.documentElement.classList.remove('dark');
     
                 if (effectiveTone === 'dark') {
                     document.documentElement.classList.add('dark');
                 } else if (effectiveTone === 'light') {
-                    // lightの場合はクラス不要なので何もしない
+                    // Lightテーマの場合はクラス不要なので何もしません
                 } else { // 'system' の場合
                     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                         document.documentElement.classList.add('dark');
                     }
                 }
     
-                // --- 2. 背景画像の適用ロジック ---
+                // --- 3. 背景画像の適用ロジック（ここは変更ありません） ---
+                // 「壁紙をアプリ全体に適用」がオンの場合のみ、コンテナ全体に背景画像を設定します。
                 if (isGlobal && hasImage) {
-                    // 全体適用の場合は#app-containerに背景を設定
                     appContainer.style.backgroundImage = `url(${activeBg.url})`;
                 } else {
-                    // 全体適用でない場合は#app-containerの背景をクリア
                     appContainer.style.backgroundImage = 'none';
                 }
             };
-
             // OSのテーマ変更を検知するリスナー
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
                 updateAppearance();
