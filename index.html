@@ -268,7 +268,7 @@
     
     <div id="countdown-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6"><h2 id="countdown-modal-title" class="text-xl font-bold mb-4">カウントダウン設定</h2><div class="space-y-4"><input id="countdown-name" type="text" placeholder="イベント名 (例: 期末テスト)" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"><input id="countdown-date" type="date" class="w-full block p-2 border rounded dark:bg-gray-800 dark:border-gray-600"></div><div class="mt-6"><h3 class="font-semibold mb-2">通知設定</h3><div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg space-y-3"><div class="flex items-center justify-between"><p>通知をオンにする</p><input type="checkbox" id="countdown-notification-toggle" class="toggle-checkbox"></div><div id="countdown-notification-details" class="space-y-3"><div class="flex items-center justify-between"><p>通知時刻</p><input id="countdown-notification-time" type="time" class="p-1 border rounded dark:bg-gray-600 dark:border-gray-500"></div><div><p class="mb-2">通知するタイミング (複数選択可)</p><div id="countdown-notification-days" class="flex flex-wrap gap-2"></div></div></div></div></div><div class="flex justify-between items-center mt-6"><button id="countdown-delete-btn" class="text-red-500 hover:text-red-700 font-semibold p-2 hidden"><i data-lucide="trash-2" class="w-5 h-5 inline-block mr-1"></i>削除</button><div class="flex space-x-2"><button id="countdown-cancel-btn" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">キャンセル</button><button id="countdown-save-btn" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg">保存</button></div></div></div></div>
 
-    <div id="point-details-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 flex flex-col max-h-[90vh]"><div class="flex justify-between items-center mb-4 flex-shrink-0"><h2 class="text-xl font-bold">マイステータス</h2><button id="close-point-modal-btn" class="p-1"><i data-lucide="x"></i></button></div><div class="space-y-6"><div class="text-center"><p class="text-sm text-gray-500">現在の学習ポイント</p><p class="text-4xl font-bold primary-text" id="modal-lp-display"></p></div><div><h3 class="font-semibold mb-2">アイテム交換所</h3><div id="modal-theme-selector" class="grid grid-cols-4 gap-4"></div></div><div><h3 class="font-semibold mb-2">壁紙 交換所</h3><div id="modal-background-selector" class="grid grid-cols-3 gap-2"></div></div><div><h3 class="font-semibold mb-2">獲得した称号</h3><div id="modal-titles-list" class="flex flex-wrap gap-2"></div></div></div></div></div>
+    <div id="point-details-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 flex flex-col max-h-[90vh]"><div class="flex justify-between items-center mb-4 flex-shrink-0"><h2 class="text-xl font-bold">マイステータス</h2><button id="close-point-modal-btn" class="p-1"><i data-lucide="x"></i></button></div><div class="space-y-6 overflow-y-auto"><div class="text-center"><p class="text-sm text-gray-500">現在の学習ポイント</p><p class="text-4xl font-bold primary-text" id="modal-lp-display"></p></div><div><h3 class="font-semibold mb-2">アイテム交換所</h3><div id="modal-theme-selector" class="grid grid-cols-4 gap-4"></div></div><div><h3 class="font-semibold mb-2">壁紙 交換所</h3><div id="modal-background-selector" class="grid grid-cols-3 gap-2"></div></div><div><h3 class="font-semibold mb-2">獲得した称号</h3><div id="modal-titles-list" class="flex flex-wrap gap-2"></div></div></div></div></div>
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300 z-50 transform -translate-y-10"></div>
     
     <script>
@@ -740,95 +740,36 @@
             });
             
             $('#lp-button').addEventListener('click', () => {
+                // 1. LPポイントの表示を更新
                 $('#modal-lp-display').textContent = state.profile.lp;
                 
-                renderPointModalContent(); // ここで関数を呼び出す
+                // 2. テーマと壁紙のリストを描画（関数呼び出し）
+                renderPointModalContent(); 
                 
-                $('#modal-theme-selector').innerHTML = Object.entries(initialData.themes).map(([id, theme]) => {
-                    const isUnlocked = state.profile.unlockedThemes.includes(id);
-                    return `<div class="text-center">
-                        <button class="theme-btn w-12 h-12 rounded-full border-2 ${isUnlocked ? 'border-green-400' : 'border-transparent'} relative" style="background-color: ${theme.color}" data-theme="${id}">
-                            ${!isUnlocked ? `<i data-lucide="lock" class="w-6 h-6 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>` : ''}
-                        </button>
-                        <p class="text-xs mt-1">${isUnlocked ? theme.name : `${theme.cost} LP`}</p>
-                    </div>`;
-                }).join('');
-
-                $('#modal-background-selector').innerHTML = Object.entries(initialData.backgrounds).map(([id, bg]) => {
-                     const isUnlocked = state.profile.unlockedBackgrounds.includes(id);
-                     return `<div class="text-center">
-                                <button class="background-btn w-full h-16 rounded-lg border-2 ${isUnlocked ? 'border-green-400' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}">
-                                     ${!isUnlocked ? `<div class="absolute inset-0 bg-black/60 flex items-center justify-center rounded-md"><i data-lucide="lock" class="w-6 h-6 text-white"></i></div>` : ''}
-                                </button>
-                                <p class="text-xs mt-1">${isUnlocked ? bg.name : `${bg.cost} LP`}</p>
-                            </div>`;
-                }).join('');
-                
+                // 3. 称号リストを描画
                 const titlesList = $('#modal-titles-list');
                 const earnedTitles = state.profile.earnedTitles.map(id => initialData.titles.find(t => t.id === id));
                 titlesList.innerHTML = earnedTitles.length ? earnedTitles.map(t => `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">${t.name}</span>`).join('') : '<p class="text-sm text-gray-500">まだ称号はありません</p>';
-
-                // この新しい関数を追加してください
-                function renderPointModalContent() {
-                    $('#modal-theme-selector').innerHTML = Object.entries(initialData.themes).map(([id, theme]) => {
-                        const isUnlocked = state.profile.unlockedThemes.includes(id);
-                        return `<div class="text-center">
-                            <button class="theme-btn w-12 h-12 rounded-full border-2 ${isUnlocked ? 'border-green-400' : 'border-transparent'} relative" style="background-color: ${theme.color}" data-theme="${id}">
-                                ${!isUnlocked ? `<i data-lucide="lock" class="w-6 h-6 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>` : ''}
-                            </button>
-                            <p class="text-xs mt-1">${isUnlocked ? theme.name : `${theme.cost} LP`}</p>
-                        </div>`;
-                    }).join('');
-                
-                    $('#modal-background-selector').innerHTML = Object.entries(initialData.backgrounds).map(([id, bg]) => {
-                        const isUnlocked = state.profile.unlockedBackgrounds.includes(id);
-                        return `<div class="text-center">
-                            <button class="background-btn w-full h-16 rounded-lg border-2 ${isUnlocked ? 'border-green-400' : 'border-transparent'} relative bg-gray-500 bg-cover bg-center" style="background-image: ${bg.url ? `url(${bg.url})` : 'none'}" data-bg="${id}">
-                                ${!isUnlocked ? `<div class="absolute inset-0 bg-black/60 flex items-center justify-center rounded-md"><i data-lucide="lock" class="w-6 h-6 text-white"></i></div>` : ''}
-                            </button>
-                            <p class="text-xs mt-1">${isUnlocked ? bg.name : `${bg.cost} LP`}</p>
-                        </div>`;
-                    }).join('');
-                
-                    // アイコンの再描画も忘れずに
-                    lucide.createIcons();
-                }
+            
+                // 4. モーダルを表示
                 $('#point-details-modal').style.display = 'flex';
                 lucide.createIcons();
             });
 
-            $('#close-point-modal-btn').addEventListener('click', () => $('#point-details-modal').style.display = 'none');
-            
-            // Countdown Modal
-            $('#add-countdown-btn').addEventListener('click', () => openCountdownModal());
-            $('#countdown-cancel-btn').addEventListener('click', () => $('#countdown-modal').style.display = 'none');
-            $('#countdown-notification-toggle').addEventListener('change', (e) => {
-                $('#countdown-notification-details').style.display = e.target.checked ? 'block' : 'none';
-            });
-            $('#countdown-save-btn').addEventListener('click', saveCountdown);
-            $('#countdown-delete-btn').addEventListener('click', deleteCountdown);
-            
-            // Generic Purchase Logic
-            $('#theme-purchase-confirm').addEventListener('click', handlePurchase);
-            $('#background-purchase-confirm').addEventListener('click', handlePurchase);
-            $('#theme-purchase-cancel').addEventListener('click', () => $('#theme-purchase-modal').style.display = 'none');
-            $('#background-purchase-cancel').addEventListener('click', () => $('#background-purchase-modal').style.display = 'none');
-
             function handlePurchase(e) {
                 const { itemId, itemType } = e.target.dataset;
                 const itemData = initialData[itemType + 's'][itemId];
-                
+            
                 if (state.profile.lp >= itemData.cost) {
                     addLP(-itemData.cost, `アイテム「${itemData.name}」交換`);
                     state.profile[`unlocked${itemType.charAt(0).toUpperCase() + itemType.slice(1)}s`].push(itemId);
                     showToast(`「${itemData.name}」を解放しました！`);
                     saveState();
-                    renderPointModalContent(); 
-                        if ($('#settings-page').classList.contains('active')) {
-                            renderEngine.pages['settings-page']();
-                        }
-                    } 
-                } else {
+                    renderPointModalContent();
+                    if ($('#settings-page').classList.contains('active')) {
+                        renderEngine.pages['settings-page']();
+                    }
+                } else { // ← if文の中に正しく入れる
                     showToast('LPが足りません！');
                 }
                 $(`#${itemType}-purchase-modal`).style.display = 'none';
