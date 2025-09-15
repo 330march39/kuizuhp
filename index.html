@@ -276,10 +276,10 @@
             const initialData = {
                 quizzes: [
                     { id: 'math1', title: "数学 - 正負の数", subject: "数学", genre: "中1", tags: ['english1'], url: "https://docs.google.com/forms/d/e/1FAIpQLScsC0BFa_3gY-f-u4pW8Q22o_l3c0T-t_9c3z-q8pY6X-u8qQ/viewform?usp=sf_link" },
-                    { id: 'english1', title: "英語 - be動詞", subject: "英語", genre: "中1", tags: ['math1', 'history1'], url: "https://docs.google.com/forms/d/e/1FAIpQLSfB_iJ3-s-W-hT5pQ8bF_cK6dL_xG9z-u0bM-pC7oR8sT-w_w/viewform?usp=sf_link" },
+                    { id: 'english1', title: "英語 - be動詞", subject: "英語", genre: "中1", tags: ['math1', 'history1'], url: "https://docs.google.com/forms/d/e/1FAIpQLSfvtBwi1Tb1z6YEQOclBi4J7pxOc8lEILZ-OPZ4k6aebFJmTg/viewform" },
                     { id: 'science1', title: "理科 - 植物のつくり", subject: "理科", genre: "中1", tags: [], url: "https://docs.google.com/forms/d/e/1FAIpQLSfp-24sW_4xT8d_aK_b_nL5e-pX7a-j8vN-qA9rR_cT_uL-vQ/viewform?usp=sf_link" },
                     { id: 'japanese1', title: "国語 - 枕草子", subject: "国語", genre: "古典", tags: ['history1'], url: "https://docs.google.com/forms/d/e/1FAIpQLSe-0P7p_L-rT9c-yS_eD-wA9iR_bO8kM-nL-u_V-iE7xS-tQ/viewform?usp=sf_link" },
-                    { id: 'history1', title: "社会 - 鎌倉時代", subject: "社会", genre: "歴史", tags: ['japanese1'], url: "https://docs.google.com/forms/d/e/1FAIpQLSdi-tYv_zW-a_c_iR_s-vI_oN-eL_a-yP-sN_e-rB_c_uK_wQ/viewform?usp=sf_link" },
+                    { id: 'history1', title: "社会 - 鎌倉時代", subject: "社会", genre: "歴史", tags: ['japanese1'], url: "https://docs.google.com/forms/d/e/1FAIpQLSeLprqPbZCZv2ufQ2qYqltnRiUE1FsBYODa_eNwOVO1NqZwBw/viewform?usp=pp_url" },
                 ],
                 titles: [
                     { id: 'math_master', name: '数学マスター', condition: (s) => initialData.quizzes.filter(q => q.subject === '数学' && s.progress[q.id]?.level === 3).length >= 1 },
