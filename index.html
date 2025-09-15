@@ -1166,6 +1166,34 @@
 
             lucide.createIcons();
         };
+            
+        // --- 購入モーダル関連のボタン ---
+        $('#theme-purchase-confirm').addEventListener('click', handlePurchase);
+        $('#theme-purchase-cancel').addEventListener('click', () => {
+            $('#theme-purchase-modal').style.display = 'none';
+        });
+
+        $('#background-purchase-confirm').addEventListener('click', handlePurchase);
+        $('#background-purchase-cancel').addEventListener('click', () => {
+            $('#background-purchase-modal').style.display = 'none';
+        });
+
+        // --- ポイント詳細モーダルを閉じるボタン ---
+        $('#close-point-modal-btn').addEventListener('click', () => {
+            $('#point-details-modal').style.display = 'none';
+        });
+
+        // --- カウントダウンモーダル関連のボタン ---
+        $('#add-countdown-btn').addEventListener('click', () => openCountdownModal());
+        $('#countdown-save-btn').addEventListener('click', saveCountdown);
+        $('#countdown-cancel-btn').addEventListener('click', () => {
+            $('#countdown-modal').style.display = 'none';
+        });
+        $('#countdown-delete-btn').addEventListener('click', deleteCountdown);
+        $('#countdown-notification-toggle').addEventListener('change', (e) => {
+            $('#countdown-notification-details').style.display = e.target.checked ? 'block' : 'none';
+        });
+            
             init();
         });
     </script>
