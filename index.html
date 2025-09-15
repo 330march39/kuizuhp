@@ -1116,6 +1116,56 @@
                 $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
                 updateAppearance();
             };
+            const renderPointModalContent = () => {
+            const themeContainer = $('#modal-theme-selector');
+            themeContainer.innerHTML = Object.entries(initialData.themes).map(([id, theme]) => {
+                const isUnlocked = state.profile.unlockedThemes.includes(id);
+                if (isUnlocked) {
+                    return `<div class="text-center">
+                        <button class="theme-btn w-12 h-12 rounded-full border-4 ${state.profile.activeTheme === id ? 'border-blue-500' : 'border-transparent'} relative" style="background-color: ${theme.color}" data-theme="${id}">
+                            <div class="absolute inset-0 bg-green-500/80 flex items-center justify-center rounded-full opacity-100"><i data-lucide="check" class="w-6 h-6 text-white"></i></div>
+                        </button>
+                        <p class="text-xs mt-1">${theme.name}</p>
+                    </div>`;
+                } else {
+                    return `<div class="text-center">
+                        <button class="theme-btn w-12 h-12 rounded-full border-4 border-transparent relative" style="background-color: ${theme.color}" data-theme="${id}">
+                            <div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-full text-white">
+                                <i data-lucide="lock" class="w-5 h-5"></i>
+                                <span class="text-[10px] font-bold">${theme.cost}</span>
+                            </div>
+                        </button>
+                        <p class="text-xs mt-1">${theme.name}</p>
+                    </div>`;
+                }
+            }).join('');
+
+            const backgroundContainer = $('#modal-background-selector');
+            backgroundContainer.innerHTML = Object.entries(initialData.backgrounds).map(([id, bg]) => {
+                const isUnlocked = state.profile.unlockedBackgrounds.includes(id);
+                const style = bg.url ? `background-image: url(${bg.url})` : 'background-color: #6b7280;';
+                if (isUnlocked) {
+                    return `<div class="text-center">
+                        <button class="background-btn w-full h-20 rounded-lg border-4 ${state.profile.activeBackground === id ? 'border-blue-500' : 'border-transparent'} relative bg-cover bg-center" style="${style}" data-bg="${id}">
+                             <div class="absolute inset-0 bg-green-500/80 flex items-center justify-center rounded-md opacity-100"><i data-lucide="check" class="w-8 h-8 text-white"></i></div>
+                        </button>
+                         <p class="text-xs mt-1">${bg.name}</p>
+                    </div>`;
+                } else {
+                     return `<div class="text-center">
+                        <button class="background-btn w-full h-20 rounded-lg border-4 border-transparent relative bg-cover bg-center" style="${style}" data-bg="${id}">
+                             <div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-md text-white">
+                                <i data-lucide="lock" class="w-6 h-6"></i>
+                                <span class="text-sm font-bold">${bg.cost}</span>
+                            </div>
+                        </button>
+                         <p class="text-xs mt-1">${bg.name}</p>
+                    </div>`;
+                }
+            }).join('');
+
+            lucide.createIcons();
+        };
             init();
         });
     </script>
