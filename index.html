@@ -573,18 +573,25 @@
 
             document.body.addEventListener('click', e => {
                 const quizCard = e.target.closest('.quiz-card');
-                if (quizCard && !e.target.closest('.pin-btn')) {
-                    const quiz = initialData.quizzes.find(q => q.id === quizCard.dataset.id);
-                    $('#quiz-modal-title').textContent = quiz.title;
-                    $('#quiz-iframe').classList.add('invisible');
-                    $('#quiz-modal').dataset.currentQuiz = quiz.id;
-                    $('#quiz-modal').style.display = 'flex';
-                    quizTimer.startTime = Date.now();
-                    setTimeout(() => {
-                        $('#quiz-iframe').src = quiz.url;
-                        $('#quiz-iframe').onload = () => $('#quiz-iframe').classList.remove('invisible');
-                    }, 100);
-                }
+                if (quizCard && !e.target.closest('.pin-btn')) {
+                    const quiz = initialData.quizzes.find(q => q.id === quizCard.dataset.id);
+                    $('#quiz-modal-title').textContent = quiz.title;
+                    
+                    // ★★★ ローダーを再表示する処理を追加 ★★★
+                    $('#loader').parentElement.style.display = 'flex'; 
+                
+                    $('#quiz-iframe').classList.add('invisible');
+                    $('#quiz-modal').dataset.currentQuiz = quiz.id;
+                    $('#quiz-modal').style.display = 'flex';
+                    quizTimer.startTime = Date.now();
+                    setTimeout(() => {
+                        $('#quiz-iframe').src = quiz.url;
+                        $('#quiz-iframe').onload = () => {
+                            $('#loader').parentElement.style.display = 'none'; 
+                            $('#quiz-iframe').classList.remove('invisible');
+                        };
+                    }, 100);
+                }
                 const pinBtn = e.target.closest('.pin-btn');
                 if(pinBtn) {
                     const quizId = pinBtn.dataset.id;
