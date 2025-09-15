@@ -577,16 +577,12 @@
                     const quiz = initialData.quizzes.find(q => q.id === quizCard.dataset.id);
                     $('#quiz-modal-title').textContent = quiz.title;
                     $('#quiz-iframe').classList.add('invisible');
-                    **$('#loader').style.display = 'block'; // ローダーを再表示**
                     $('#quiz-modal').dataset.currentQuiz = quiz.id;
                     $('#quiz-modal').style.display = 'flex';
                     quizTimer.startTime = Date.now();
                     setTimeout(() => {
                         $('#quiz-iframe').src = quiz.url;
-                        $('#quiz-iframe').onload = () => {
-                            **$('#loader').style.display = 'none'; // ローダーを非表示**
-                            $('#quiz-iframe').classList.remove('invisible');
-                        };
+                        $('#quiz-iframe').onload = () => $('#quiz-iframe').classList.remove('invisible');
                     }, 100);
                 }
                 const pinBtn = e.target.closest('.pin-btn');
