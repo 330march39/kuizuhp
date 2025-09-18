@@ -420,8 +420,6 @@
                         if (state.pinnedQuizzes.length > 0) {
                             // ピン留めがある場合、セクションを表示して中身を描画
                             pinnedSectionContainer.style.display = 'block';
-                            const pinnedQuizzes = state.pinnedQuizzes.map(id => initialData.quizzes.find(q => q.id === id)).filter(Boolean);
-                            pinnedContainer.innerHTML = pinnedQuizzes.map(q => createQuizCard(q, true)).join('');
                         } else {
                             // ピン留めがない場合、セクション全体を非表示にする
                             pinnedSectionContainer.style.display = 'none';
