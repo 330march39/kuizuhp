@@ -1205,29 +1205,30 @@
         };
 
             const init = () => {
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('sw.js')
-                        .then(registration => console.log('Service Worker登録成功:', registration))
-                        .catch(error => console.log('Service Worker登録失敗:', error));
-                }
-            
-                loadState();
-                checkCountdownNotifications();
-            
-                // ページ描画の前にタイマーの状態を復元・設定する
-                restoreFocusState();
-            
-                renderEngine.renderAll();
-                // updateFocusModeUI(); // restoreFocusStateが担当するので不要
-            
-                const reviewsToday = state.reviewSchedule.filter(r => new Date(r.reviewDate) <= new Date()).length;
-                if (reviewsToday > 0) { 
-                    showToast(`今日やるべき復習が ${reviewsToday} 件あります！`); 
-                }
-            
-                $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
-                updateAppearance();
-            };
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('sw.js')
+                        .then(registration => console.log('Service Worker登録成功:', registration))
+                        .catch(error => console.log('Service Worker登録失敗:', error));
+                }
+                
+                loadState();
+                checkCountdownNotifications();
+                
+                // ページ描画の前にタイマーの状態を復元・設定する
+                restoreFocusState();
+                
+                // 全てのページを描画
+                renderEngine.renderAll();
+
+                const reviewsToday = state.reviewSchedule.filter(r => new Date(r.reviewDate) <= new Date()).length;
+                if (reviewsToday > 0) { 
+                    showToast(`今日やるべき復習が ${reviewsToday} 件あります！`); 
+                }
+                
+                // 最後に外観を更新
+                $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
+                updateAppearance();
+            };
             const renderPointModalContent = () => {
             const themeContainer = $('#modal-theme-selector');
             themeContainer.innerHTML = Object.entries(initialData.themes).map(([id, theme]) => {
@@ -1304,15 +1305,6 @@
         $('#countdown-delete-btn').addEventListener('click', deleteCountdown);
         $('#countdown-notification-toggle').addEventListener('change', (e) => {
             $('#countdown-notification-details').style.display = e.target.checked ? 'block' : 'none';
-        });
-            
-        const darkModeMatcher = window.matchMedia('(prefers-color-scheme: dark)');
-        darkModeMatcher.addEventListener('change', e => {
-            // OSのテーマが変更された時だけ、外観を更新する
-            const activeBg = initialData.backgrounds[state.profile.activeBackground];
-            if (activeBg && activeBg.tone === 'system') {
-                updateAppearance();
-            }
         });
             
             init();
