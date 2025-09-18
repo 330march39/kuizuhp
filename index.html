@@ -935,7 +935,6 @@
             });
 
             $('#focus-start-btn').addEventListener('click', () => {
-                // 0秒の時は開始しない
                 if (focusTimer.timeLeft <= 0) {
                     showToast('時間を設定してください');
                     return;
