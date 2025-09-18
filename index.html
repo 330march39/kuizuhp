@@ -824,17 +824,22 @@
                 updateMiniTimer();
                 if (focusTimer.timeLeft <= 0) {
                     clearInterval(focusTimer.interval);
-                    showToast('集中モード完了！お疲れ様でした！');
-                    if (Notification.permission === 'granted') {
-                        new Notification('集中モード完了！', { body: 'お疲れ様でした！少し休憩しましょう。', icon: 'https://placehold.co/180x180/4f46e5/ffffff?text=Q' });
-                    }
+                    // showToast と new Notification は Service Worker が担当するためコメントアウトまたは削除
+                    // showToast('集中モード完了！お疲れ様でした！');
+                    // if (Notification.permission === 'granted') { ... }
+            
                     const elapsed = focusTimer.defaultTime;
                     logStudyTime('focus', elapsed);
                     addLP(Math.floor(elapsed/60), 'タイマー完了');
                     state.focus.totalTime += elapsed;
-                    checkTitles(); 
-                    saveState(); 
+                    checkTitles();
+                    saveState();
                     resetTimerUI();
+            
+                    // 【追加】Service Workerにタイマー停止を通知（完了時）
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({ command: 'stopTimer' });
+                    }
                 }
             };
             
@@ -913,6 +918,11 @@
                 const elapsed = focusTimer.defaultTime - focusTimer.timeLeft;
                 if (elapsed > 0) { logStudyTime('focus', elapsed); addLP(Math.floor(elapsed / 60), '集中モード'); state.focus.totalTime += elapsed; checkTitles(); saveState(); }
                 resetTimerUI();
+            
+                // 【追加】Service Workerにタイマー停止を通知
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({ command: 'stopTimer' });
+                }
             };
 
             const endStopwatch = () => {
@@ -934,12 +944,12 @@
                 if (minutes > 0) { setTimer(minutes * 60); $$('.timer-duration-btn').forEach(btn => btn.classList.replace('bg-white/40', 'bg-white/20')); }
             });
 
-            $('#focus-start-btn').addEventListener('click', () => {
+           $('#focus-start-btn').addEventListener('click', () => {
                 if (focusTimer.timeLeft <= 0) {
                     showToast('時間を設定してください');
                     return;
                 }
-                focusTimer.defaultTime = focusTimer.timeLeft; // 開始時の時間を記憶
+                focusTimer.defaultTime = focusTimer.timeLeft;
                 focusTimer.isRunning = true;
                 focusTimer.isPaused = false;
                 focusTimer.interval = setInterval(timerTick, 1000);
@@ -947,6 +957,14 @@
                 $('#focus-controls').classList.remove('hidden');
                 $('#timer-settings-container').classList.add('hidden');
                 updateMiniTimer();
+            
+                // 【追加】Service Workerにタイマー開始を通知
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        command: 'startTimer',
+                        timeLeft: focusTimer.timeLeft
+                    });
+                }
             });
             $('#focus-pause-btn').addEventListener('click', () => { if (focusTimer.isPaused) resumeFocusTimer(); else pauseFocusTimer(); });
             $('#focus-end-btn').addEventListener('click', endFocusTimer);
@@ -1130,6 +1148,17 @@
             }
 
             const init = () => {
+                const init = () => {
+                // 【追加】Service Workerの登録
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(registration => {
+                            console.log('Service Worker登録成功:', registration);
+                        })
+                        .catch(error => {
+                            console.log('Service Worker登録失敗:', error);
+                        });
+                }
                 loadState();
                 checkCountdownNotifications();
                 renderEngine.renderAll();
