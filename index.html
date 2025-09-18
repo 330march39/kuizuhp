@@ -439,6 +439,7 @@
                     },
                     // 変更後
                   'focus-page': () => {
+                      updateFocusModeUI();
                         const activeBg = initialData.backgrounds[state.profile.activeBackground];
                         const hasImage = activeBg && activeBg.url;
                         const isGlobal = state.settings.backgroundScopeGlobal;
@@ -1178,13 +1179,7 @@
             const elapsed = Math.floor((Date.now() - state.focus.startTime) / 1000); // 経過時間（秒）
         
             // 復元するモードに合わせてUIを更新
-            $$('.focus-mode-btn').forEach(btn => {
-                const isSelected = btn.dataset.mode === state.focus.mode;
-                btn.classList.toggle('primary-bg', isSelected);
-                btn.classList.toggle('text-white', isSelected);
-            });
-            $('#timer-view').style.display = state.focus.mode === 'timer' ? 'flex' : 'none';
-            $('#stopwatch-view').style.display = state.focus.mode === 'stopwatch' ? 'flex' : 'none';
+            updateFocusModeUI();
         
             if (state.focus.mode === 'timer') {
                 const timeLeft = state.focus.duration - elapsed;
