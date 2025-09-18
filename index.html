@@ -328,7 +328,13 @@
                     reviewSchedule: [],
                     pinnedQuizzes: [],
                     countdowns: [],
-                    focus: { totalTime: 0, mode: 'timer' },
+                    focus: { 
+                        totalTime: 0, 
+                        mode: 'timer',
+                        isRunning: false, // 実行中かどうかのフラグ
+                        startTime: null,  // 開始時刻のタイムスタンプ
+                        duration: 0       // タイマーの総時間
+                    },
                     studyLog: {}, 
                     settings: { reviewNotifications: true, backgroundScopeGlobal: true , manualDarkMode: false },
                     lastLogin: null,
@@ -923,6 +929,11 @@
                 if (navigator.serviceWorker.controller) {
                     navigator.serviceWorker.controller.postMessage({ command: 'stopTimer' });
                 }
+                // ▼▼▼【追加】ここから▼▼▼
+                state.focus.isRunning = false;
+                state.focus.startTime = null;
+                saveState();
+                // ▲▲▲【追加】ここまで▲▲▲
             };
 
             const endStopwatch = () => {
@@ -930,6 +941,11 @@
                 const elapsed = Math.round(stopwatch.elapsedTime);
                 if (elapsed > 0) { logStudyTime('focus', elapsed); addLP(Math.floor(elapsed / 60), 'ストップウォッチ'); state.focus.totalTime += elapsed; checkTitles(); saveState(); }
                 resetStopwatchUI();
+                // ▼▼▼【追加】ここから▼▼▼
+                state.focus.isRunning = false;
+                state.focus.startTime = null;
+                saveState();
+                // ▲▲▲【追加】ここまで▲▲▲
             };
             
             const setTimer = (seconds) => {
@@ -946,6 +962,10 @@
                 focusTimer.defaultTime = focusTimer.timeLeft;
                 focusTimer.isRunning = true;
                 focusTimer.isPaused = false;
+                state.focus.isRunning = true;
+                state.focus.startTime = Date.now(); // 現在時刻のタイムスタンプを保存
+                state.focus.duration = focusTimer.timeLeft;
+                saveState();
                 focusTimer.interval = setInterval(timerTick, 1000);
                 $('#focus-start-btn').classList.add('hidden');
                 $('#focus-controls').classList.remove('hidden');
@@ -965,7 +985,14 @@
 
             $('#stopwatch-start-btn').addEventListener('click', () => {
                 stopwatch.isRunning = true; stopwatch.isPaused = false;
+                // 修正：保存された時間ではなく、常に現在の時刻から開始
                 stopwatch.startTime = Date.now() - stopwatch.elapsedTime * 1000;
+            
+                // ▼▼▼【追加】ここから▼▼▼
+                state.focus.isRunning = true;
+                // ストップウォッチの場合、開始時刻のみ保存
+                state.focus.startTime = stopwatch.startTime; 
+                saveState();
                 stopwatch.interval = setInterval(stopwatchTick, 100);
                 $('#stopwatch-start-btn').classList.add('hidden');
                 $('#stopwatch-controls').classList.remove('hidden');
@@ -1141,30 +1168,87 @@
                 saveState();
             }
 
-            const init = () => {
-                // Service Workerの登録
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('sw.js') 
-                        .then(registration => {
-                            console.log('Service Worker登録成功:', registration);
-                        })
-                        .catch(error => {
-                            console.log('Service Worker登録失敗:', error);
-                        });
+            const restoreFocusState = () => {
+            // 保存された実行中のタイマー/SWがなければ何もしない
+            if (!state.focus.isRunning || !state.focus.startTime) {
+                setTimer(1500); // デフォルトの25分をセット
+                return;
+            }
+        
+            const elapsed = Math.floor((Date.now() - state.focus.startTime) / 1000); // 経過時間（秒）
+        
+            // 復元するモードに合わせてUIを更新
+            $$('.focus-mode-btn').forEach(btn => {
+                const isSelected = btn.dataset.mode === state.focus.mode;
+                btn.classList.toggle('primary-bg', isSelected);
+                btn.classList.toggle('text-white', isSelected);
+            });
+            $('#timer-view').style.display = state.focus.mode === 'timer' ? 'flex' : 'none';
+            $('#stopwatch-view').style.display = state.focus.mode === 'stopwatch' ? 'flex' : 'none';
+        
+            if (state.focus.mode === 'timer') {
+                const timeLeft = state.focus.duration - elapsed;
+        
+                if (timeLeft <= 0) {
+                    // 復元時にはタイマーが既に終了している場合
+                    showToast('タイマーは終了しました');
+                    logStudyTime('focus', state.focus.duration);
+                    addLP(Math.floor(state.focus.duration / 60), 'タイマー完了');
+                    resetTimerUI();
+                    // 状態をクリア
+                    state.focus.isRunning = false;
+                    state.focus.startTime = null;
+                    saveState();
+                    setTimer(1500); // 次のためにリセット
+                } else {
+                    // タイマーを復元
+                    focusTimer.timeLeft = timeLeft;
+                    focusTimer.defaultTime = state.focus.duration;
+                    focusTimer.isRunning = true;
+        
+                    $('#focus-timer-display').textContent = formatTime(timeLeft);
+                    $('#focus-start-btn').classList.add('hidden');
+                    $('#focus-controls').classList.remove('hidden');
+                    $('#timer-settings-container').classList.add('hidden');
+        
+                    focusTimer.interval = setInterval(timerTick, 1000);
+                    updateMiniTimer();
                 }
-                
+            } else { // ストップウォッチの場合
+                stopwatch.elapsedTime = elapsed;
+                stopwatch.startTime = state.focus.startTime;
+                stopwatch.isRunning = true;
+        
+                $('#stopwatch-display').textContent = formatStopwatchTime(elapsed);
+                $('#stopwatch-start-btn').classList.add('hidden');
+                $('#stopwatch-controls').classList.remove('hidden');
+        
+                stopwatch.interval = setInterval(stopwatchTick, 100);
+                updateMiniTimer();
+            }
+        };
+
+            const init = () => {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('sw.js')
+                        .then(registration => console.log('Service Worker登録成功:', registration))
+                        .catch(error => console.log('Service Worker登録失敗:', error));
+                }
+            
                 loadState();
                 checkCountdownNotifications();
+            
+                // ページ描画の前にタイマーの状態を復元・設定する
+                restoreFocusState();
+            
                 renderEngine.renderAll();
-                updateFocusModeUI();
-                setTimer(1500); // タイマーの初期値を25分に設定
-                
+                // updateFocusModeUI(); // restoreFocusStateが担当するので不要
+            
                 const reviewsToday = state.reviewSchedule.filter(r => new Date(r.reviewDate) <= new Date()).length;
-                if(reviewsToday > 0) { 
+                if (reviewsToday > 0) { 
                     showToast(`今日やるべき復習が ${reviewsToday} 件あります！`); 
                 }
             
-                // 設定ページ用の初期化
                 $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
                 updateAppearance();
             };
