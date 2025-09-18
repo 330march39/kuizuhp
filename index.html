@@ -343,41 +343,39 @@
            // 既存の updateAppearance 関数を、この新しいコードで完全に置き換えてください。
             
             const updateAppearance = () => {
-                const appContainer = $('#app-container');
-                const activeBgId = state.profile.activeBackground;
-                const activeBg = initialData.backgrounds[activeBgId];
-                const isGlobal = state.settings.backgroundScopeGlobal;
-                const hasImage = activeBg && activeBg.url;
-            
-                // --- 1. テーマ決定ロジック (新) ---
-                let effectiveTone = activeBg.tone; // まず壁紙のtoneを基本にする
-            
-                // toneが'system'の場合のみ、デバイスの設定を確認する
-                if (effectiveTone === 'system') {
-                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                        effectiveTone = 'dark'; // デバイスがダークモードならdark
-                    } else {
-                        effectiveTone = 'light'; // それ以外はlight
-                    }
-                }
-            
-                // --- 2. 決定したテーマをHTML要素に適用 ---
-                document.documentElement.classList.remove('dark');
-                if (effectiveTone === 'dark') {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    document.documentElement.setAttribute('data-theme', 'light');
-                }
-            
-                // --- 3. 背景画像の適用ロジック ---
-                if (isGlobal && hasImage) {
-                    appContainer.style.backgroundImage = `url(${activeBg.url})`;
-                } else {
-                    appContainer.style.backgroundImage = 'none';
-                }
-            };
+                const appContainer = $('#app-container');
+                const activeBgId = state.profile.activeBackground;
+                const activeBg = initialData.backgrounds[activeBgId];
+                const isGlobal = state.settings.backgroundScopeGlobal;
+                const hasImage = activeBg && activeBg.url;
+                
+                // --- 1. テーマ決定ロジック ---
+                let effectiveTone = activeBg.tone;
+                
+                if (effectiveTone === 'system') {
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        effectiveTone = 'dark';
+                    } else {
+                        effectiveTone = 'light';
+                    }
+                }
+                
+                // --- 2. 決定したテーマをHTML要素に適用 (修正済みのロジック) ---
+                if (effectiveTone === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+                
+                // --- 3. 背景画像の適用ロジック ---
+                if (isGlobal && hasImage) {
+                    appContainer.style.backgroundImage = `url(${activeBg.url})`;
+                } else {
+                    appContainer.style.backgroundImage = 'none';
+                }
+            };
 
             const updateLpDisplay = () => {
                 $('#lp-display').textContent = `${state.profile.lp} LP`;
