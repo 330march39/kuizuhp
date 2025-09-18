@@ -1148,7 +1148,7 @@
             }
 
             const init = () => {
-                // 【追加】Service Workerの登録
+                // Service Workerの登録
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.register('/sw.js')
                         .then(registration => {
@@ -1158,15 +1158,19 @@
                             console.log('Service Worker登録失敗:', error);
                         });
                 }
+                
                 loadState();
                 checkCountdownNotifications();
                 renderEngine.renderAll();
                 updateFocusModeUI();
-                setTimer(1500);
+                setTimer(1500); // タイマーの初期値を25分に設定
                 
                 const reviewsToday = state.reviewSchedule.filter(r => new Date(r.reviewDate) <= new Date()).length;
-                if(reviewsToday > 0) { showToast(`今日やるべき復習が ${reviewsToday} 件あります！`); }
-
+                if(reviewsToday > 0) { 
+                    showToast(`今日やるべき復習が ${reviewsToday} 件あります！`); 
+                }
+            
+                // 設定ページ用の初期化
                 $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
                 updateAppearance();
             };
