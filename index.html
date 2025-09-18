@@ -202,15 +202,6 @@
                         <input type="checkbox" id="background-scope-toggle" class="toggle-checkbox">
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
-                    <h3 class="font-semibold mb-2">外観</h3>
-                    <div id="manual-theme-container" class="hidden">
-                        <div class="flex items-center justify-between">
-                            <p>ダークモード</p>
-                            <input type="checkbox" id="manual-dark-mode-toggle" class="toggle-checkbox">
-                        </div>
-                    </div>
-                </div>
             </div>
         </main>
 
@@ -358,18 +349,16 @@
                 const isGlobal = state.settings.backgroundScopeGlobal;
                 const hasImage = activeBg && activeBg.url;
             
-                // --- 1. テーマ決定ロジック ---
-                let effectiveTone;
+                // --- 1. テーマ決定ロジック (新) ---
+                let effectiveTone = activeBg.tone; // まず壁紙のtoneを基本にする
             
-                // 手動テーマ設定が有効になる条件（＝トグルが表示される条件）を定義
-                const isManualThemeMode = (activeBgId === 'default' || !isGlobal);
-            
-                if (isManualThemeMode) {
-                    // 条件に合致する場合、手動設定トグルの状態に従う (trueならdark, falseならlight)
-                    effectiveTone = state.settings.manualDarkMode ? 'dark' : 'light';
-                } else {
-                    // 条件外（カスタム壁紙で「全体適用」オン）の場合、壁紙のtoneに従う
-                    effectiveTone = activeBg.tone;
+                // toneが'system'の場合のみ、デバイスの設定を確認する
+                if (effectiveTone === 'system') {
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        effectiveTone = 'dark'; // デバイスがダークモードならdark
+                    } else {
+                        effectiveTone = 'light'; // それ以外はlight
+                    }
                 }
             
                 // --- 2. 決定したテーマをHTML要素に適用 ---
@@ -492,18 +481,6 @@
                         renderChart('study-time-chart', 'bar', { labels, datasets: [{ label: '学習時間 (分)', data, backgroundColor: 'rgba(79, 70, 229, 0.5)', borderColor: 'rgba(79, 70, 229, 1)', borderWidth: 1 }] }, { scales: { y: { beginAtZero: true } } });
                     },
                     'settings-page': () => {
-                        const manualThemeContainer = $('#manual-theme-container');
-                        const activeBgId = state.profile.activeBackground;
-                        const isGlobal = state.settings.backgroundScopeGlobal;
-                    
-                        // デフォルト壁紙、または「全体適用」がオフの時にだけトグルを表示する
-                        if (activeBgId === 'default' || !isGlobal) {
-                            manualThemeContainer.classList.remove('hidden');
-                            $('#manual-dark-mode-toggle').checked = state.settings.manualDarkMode;
-                        } else {
-                            manualThemeContainer.classList.add('hidden');
-                        }
-
                         $('#review-notification-toggle').checked = state.settings.reviewNotifications;
                         
                         $('#theme-selector').innerHTML = state.profile.unlockedThemes.map(id => {
