@@ -132,11 +132,14 @@
                 <div id="timer-view" class="focus-view-bg flex-grow flex flex-col items-center justify-center text-center relative text-white rounded-lg">
                     <div class="absolute inset-0 bg-black/50 rounded-lg"></div>
                     <div class="relative z-10 p-4">
-                        <div class="flex items-center justify-center space-x-2 mb-4">
-                            <button class="timer-duration-btn bg-white/20 px-3 py-1 rounded-full text-sm" data-time="300">5分</button>
-                            <button class="timer-duration-btn bg-white/20 px-3 py-1 rounded-full text-sm" data-time="900">15分</button>
-                            <button class="timer-duration-btn bg-white/40 px-3 py-1 rounded-full text-sm" data-time="1500">25分</button>
-                            <button class="timer-duration-btn bg-white/20 px-3 py-1 rounded-full text-sm" data-time="2700">45分</button>
+                        <div id="timer-settings-container"> <div class="flex items-center justify-center space-x-2 mb-4">
+                                <button class="timer-duration-btn bg-white/20 px-3 py-1 rounded-full text-sm" data-time="300">5分</button>
+                                </div>
+                            <div class="flex justify-center items-center space-x-2 mb-6">
+                                <input id="custom-time-input" type="number" min="1" class="w-24 bg-white/20 text-white placeholder-white/70 text-center font-bold p-2 rounded-lg" placeholder="分">
+                                <button id="set-custom-time-btn" class="bg-white/30 hover:bg-white/40 text-white font-bold p-2 rounded-lg"><i data-lucide="check" class="w-6 h-6"></i></button>
+                            </div>
+                        </div> <div id="focus-timer-display" class="text-7xl font-bold tabular-nums mb-6">25:00</div>
                         </div>
                          <div class="flex justify-center items-center space-x-2 mb-6">
                             <input id="custom-time-input" type="number" min="1" class="w-24 bg-white/20 text-white placeholder-white/70 text-center font-bold p-2 rounded-lg" placeholder="分">
@@ -154,7 +157,7 @@
                 <div id="stopwatch-view" class="focus-view-bg hidden flex-grow flex-col items-center justify-center text-center relative text-white rounded-lg">
                      <div class="absolute inset-0 bg-black/50 rounded-lg"></div>
                      <div class="relative z-10 p-4">
-                        <div id="stopwatch-display" class="text-7xl font-bold tabular-nums mb-6">00:00:00</div>
+                        <div id="stopwatch-display" class="text-7xl font-bold tabular-nums mb-6">00:00</div>
                          <button id="stopwatch-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center mx-auto"><i data-lucide="play" class="w-6 h-6 mr-2"></i>スタート</button>
                         <div id="stopwatch-controls" class="hidden flex flex-wrap items-center justify-center gap-4">
                             <button id="stopwatch-pause-btn" class="bg-gray-500/70 hover:bg-gray-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
@@ -207,10 +210,6 @@
                             <input type="checkbox" id="manual-dark-mode-toggle" class="toggle-checkbox">
                         </div>
                     </div>
-                </div>
-                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
-                    <h3 class="font-semibold mb-2">アプリのインストール</h3>
-                    <button id="install-button" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center hidden"><i data-lucide="download-cloud" class="w-5 h-5 mr-2"></i>ホーム画面に追加</button>
                 </div>
             </div>
         </main>
@@ -561,8 +560,8 @@
                 const totalSeconds = s;
                 const minutes = Math.floor(totalSeconds / 60);
                 const seconds = Math.floor(totalSeconds % 60);
-                const ms = Math.floor((totalSeconds * 100) % 100);
-                return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}:${ms.toString().padStart(2,'0')}`;
+                // const ms = ... の行を削除
+                return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`; // 返り値からmsを削除
             };
 
             const logStudyTime = (type, seconds) => {
@@ -876,6 +875,7 @@
                 $('#focus-timer-display').textContent = formatTime(focusTimer.defaultTime);
                 $('#focus-start-btn').classList.remove('hidden');
                 $('#focus-controls').classList.add('hidden');
+                $('#timer-settings-container').classList.remove('hidden'); // この行を追加
                 updateMiniTimer();
             };
 
@@ -919,6 +919,7 @@
                 focusTimer.interval = setInterval(timerTick, 1000);
                 $('#focus-start-btn').classList.add('hidden');
                 $('#focus-controls').classList.remove('hidden');
+                $('#timer-settings-container').classList.add('hidden'); // この行を追加
                 updateMiniTimer();
             });
             $('#focus-pause-btn').addEventListener('click', () => { if (focusTimer.isPaused) resumeFocusTimer(); else pauseFocusTimer(); });
@@ -1112,13 +1113,6 @@
                 const reviewsToday = state.reviewSchedule.filter(r => new Date(r.reviewDate) <= new Date()).length;
                 if(reviewsToday > 0) { showToast(`今日やるべき復習が ${reviewsToday} 件あります！`); }
 
-                let deferredPrompt;
-                window.addEventListener('beforeinstallprompt', (e) => {
-                    e.preventDefault(); deferredPrompt = e;
-                    const installBtn = $('#install-button');
-                    installBtn.classList.remove('hidden');
-                    installBtn.onclick = () => deferredPrompt.prompt();
-                });
                 $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
                 updateAppearance();
             };
