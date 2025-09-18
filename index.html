@@ -134,15 +134,14 @@
                     <div class="relative z-10 p-4">
                         
                         <div id="timer-settings-container">
-                            <div class="flex items-center justify-center space-x-2 mb-4">
-                                <button class="timer-duration-btn bg-white/20 px-3 py-1 rounded-full text-sm" data-time="300">5分</button>
-                                <button class="timer-duration-btn bg-white/20 px-3 py-1 rounded-full text-sm" data-time="900">15分</button>
-                                <button class="timer-duration-btn bg-white/40 px-3 py-1 rounded-full text-sm" data-time="1500">25分</button>
-                                <button class="timer-duration-btn bg-white/20 px-3 py-1 rounded-full text-sm" data-time="2700">45分</button>
-                            </div>
-                            <div class="flex justify-center items-center space-x-2 mb-6">
-                                <input id="custom-time-input" type="number" min="1" class="w-24 bg-white/20 text-white placeholder-white/70 text-center font-bold p-2 rounded-lg" placeholder="分">
-                                <button id="set-custom-time-btn" class="bg-white/30 hover:bg-white/40 text-white font-bold p-2 rounded-lg"><i data-lucide="check" class="w-6 h-6"></i></button>
+                            <div class="flex items-center justify-center space-x-2 mb-6">
+                                <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="60">1分</button>
+                                <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="300">5分</button>
+                                <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="1800">30分</button>
+                                <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="3600">60分</button>
+                                <button id="timer-reset-btn" class="bg-white/20 hover:bg-white/30 w-10 h-10 rounded-full flex items-center justify-center">
+                                    <i data-lucide="rotate-cw" class="w-5 h-5"></i>
+                                </button>
                             </div>
                         </div>
             
@@ -308,7 +307,7 @@
 
             let state;
             let chartInstances = {};
-            let focusTimer = { interval: null, defaultTime: 1500, timeLeft: 1500, isRunning: false, isPaused: false };
+            let focusTimer = { interval: null, defaultTime: 0, timeLeft: 0, isRunning: false, isPaused: false };
             let stopwatch = { interval: null, startTime: 0, elapsedTime: 0, isRunning: false, isPaused: false };
             let quizTimer = { startTime: null };
 
@@ -556,6 +555,20 @@
                 if (hours > 0) return `${hours}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
                 return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
             };
+
+            // 【追加】タイマーに時間を加算する関数
+            const addTimerTime = (seconds) => {
+                if (focusTimer.isRunning) return; // 実行中は時間を変更できないようにする
+                focusTimer.timeLeft += seconds;
+                $('#focus-timer-display').textContent = formatTime(focusTimer.timeLeft);
+            };
+            
+            // 【追加】タイマー表示をリセットする関数
+            const resetTimerDisplay = () => {
+                if (focusTimer.isRunning) return;
+                focusTimer.timeLeft = 0;
+                $('#focus-timer-display').textContent = formatTime(0);
+            };
             
             const formatStopwatchTime = (s) => {
                 const totalSeconds = s;
@@ -719,12 +732,17 @@
                     updateFocusModeUI();
                 }
 
-                const timerDurationBtn = e.target.closest('.timer-duration-btn');
-                if(timerDurationBtn && !focusTimer.isRunning) {
-                    const time = parseInt(timerDurationBtn.dataset.time);
-                    setTimer(time);
-                     $$('.timer-duration-btn').forEach(btn => btn.classList.replace('bg-white/40', 'bg-white/20'));
-                    timerDurationBtn.classList.replace('bg-white/20', 'bg-white/40');
+                // 時間加算ボタンの処理
+                const timeAddBtn = e.target.closest('.time-add-btn');
+                if(timeAddBtn) {
+                    const time = parseInt(timeAddBtn.dataset.time);
+                    addTimerTime(time);
+                }
+                
+                // リセットボタンの処理
+                const timerResetBtn = e.target.closest('#timer-reset-btn');
+                if(timerResetBtn) {
+                    resetTimerDisplay();
                 }
             });
 
@@ -872,11 +890,11 @@
             const resetTimerUI = () => {
                 clearInterval(focusTimer.interval);
                 focusTimer.isRunning = false; focusTimer.isPaused = false;
-                focusTimer.timeLeft = focusTimer.defaultTime;
+                focusTimer.timeLeft = focusTimer.defaultTime; // defaultTimeからリセット
                 $('#focus-timer-display').textContent = formatTime(focusTimer.defaultTime);
                 $('#focus-start-btn').classList.remove('hidden');
                 $('#focus-controls').classList.add('hidden');
-                $('#timer-settings-container').classList.remove('hidden'); // この行を追加
+                $('#timer-settings-container').classList.remove('hidden');
                 updateMiniTimer();
             };
 
@@ -905,9 +923,10 @@
             };
             
             const setTimer = (seconds) => {
-                 focusTimer.defaultTime = seconds; focusTimer.timeLeft = seconds;
-                 $('#focus-timer-display').textContent = formatTime(seconds);
-                 $('#custom-time-input').value = '';
+                focusTimer.defaultTime = seconds; // defaultTimeも更新
+                focusTimer.timeLeft = seconds;
+                $('#focus-timer-display').textContent = formatTime(seconds);
+                $('#custom-time-input').value = '';
             };
             
             $('#set-custom-time-btn').addEventListener('click', () => {
@@ -916,11 +935,18 @@
             });
 
             $('#focus-start-btn').addEventListener('click', () => {
-                focusTimer.isRunning = true; focusTimer.isPaused = false;
+                // 0秒の時は開始しない
+                if (focusTimer.timeLeft <= 0) {
+                    showToast('時間を設定してください');
+                    return;
+                }
+                focusTimer.defaultTime = focusTimer.timeLeft; // 開始時の時間を記憶
+                focusTimer.isRunning = true;
+                focusTimer.isPaused = false;
                 focusTimer.interval = setInterval(timerTick, 1000);
                 $('#focus-start-btn').classList.add('hidden');
                 $('#focus-controls').classList.remove('hidden');
-                $('#timer-settings-container').classList.add('hidden'); // この行を追加
+                $('#timer-settings-container').classList.add('hidden');
                 updateMiniTimer();
             });
             $('#focus-pause-btn').addEventListener('click', () => { if (focusTimer.isPaused) resumeFocusTimer(); else pauseFocusTimer(); });
