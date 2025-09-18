@@ -1301,6 +1301,15 @@
             $('#countdown-notification-details').style.display = e.target.checked ? 'block' : 'none';
         });
             
+        const darkModeMatcher = window.matchMedia('(prefers-color-scheme: dark)');
+        darkModeMatcher.addEventListener('change', e => {
+            // OSのテーマが変更された時だけ、外観を更新する
+            const activeBg = initialData.backgrounds[state.profile.activeBackground];
+            if (activeBg && activeBg.tone === 'system') {
+                updateAppearance();
+            }
+        });
+            
             init();
         });
     </script>
