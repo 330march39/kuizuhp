@@ -415,25 +415,23 @@
                     },
                     'study-page': () => {
                         const pinnedContainer = $('#pinned-quizzes');
-                        const pinnedSectionContainer = pinnedContainer.parentElement; // 親要素(セクション全体)を取得
+                        const pinnedSectionContainer = pinnedContainer.parentElement;
                     
                         if (state.pinnedQuizzes.length > 0) {
-                            // ピン留めがある場合、セクションを表示して中身を描画
                             pinnedSectionContainer.style.display = 'block';
+                            const pinnedQuizzes = state.pinnedQuizzes.map(id => initialData.quizzes.find(q => q.id === id)).filter(Boolean);
+                            pinnedContainer.innerHTML = pinnedQuizzes.map(q => createQuizCard(q, true)).join('');
                         } else {
-                            // ピン留めがない場合、セクション全体を非表示にする
                             pinnedSectionContainer.style.display = 'none';
                         }
+                    
                         const allContainer = $('#all-quizzes');
                         const subjects = ['all', ...new Set(initialData.quizzes.map(q => q.subject))];
                         const activeFilter = $('#filter-container .active')?.dataset.filter || 'all';
                         $('#filter-container').innerHTML = subjects.map(s => `<button class="filter-btn ${s === activeFilter ? 'active primary-bg text-white' : 'bg-gray-200 dark:bg-gray-600'} px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap" data-filter="${s}">${s === 'all' ? 'すべて' : s}</button>`).join('');
-                        
+                    
                         const quizzes = initialData.quizzes.filter(q => activeFilter === 'all' || q.subject === activeFilter);
                         allContainer.innerHTML = quizzes.map(q => createQuizCard(q, state.pinnedQuizzes.includes(q.id))).join('');
-                        
-                        const pinnedQuizzes = state.pinnedQuizzes.map(id => initialData.quizzes.find(q => q.id === id)).filter(Boolean);
-                        pinnedContainer.innerHTML = pinnedQuizzes.length ? pinnedQuizzes.map(q => createQuizCard(q, true)).join('') : `<p class="text-sm text-gray-500">クイズをピン留めしてすぐアクセス！</p>`;
                     },
                     // 変更後
                   'focus-page': () => {
