@@ -936,13 +936,7 @@
                 focusTimer.defaultTime = seconds; // defaultTimeも更新
                 focusTimer.timeLeft = seconds;
                 $('#focus-timer-display').textContent = formatTime(seconds);
-                $('#custom-time-input').value = '';
             };
-            
-            $('#set-custom-time-btn').addEventListener('click', () => {
-                const minutes = parseInt($('#custom-time-input').value);
-                if (minutes > 0) { setTimer(minutes * 60); $$('.timer-duration-btn').forEach(btn => btn.classList.replace('bg-white/40', 'bg-white/20')); }
-            });
 
            $('#focus-start-btn').addEventListener('click', () => {
                 if (focusTimer.timeLeft <= 0) {
