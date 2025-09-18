@@ -736,12 +736,6 @@
                     resetTimerDisplay();
                 }
             });
-
-            $('#manual-dark-mode-toggle').addEventListener('change', (e) => {
-                state.settings.manualDarkMode = e.target.checked;
-                saveState();
-                updateAppearance(); // 外観を即時更新
-            });
             
             /* 変更後 (新しいイベントリスナーとして追加) */
             $('#background-scope-toggle').addEventListener('change', (e) => {
