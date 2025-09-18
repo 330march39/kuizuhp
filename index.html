@@ -129,30 +129,19 @@
                     </div>
                 </div>
 
-                <div id="timer-view" class="focus-view-bg flex-grow flex flex-col items-center justify-center text-center relative text-white rounded-lg">
-                    <div class="absolute inset-0 bg-black/50 rounded-lg"></div>
-                    <div class="relative z-10 p-4">
-                        <div id="timer-settings-container"> <div class="flex items-center justify-center space-x-2 mb-4">
-                                <button class="timer-duration-btn bg-white/20 px-3 py-1 rounded-full text-sm" data-time="300">5分</button>
-                                </div>
-                            <div class="flex justify-center items-center space-x-2 mb-6">
-                                <input id="custom-time-input" type="number" min="1" class="w-24 bg-white/20 text-white placeholder-white/70 text-center font-bold p-2 rounded-lg" placeholder="分">
-                                <button id="set-custom-time-btn" class="bg-white/30 hover:bg-white/40 text-white font-bold p-2 rounded-lg"><i data-lucide="check" class="w-6 h-6"></i></button>
-                            </div>
-                        </div> <div id="focus-timer-display" class="text-7xl font-bold tabular-nums mb-6">25:00</div>
-                        </div>
-                         <div class="flex justify-center items-center space-x-2 mb-6">
-                            <input id="custom-time-input" type="number" min="1" class="w-24 bg-white/20 text-white placeholder-white/70 text-center font-bold p-2 rounded-lg" placeholder="分">
-                            <button id="set-custom-time-btn" class="bg-white/30 hover:bg-white/40 text-white font-bold p-2 rounded-lg"><i data-lucide="check" class="w-6 h-6"></i></button>
-                        </div>
-                        <div id="focus-timer-display" class="text-7xl font-bold tabular-nums mb-6">25:00</div>
-                        <button id="focus-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center mx-auto"><i data-lucide="play" class="w-6 h-6 mr-2"></i>集中モード開始</button>
-                        <div id="focus-controls" class="hidden flex flex-wrap items-center justify-center gap-4">
-                            <button id="focus-pause-btn" class="bg-gray-500/70 hover:bg-gray-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
-                            <button id="focus-end-btn" class="bg-red-500/70 hover:bg-red-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="stop-circle" class="w-6 h-6 mr-2"></i>終了</button>
-                        </div>
+                <div id="timer-settings-container">
+                    <div class="flex items-center justify-center space-x-2 mb-4">
+                        <button class="timer-duration-btn bg-white/20 px-3 py-1 rounded-full text-sm" data-time="300">5分</button>
+                        <button class="timer-duration-btn bg-white/20 px-3 py-1 rounded-full text-sm" data-time="900">15分</button>
+                        <button class="timer-duration-btn bg-white/40 px-3 py-1 rounded-full text-sm" data-time="1500">25分</button>
+                        <button class="timer-duration-btn bg-white/20 px-3 py-1 rounded-full text-sm" data-time="2700">45分</button>
+                    </div>
+                    <div class="flex justify-center items-center space-x-2 mb-6">
+                        <input id="custom-time-input" type="number" min="1" class="w-24 bg-white/20 text-white placeholder-white/70 text-center font-bold p-2 rounded-lg" placeholder="分">
+                        <button id="set-custom-time-btn" class="bg-white/30 hover:bg-white/40 text-white font-bold p-2 rounded-lg"><i data-lucide="check" class="w-6 h-6"></i></button>
                     </div>
                 </div>
+                <div id="focus-timer-display" class="text-7xl font-bold tabular-nums mb-6">25:00</div>
 
                 <div id="stopwatch-view" class="focus-view-bg hidden flex-grow flex-col items-center justify-center text-center relative text-white rounded-lg">
                      <div class="absolute inset-0 bg-black/50 rounded-lg"></div>
