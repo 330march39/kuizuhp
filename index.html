@@ -188,7 +188,6 @@
             </div>
 
             <div id="settings-page" class="page p-4 space-y-4">
-                <h2 class="text-2xl font-bold mb-2">設定</h2>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                     <h3 class="font-semibold mb-2">通知設定</h3>
                     <button id="notification-permission-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center mb-4"><i data-lucide="bell-ring" class="w-5 h-5 mr-2"></i>ブラウザ通知を許可</button>
@@ -214,7 +213,7 @@
              <div id="mini-timer-bar" class="w-full bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg flex items-center p-2 space-x-3 cursor-pointer">
                 <div class="flex items-center space-x-3 flex-grow min-w-0">
                     <i data-lucide="timer" class="w-5 h-5 primary-text flex-shrink-0"></i>
-                    <span id="mini-timer-text" class="text-sm font-mono text-white truncate"></span>
+                    <span id="mini-timer-text" class="text-sm font-bold tabular-nums text-white truncate"></span>
                 </div>
                 <div class="w-1/3 h-1.5 bg-gray-600 rounded-full overflow-hidden flex-shrink-0">
                     <div id="mini-timer-progress-bar" class="h-full primary-bg rounded-full"></div>
@@ -305,6 +304,7 @@
             let chartInstances = {};
             let focusTimer = { interval: null, defaultTime: 0, timeLeft: 0, isRunning: false, isPaused: false };
             let stopwatch = { interval: null, startTime: 0, elapsedTime: 0, isRunning: false, isPaused: false };
+            let miniTimerTemporarilyHidden = false;
             let quizTimer = { startTime: null };
 
             const $ = (s) => document.querySelector(s);
@@ -789,16 +789,20 @@
             
             // --- Focus Page Logic ---
             const updateMiniTimer = () => {
+                if (miniTimerTemporarilyHidden) {
+                    $('#mini-timer-container').classList.remove('visible');
+                    return;
+                }
                 const container = $('#mini-timer-container');
                 const bar = $('#mini-timer-bar');
                 if ((focusTimer.isRunning || stopwatch.isRunning) && !$('#focus-page').classList.contains('active')) {
                     container.classList.add('visible');
                     if(focusTimer.isRunning){
                         const progress = (focusTimer.defaultTime - focusTimer.timeLeft) / focusTimer.defaultTime * 100;
-                        $('#mini-timer-text').textContent = `タイマー: ${formatTime(focusTimer.timeLeft)}`;
+                        $('#mini-timer-text').textContent = formatTime(focusTimer.timeLeft);
                         $('#mini-timer-progress-bar').style.width = `${progress}%`;
                     } else { // stopwatch
-                         $('#mini-timer-text').textContent = `計測中: ${formatStopwatchTime(stopwatch.elapsedTime)}`;
+                         $('#mini-timer-text').textContent = formatStopwatchTime(stopwatch.elapsedTime);
                          $('#mini-timer-progress-bar').style.width = `100%`;
                     }
                 } else {
@@ -1000,7 +1004,9 @@
                 e.currentTarget.classList.replace('text-gray-500', 'primary-text');
                 $('#header-title').textContent = e.currentTarget.dataset.title;
                 if(renderEngine.pages[pageId]) { renderEngine.pages[pageId](); }
-                
+                if (pageId === 'focus-page') {
+                    miniTimerTemporarilyHidden = false;
+                }
                 updateMiniTimer();
                 lucide.createIcons();
             }));
@@ -1011,8 +1017,8 @@
             });
 
             $('#close-mini-timer-btn').addEventListener('click', () => {
-                if (focusTimer.isRunning) endFocusTimer();
-                if (stopwatch.isRunning) endStopwatch();
+                miniTimerTemporarilyHidden = true; // フラグを立てる
+                $('#mini-timer-container').classList.remove('visible'); // 非表示にする
             });
 
             // --- Countdown Logic ---
