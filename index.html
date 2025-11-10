@@ -13,12 +13,12 @@
     <link rel="apple-touch-icon" href="https://placehold.co/180x180/4f46e5/ffffff?text=Q">
 
     <!-- 外部ライブラリとフォント -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         darkMode: 'class' // ここでダークモードの制御方法を'class'に指定します
       }
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -514,7 +514,7 @@
             const updateAppearance = () => {
                 const appContainer = $('#app-container');
                 const activeBgId = state.profile.activeBackground;
-                const activeBg = initialData.backgrounds[activeBgId];
+                const activeBg = initialData.backgrounds[activeBgId] || initialData.backgrounds['default'];
                 const isGlobal = state.settings.backgroundScopeGlobal;
                 const hasImage = activeBg && activeBg.url;
                 
