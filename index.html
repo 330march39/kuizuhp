@@ -421,6 +421,9 @@
             let miniTimerTemporarilyHidden = false;
             let quizTimer = { startTime: null };
 
+            const $ = (s) => document.querySelector(s);
+            const $$ = (s) => document.querySelectorAll(s);
+
             let quest = {
                 plan: [], // { id, type: 'section' | 'break', text?, duration }
                 active: false,
@@ -455,9 +458,6 @@
             const closeIframeBtn = $('#close-iframe-btn');
             const breakContentSelector = $('#break-content-selector');
             const breakSnsSelector = $('#break-sns-selector');
-
-            const $ = (s) => document.querySelector(s);
-            const $$ = (s) => document.querySelectorAll(s);
 
             const loadState = () => {
                 const defaultState = {
