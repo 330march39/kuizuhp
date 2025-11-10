@@ -575,10 +575,19 @@
                         reviewContainer.innerHTML = reviews.length ? reviews.map(r => createQuizCard(initialData.quizzes.find(q => q.id === r.quizId), false, true)).join('') : `<p class="text-sm text-gray-500">今日の復習はありません。素晴らしい！</p>`;
                         
                         const titlesContainer = $('#recent-titles');
-                        titlesContainer.innerHTML = state.profile.earnedTitles.slice(-5).reverse().map(tid => {
-                             const title = initialData.titles.find(t => t.id === tid);
-                             return `<div class="bg-white dark:bg-gray-700 p-2 rounded-lg shadow-sm text-center min-w-[100px]"><i data-lucide="award" class="mx-auto w-8 h-8 text-yellow-500"></i><p class="text-xs font-semibold mt-1">${title.name}</p></div>`;
-                        }).join('') || `<p class="text-sm text-gray-500">称号を獲得してここに表示しよう！</p>`;
+                        // 1. 称号オブジェクトの配列を取得
+                        const titles = state.profile.earnedTitles
+                            .slice(-5)
+                            .reverse()
+                            .map(tid => initialData.titles.find(t => t.id === tid))
+                            .filter(Boolean); // <-- 【重要】ここで undefined を取り除く
+
+                        // 2. 取得できた称号が1件以上ある場合のみ描画
+                        titlesContainer.innerHTML = titles.length 
+                          ? titles.map(title => { // 安全な配列を map する
+                              return `<div class="bg-white dark:bg-gray-700 p-2 rounded-lg shadow-sm text-center min-w-[100px]"><i data-lucide="award" class="mx-auto w-8 h-8 text-yellow-500"></i><p class="text-xs font-semibold mt-1">${title.name}</p></div>`;
+                          }).join('') 
+                          : `<p class="text-sm text-gray-500">称号を獲得してここに表示しよう！</p>`;
                     },
                     'study-page': () => {
                         const pinnedContainer = $('#pinned-quizzes');
