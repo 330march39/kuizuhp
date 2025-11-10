@@ -1379,6 +1379,171 @@
                 lucide.createIcons();
                 $('#countdown-modal').style.display = 'none';
             }
+
+            /* ▼▼▼ 追加: クエスト機能の関数群 ▼▼▼ */
+
+        // クエストプランのリストをレンダリングする関数
+        const renderQuestPlan = () => {
+            questPlanListEl.innerHTML = '';
+            quest.plan.forEach((item, index) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'flex items-center space-x-2 group bg-gray-100 dark:bg-gray-800 p-2 rounded-lg';
+                itemEl.dataset.id = item.id;
+                            
+                let content = '';
+                if (item.type === 'section') {
+                    content = `
+                        <span class="font-bold w-6 text-center">${index + 1}</span>
+                        <input type="text" value="${item.text}" class="quest-item-text flex-grow bg-transparent p-1 rounded border border-transparent focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none">
+                        <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
+                        <span class="text-sm">分</span>
+                    `;
+                } else { // break
+                    content = `
+                        <span class="font-bold w-6 text-center">☕</span>
+                        <span class="flex-grow p-1 text-gray-500 dark:text-gray-400 font-semibold">ブレイクタイム</span>
+                        <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
+                        <span class="text-sm">分</span>
+                    `;
+                }
+
+                itemEl.innerHTML = `
+                    ${content}
+                    <button class="delete-item-btn text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                `;
+                questPlanListEl.appendChild(itemEl);
+
+                // イベントリスナー
+                itemEl.querySelector('.quest-item-text')?.addEventListener('change', (e) => {
+                    item.text = e.target.value;
+                });
+                itemEl.querySelector('.quest-item-duration').addEventListener('change', (e) => {
+                    item.duration = parseInt(e.target.value) * 60;
+                });
+                itemEl.querySelector('.delete-item-btn').addEventListener('click', () => {
+                    quest.plan = quest.plan.filter(p => p.id !== item.id);
+                    renderQuestPlan();
+                });
+            });
+            lucide.createIcons();
+        };
+
+        // クエスト用のタイマーを開始する関数
+        const startQuestTimer = (duration, onTick, onEnd) => {
+            quest.timeLeft = duration;
+            onTick(quest.timeLeft);
+            quest.timerInterval = setInterval(() => {
+                quest.timeLeft--;
+                onTick(quest.timeLeft);
+                if (quest.timeLeft <= 0) {
+                    clearInterval(quest.timerInterval);
+                    onEnd();
+                }
+            }, 1000);
+        };
+
+        // 次のクエストステップを実行する関数
+        const runNextQuestStep = () => {
+            quest.currentIndex++;
+            if (quest.currentIndex >= quest.plan.length) {
+                endQuest(true); // クエスト完了
+                return;
+            }
+
+            const currentStep = quest.plan[quest.currentIndex];
+            
+            // アプリ2のトースト関数とNotification APIを使用
+            const showQuestNotification = (title, body) => {
+                showToast(body);
+                if (Notification.permission === "granted") {
+                    new Notification(title, { body });
+                }
+            };
+
+            if (currentStep.type === 'section') {
+                showQuestNotification('セクション開始', `「${currentStep.text}」を始めましょう！`);
+                questSectionView.style.display = 'block';
+                questBreakView.style.display = 'none';
+                questSectionTitle.textContent = currentStep.text;
+                questProgressEl.textContent = `${quest.currentIndex + 1} / ${quest.plan.length}`;
+                startQuestTimer(
+                    currentStep.duration,
+                    (timeLeft) => { questTimerEl.textContent = formatTime(timeLeft); }, // 既存のformatTimeを流用
+                    () => {
+                        showQuestNotification('セクション終了', 'お疲れ様でした！休憩に入ります。');
+                        runNextQuestStep();
+                    }
+                );
+            } else { // break
+                showQuestNotification('休憩時間', '少し休みましょう！');
+                questSectionView.style.display = 'none';
+                questBreakView.style.display = 'block';
+                breakContentSelector.style.display = 'grid'; // 常に初期表示
+                breakSnsSelector.style.display = 'none';
+                startQuestTimer(
+                    currentStep.duration,
+                    (timeLeft) => { breakTimerEl.textContent = formatTime(timeLeft); },
+                    () => {
+                        showQuestNotification('休憩終了', '次のセクションを始めましょう！');
+                        closeIframe();
+                        runNextQuestStep();
+                    }
+                );
+            }
+        };
+
+        // クエストを開始する関数
+        const startQuest = () => {
+            if (quest.plan.length === 0) {
+                showToast('クエストの予定がありません。');
+                return;
+            }
+            quest.active = true;
+            quest.currentIndex = -1;
+            questActiveScreen.style.display = 'flex';
+            
+            // アプリ2のヘッダーとタブバーを隠す
+            $('header').style.display = 'none';
+            $('nav').style.display = 'none';
+            $('#mini-timer-container').classList.remove('visible'); // ミニタイマーも隠す
+
+            document.body.style.overflow = 'hidden';
+            runNextQuestStep();
+        };
+
+        // クエストを終了する関数
+        const endQuest = (completed = false) => {
+            clearInterval(quest.timerInterval);
+            quest.active = false;
+            questActiveScreen.style.display = 'none';
+
+            // アプリ2のヘッダーとタブバーを再表示
+            $('header').style.display = 'flex';
+            $('nav').style.display = 'flex';
+
+            document.body.style.overflow = 'auto';
+            confirmationModal.style.display = 'none';
+            closeIframe();
+            if (completed) {
+                showToast('クエスト完了！お疲れ様でした！');
+            }
+        };
+
+        // 休憩用iframeを開く/閉じる関数
+        const openIframe = (url) => {
+            breakIframe.src = url;
+            iframeOverlay.style.display = 'flex';
+            lucide.createIcons(); // ボタンのアイコンを描画
+        };
+
+        const closeIframe = () => {
+            breakIframe.src = 'about:blank';
+            iframeOverlay.style.display = 'none';
+        };
+
+        /* ▲▲▲ 追加: クエスト機能の関数群 ▲▲▲ */
             
             // --- Notification Check ---
             function checkCountdownNotifications() {
@@ -1569,171 +1734,6 @@
         $('#countdown-notification-toggle').addEventListener('change', (e) => {
             $('#countdown-notification-details').style.display = e.target.checked ? 'block' : 'none';
         });
-
-        /* ▼▼▼ 追加: クエスト機能の関数群 ▼▼▼ */
-
-        // クエストプランのリストをレンダリングする関数
-        const renderQuestPlan = () => {
-            questPlanListEl.innerHTML = '';
-            quest.plan.forEach((item, index) => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'flex items-center space-x-2 group bg-gray-100 dark:bg-gray-800 p-2 rounded-lg';
-                itemEl.dataset.id = item.id;
-                            
-                let content = '';
-                if (item.type === 'section') {
-                    content = `
-                        <span class="font-bold w-6 text-center">${index + 1}</span>
-                        <input type="text" value="${item.text}" class="quest-item-text flex-grow bg-transparent p-1 rounded border border-transparent focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none">
-                        <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
-                        <span class="text-sm">分</span>
-                    `;
-                } else { // break
-                    content = `
-                        <span class="font-bold w-6 text-center">☕</span>
-                        <span class="flex-grow p-1 text-gray-500 dark:text-gray-400 font-semibold">ブレイクタイム</span>
-                        <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
-                        <span class="text-sm">分</span>
-                    `;
-                }
-
-                itemEl.innerHTML = `
-                    ${content}
-                    <button class="delete-item-btn text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                    </button>
-                `;
-                questPlanListEl.appendChild(itemEl);
-
-                // イベントリスナー
-                itemEl.querySelector('.quest-item-text')?.addEventListener('change', (e) => {
-                    item.text = e.target.value;
-                });
-                itemEl.querySelector('.quest-item-duration').addEventListener('change', (e) => {
-                    item.duration = parseInt(e.target.value) * 60;
-                });
-                itemEl.querySelector('.delete-item-btn').addEventListener('click', () => {
-                    quest.plan = quest.plan.filter(p => p.id !== item.id);
-                    renderQuestPlan();
-                });
-            });
-            lucide.createIcons();
-        };
-
-        // クエスト用のタイマーを開始する関数
-        const startQuestTimer = (duration, onTick, onEnd) => {
-            quest.timeLeft = duration;
-            onTick(quest.timeLeft);
-            quest.timerInterval = setInterval(() => {
-                quest.timeLeft--;
-                onTick(quest.timeLeft);
-                if (quest.timeLeft <= 0) {
-                    clearInterval(quest.timerInterval);
-                    onEnd();
-                }
-            }, 1000);
-        };
-
-        // 次のクエストステップを実行する関数
-        const runNextQuestStep = () => {
-            quest.currentIndex++;
-            if (quest.currentIndex >= quest.plan.length) {
-                endQuest(true); // クエスト完了
-                return;
-            }
-
-            const currentStep = quest.plan[quest.currentIndex];
-            
-            // アプリ2のトースト関数とNotification APIを使用
-            const showQuestNotification = (title, body) => {
-                showToast(body);
-                if (Notification.permission === "granted") {
-                    new Notification(title, { body });
-                }
-            };
-
-            if (currentStep.type === 'section') {
-                showQuestNotification('セクション開始', `「${currentStep.text}」を始めましょう！`);
-                questSectionView.style.display = 'block';
-                questBreakView.style.display = 'none';
-                questSectionTitle.textContent = currentStep.text;
-                questProgressEl.textContent = `${quest.currentIndex + 1} / ${quest.plan.length}`;
-                startQuestTimer(
-                    currentStep.duration,
-                    (timeLeft) => { questTimerEl.textContent = formatTime(timeLeft); }, // 既存のformatTimeを流用
-                    () => {
-                        showQuestNotification('セクション終了', 'お疲れ様でした！休憩に入ります。');
-                        runNextQuestStep();
-                    }
-                );
-            } else { // break
-                showQuestNotification('休憩時間', '少し休みましょう！');
-                questSectionView.style.display = 'none';
-                questBreakView.style.display = 'block';
-                breakContentSelector.style.display = 'grid'; // 常に初期表示
-                breakSnsSelector.style.display = 'none';
-                startQuestTimer(
-                    currentStep.duration,
-                    (timeLeft) => { breakTimerEl.textContent = formatTime(timeLeft); },
-                    () => {
-                        showQuestNotification('休憩終了', '次のセクションを始めましょう！');
-                        closeIframe();
-                        runNextQuestStep();
-                    }
-                );
-            }
-        };
-
-        // クエストを開始する関数
-        const startQuest = () => {
-            if (quest.plan.length === 0) {
-                showToast('クエストの予定がありません。');
-                return;
-            }
-            quest.active = true;
-            quest.currentIndex = -1;
-            questActiveScreen.style.display = 'flex';
-            
-            // アプリ2のヘッダーとタブバーを隠す
-            $('header').style.display = 'none';
-            $('nav').style.display = 'none';
-            $('#mini-timer-container').classList.remove('visible'); // ミニタイマーも隠す
-
-            document.body.style.overflow = 'hidden';
-            runNextQuestStep();
-        };
-
-        // クエストを終了する関数
-        const endQuest = (completed = false) => {
-            clearInterval(quest.timerInterval);
-            quest.active = false;
-            questActiveScreen.style.display = 'none';
-
-            // アプリ2のヘッダーとタブバーを再表示
-            $('header').style.display = 'flex';
-            $('nav').style.display = 'flex';
-
-            document.body.style.overflow = 'auto';
-            confirmationModal.style.display = 'none';
-            closeIframe();
-            if (completed) {
-                showToast('クエスト完了！お疲れ様でした！');
-            }
-        };
-
-        // 休憩用iframeを開く/閉じる関数
-        const openIframe = (url) => {
-            breakIframe.src = url;
-            iframeOverlay.style.display = 'flex';
-            lucide.createIcons(); // ボタンのアイコンを描画
-        };
-
-        const closeIframe = () => {
-            breakIframe.src = 'about:blank';
-            iframeOverlay.style.display = 'none';
-        };
-
-        /* ▲▲▲ 追加: クエスト機能の関数群 ▲▲▲ */
             
             init();
         });
