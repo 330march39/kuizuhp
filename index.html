@@ -460,38 +460,53 @@
             const breakSnsSelector = $('#break-sns-selector');
 
             const loadState = () => {
-                const defaultState = {
-                    profile: { 
-                        lp: 0, 
-                        unlockedThemes: ['default'], 
-                        earnedTitles: [], 
-                        activeTheme: 'default',
-                        unlockedBackgrounds: ['default'],
-                        activeBackground: 'default'
-                    },
-                    progress: {},
-                    reviewSchedule: [],
-                    pinnedQuizzes: [],
-                    countdowns: [],
-                    focus: { 
-                        totalTime: 0, 
-                        mode: 'timer',
-                        isRunning: false, // 実行中かどうかのフラグ
-                        startTime: null,  // 開始時刻のタイムスタンプ
-                        duration: 0       // タイマーの総時間
-                    },
-                    studyLog: {}, 
-                    settings: { reviewNotifications: true, backgroundScopeGlobal: true , manualDarkMode: false },
-                    lastLogin: null,
-                    lastNotificationCheck: new Date().toISOString(),
-                };
-                state = JSON.parse(localStorage.getItem('quizAppUltimateV8')) || defaultState;
-                if(state.lastLogin !== new Date().toDateString()){
-                    addLP(10000, 'ログインボーナス', false);
-                    state.lastLogin = new Date().toDateString();
-                    saveState();
-                }
-            };
+                const defaultState = {
+                    profile: { 
+                        lp: 0, 
+                        unlockedThemes: ['default'], 
+                        earnedTitles: [], 
+                        activeTheme: 'default',
+                        unlockedBackgrounds: ['default'],
+                        activeBackground: 'default'
+                    },
+                    progress: {},
+                    reviewSchedule: [],
+                    pinnedQuizzes: [],
+                    countdowns: [],
+                    focus: { 
+                        totalTime: 0, 
+                        mode: 'timer',
+                        isRunning: false, // 実行中かどうかのフラグ
+                        startTime: null,  // 開始時刻のタイムスタンプ
+                        duration: 0       // タイマーの総時間
+                    },
+                    studyLog: {}, 
+                    settings: { reviewNotifications: true, backgroundScopeGlobal: true , manualDarkMode: false },
+                    lastLogin: null,
+                    lastNotificationCheck: new Date().toISOString(),
+                };
+                
+                // 1. 保存されたデータを読み込む
+                const loaded = JSON.parse(localStorage.getItem('quizAppUltimateV8')) || {};
+                
+                // 2. デフォルト値をベースに、読み込んだ値で上書き（ネストされたオブジェクトも安全にマージ）
+                state = {
+                    ...defaultState,
+                    ...loaded,
+                    // ネストされたオブジェクトをマージして、新しいプロパティが必ず存在するようにする
+                    profile: { ...defaultState.profile, ...(loaded.profile || {}) },
+                    focus: { ...defaultState.focus, ...(loaded.focus || {}) },
+                    settings: { ...defaultState.settings, ...(loaded.settings || {}) }
+                };
+
+                // 3. ログインボーナス処理 (元のロジックをそのまま流用)
+                if(state.lastLogin !== new Date().toDateString()){
+                    addLP(10000, 'ログインボーナス', false);
+                    state.lastLogin = new Date().toDateString();
+                    saveState(); // stateが完全に構築された後に保存
+                }
+            };
+            
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
             
            // 既存の updateAppearance 関数を、この新しいコードで完全に置き換えてください。
