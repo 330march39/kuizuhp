@@ -79,6 +79,24 @@
             background-position: center;
             background-repeat: no-repeat;
         }
+
+        .break-content-btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #edfcff;
+            padding: 16px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .break-content-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen antialiased">
@@ -131,7 +149,8 @@
                     <div class="flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
                         <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="timer">タイマー</button>
                         <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="stopwatch">ストップウォッチ</button>
-                    </div>
+                        <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="quest">クエスト</button>
+                        </div>
                 </div>
             
                 <div id="timer-view" class="focus-view-bg flex-grow flex flex-col items-center justify-center text-center relative text-white rounded-lg">
@@ -171,6 +190,36 @@
                         </div>
                     </div>
                 </div>
+                            <div id="quest-view" class="hidden flex-grow flex-col text-left relative rounded-lg">
+                
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">クエスト設定</h2>
+                
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm mb-4">
+                    <h3 class="font-semibold mb-2 text-gray-700 dark:text-gray-300">セクション設定</h3>
+                    <div class="flex items-center space-x-2 text-sm">
+                        <input type="number" id="break-interval-input" value="2" class="w-16 p-1 border rounded dark:bg-gray-800 dark:border-gray-600">
+                        <span>セクションごとに</span>
+                        <input type="number" id="break-duration-input" value="5" class="w-16 p-1 border rounded dark:bg-gray-800 dark:border-gray-600">
+                        <span>分休憩</span>
+                    </div>
+                     <button id="add-breaks-btn" class="mt-2 text-sm bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition">休憩を自動挿入</button>
+                </div>
+            
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm flex-grow overflow-y-auto">
+                    <div id="quest-plan-list" class="space-y-2">
+                        </div>
+                    
+                    <div class="flex justify-between mt-4">
+                        <button id="add-section-btn" class="text-sm bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition">セクション追加</button>
+                        <button id="add-break-btn" class="text-sm bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition">休憩追加</button>
+                    </div>
+                </div>
+                
+                <button id="start-quest-btn" class="mt-4 w-full primary-bg primary-bg-hover text-white py-3 px-4 rounded-lg font-bold text-lg shadow-md hover:scale-105 transition-transform transform flex items-center justify-center space-x-2">
+                    <i data-lucide="play" class="w-6 h-6"></i>
+                    <span>クエストを開始する</span>
+                </button>
+            </div>
             </div>
             <div id="my-chart-page" class="page p-4 space-y-6">
                 <div>
@@ -272,6 +321,63 @@
 
     <div id="point-details-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 flex flex-col max-h-[90vh]"><div class="flex justify-between items-center mb-4 flex-shrink-0"><h2 class="text-xl font-bold">マイステータス</h2><button id="close-point-modal-btn" class="p-1"><i data-lucide="x"></i></button></div><div class="space-y-6 overflow-y-auto"><div class="text-center"><p class="text-sm text-gray-500">現在の学習ポイント</p><p class="text-4xl font-bold primary-text" id="modal-lp-display"></p></div><div><h3 class="font-semibold mb-2">テーマカラー</h3><div id="modal-theme-selector" class="grid grid-cols-4 gap-4"></div></div><div><h3 class="font-semibold mb-2">壁紙</h3><div id="modal-background-selector" class="grid grid-cols-3 gap-2"></div></div><div><h3 class="font-semibold mb-2">獲得した称号</h3><div id="modal-titles-list" class="flex flex-wrap gap-2"></div></div></div></div></div>
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300 z-50 transform -translate-y-10"></div>
+        
+</div> <div id="quest-active-screen" class="hidden fixed inset-0 bg-gray-900 dark:bg-black text-gray-100 z-50 flex flex-col items-center justify-center p-4">
+        <button id="end-quest-btn" class="absolute top-6 right-6 text-gray-300 p-2 rounded-full hover:bg-gray-700 transition-colors">
+            <i data-lucide="x" class="w-8 h-8"></i>
+        </button>
+                
+        <div id="quest-content-area" class="w-full h-full flex flex-col items-center justify-center">
+            <div id="quest-section-view" class="hidden text-center">
+                <h2 id="quest-section-title" class="text-2xl md:text-3xl font-bold mb-2 text-gray-400"></h2>
+                <p class="text-7xl md:text-9xl font-mono font-extrabold" id="quest-timer">25:00</p>
+                <p id="quest-progress" class="mt-4 text-lg text-gray-400"></p>
+            </div>
+    
+            <div id="quest-break-view" class="hidden w-full h-full flex flex-col items-center pt-16">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-400">☕ ブレイクタイム</h2>
+                    <p class="text-5xl md:text-7xl font-mono font-extrabold" id="break-timer">05:00</p>
+                </div>
+                
+                <div id="break-content-selector" class="grid grid-cols-2 gap-4 w-full max-w-sm">
+                    <button class="break-content-btn" data-type="sns">
+                        <i data-lucide="smartphone" class="w-10 h-10"></i>
+                        <span>SNS</span>
+                    </button>
+                    <button class="break-content-btn" data-type="game">
+                        <i data-lucide="gamepad-2" class="w-10 h-10"></i>
+                        <span>ゲーム</span>
+                    </button>
+                </div>
+                
+                <div id="break-sns-selector" class="hidden grid grid-cols-3 gap-4 w-full max-w-sm mt-4">
+                    <button class="break-content-btn" data-url="https://x.com">X</button>
+                    <button class="break-content-btn" data-url="https://instagram.com">Instagram</button>
+                    <button class="break-content-btn" data-url="https://youtube.com">YouTube</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="iframe-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[60] flex flex-col">
+        <div class="bg-gray-800 p-2 flex justify-end">
+            <button id="close-iframe-btn" class="text-gray-300 p-1 rounded-full hover:bg-gray-700">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <iframe id="break-iframe" class="w-full h-full" src="about:blank"></iframe>
+    </div>
+    
+    <div id="confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[70] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-sm text-center">
+            <h3 id="modal-title" class="text-lg font-bold text-gray-900 dark:text-white mb-4">クエストを終了しますか？</h3>
+            <div class="flex justify-center space-x-4">
+                <button id="modal-cancel-btn" class="px-6 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold hover:bg-gray-300 dark:hover:bg-gray-500 transition">キャンセル</button>
+                <button id="modal-confirm-btn" class="px-6 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition">終了</button>
+            </div>
+        </div>
+    </div>
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -314,6 +420,41 @@
             let stopwatch = { interval: null, startTime: 0, elapsedTime: 0, isRunning: false, isPaused: false };
             let miniTimerTemporarilyHidden = false;
             let quizTimer = { startTime: null };
+
+            let quest = {
+                plan: [], // { id, type: 'section' | 'break', text?, duration }
+                active: false,
+                currentIndex: -1,
+                timerInterval: null,
+                timeLeft: 0,
+            };
+
+            // クエスト用 DOM要素
+            const questView = $('#quest-view');
+            const questPlanListEl = $('#quest-plan-list');
+            const startQuestBtn = $('#start-quest-btn');
+            const addBreaksBtn = $('#add-breaks-btn');
+            const addSectionBtn = $('#add-section-btn');
+            const addBreakBtn = $('#add-break-btn');
+            
+            const questActiveScreen = $('#quest-active-screen');
+            const questSectionView = $('#quest-section-view');
+            const questBreakView = $('#quest-break-view');
+            const questSectionTitle = $('#quest-section-title');
+            const questTimerEl = $('#quest-timer');
+            const breakTimerEl = $('#break-timer');
+            const questProgressEl = $('#quest-progress');
+            const endQuestBtn = $('#end-quest-btn');
+
+            const confirmationModal = $('#confirmation-modal');
+            const modalConfirmBtn = $('#modal-confirm-btn');
+            const modalCancelBtn = $('#modal-cancel-btn');
+
+            const iframeOverlay = $('#iframe-overlay');
+            const breakIframe = $('#break-iframe');
+            const closeIframeBtn = $('#close-iframe-btn');
+            const breakContentSelector = $('#break-content-selector');
+            const breakSnsSelector = $('#break-sns-selector');
 
             const $ = (s) => document.querySelector(s);
             const $$ = (s) => document.querySelectorAll(s);
@@ -897,14 +1038,22 @@
             };
 
             const updateFocusModeUI = () => {
-                const isTimer = state.focus.mode === 'timer';
-                $('#timer-view').style.display = isTimer ? 'flex' : 'none';
-                $('#stopwatch-view').style.display = isTimer ? 'none' : 'flex';
-                $$('.focus-mode-btn').forEach(btn => {
-                    btn.classList.toggle('primary-bg', btn.dataset.mode === state.focus.mode);
-                    btn.classList.toggle('text-white', btn.dataset.mode === state.focus.mode);
-                });
-            };
+                // ▼▼▼ 変更 ▼▼▼
+                const mode = state.focus.mode;
+                $('#timer-view').style.display = (mode === 'timer') ? 'flex' : 'none';
+                $('#stopwatch-view').style.display = (mode === 'stopwatch') ? 'flex' : 'none';
+                $('#quest-view').style.display = (mode === 'quest') ? 'flex' : 'none'; // クエストビューの表示切替
+
+                if (mode === 'quest') {
+                    renderQuestPlan(); // クエストタブを開いたときにプランを再描画
+                }
+                // ▲▲▲ 変更 ▲▲▲
+
+                $$('.focus-mode-btn').forEach(btn => {
+                    btn.classList.toggle('primary-bg', btn.dataset.mode === state.focus.mode);
+                    btn.classList.toggle('text-white', btn.dataset.mode === state.focus.mode);
+                });
+            };
 
             const resetTimerUI = () => {
                 clearInterval(focusTimer.interval);
@@ -988,6 +1137,90 @@
                     });
                 }
             });
+            /* ▼▼▼ 追加: クエスト機能のイベントリスナー ▼▼▼ */
+
+            // クエスト設定ビューのボタン
+            addSectionBtn.addEventListener('click', () => {
+                quest.plan.push({
+                    id: Date.now(),
+                    type: 'section',
+                    text: '新しいセクション',
+                    duration: 25 * 60
+                });
+                renderQuestPlan();
+            });
+
+            addBreakBtn.addEventListener('click', () => {
+                quest.plan.push({
+                    id: Date.now(),
+                    type: 'break',
+                    duration: 5 * 60
+                });
+                renderQuestPlan();
+            });
+
+            addBreaksBtn.addEventListener('click', () => {
+                const interval = parseInt($('#break-interval-input').value) || 2;
+                const duration = parseInt($('#break-duration-input').value) || 5;
+                const newPlan = [];
+                let sectionCount = 0;
+                
+                // 休憩を除いたセクションのみのリストを元にする
+                const sections = quest.plan.filter(item => item.type === 'section');
+
+                sections.forEach((item, index) => {
+                    newPlan.push(item);
+                    sectionCount++;
+                    // 最後のセクション以外で、intervalの倍数番目なら休憩を追加
+                    if (sectionCount % interval === 0 && index !== sections.length - 1) {
+                        newPlan.push({
+                            id: Date.now() + Math.random(),
+                            type: 'break',
+                            duration: duration * 60
+                        });
+                    }
+                });
+                
+                quest.plan = newPlan;
+                renderQuestPlan();
+            });
+
+            startQuestBtn.addEventListener('click', startQuest);
+
+            // クエスト実行画面のボタン
+            endQuestBtn.addEventListener('click', () => {
+                confirmationModal.style.display = 'flex';
+            });
+
+            modalConfirmBtn.addEventListener('click', () => endQuest(false));
+            modalCancelBtn.addEventListener('click', () => {
+                confirmationModal.style.display = 'none';
+            });
+
+            // 休憩中のコンテンツ
+            breakContentSelector.addEventListener('click', (e) => {
+                const btn = e.target.closest('.break-content-btn');
+                if (!btn) return;
+                const type = btn.dataset.type;
+                if (type === 'sns') {
+                    breakContentSelector.style.display = 'none';
+                    breakSnsSelector.style.display = 'grid';
+                } else if (type === 'game') {
+                    openIframe('https://www.google.com/search?q=pacman+doodle'); // 例
+                }
+            });
+
+            breakSnsSelector.addEventListener('click', (e) => {
+                const btn = e.target.closest('.break-content-btn');
+                if (btn && btn.dataset.url) {
+                    openIframe(btn.dataset.url);
+                }
+            });
+
+            closeIframeBtn.addEventListener('click', closeIframe);
+
+            /* ▲▲▲ 追加: クエスト機能のイベントリスナー ▲▲▲ */
+            
             $('#focus-pause-btn').addEventListener('click', () => { if (focusTimer.isPaused) resumeFocusTimer(); else pauseFocusTimer(); });
             $('#focus-end-btn').addEventListener('click', endFocusTimer);
 
@@ -1256,6 +1489,8 @@
                 // 最後に外観を更新
                 $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
                 updateAppearance();
+                // ▼▼▼ 変更（initの最後にlucideを1回実行） ▼▼▼
+                lucide.createIcons();
             };
             const renderPointModalContent = () => {
             const themeContainer = $('#modal-theme-selector');
@@ -1334,6 +1569,171 @@
         $('#countdown-notification-toggle').addEventListener('change', (e) => {
             $('#countdown-notification-details').style.display = e.target.checked ? 'block' : 'none';
         });
+
+        /* ▼▼▼ 追加: クエスト機能の関数群 ▼▼▼ */
+
+        // クエストプランのリストをレンダリングする関数
+        const renderQuestPlan = () => {
+            questPlanListEl.innerHTML = '';
+            quest.plan.forEach((item, index) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'flex items-center space-x-2 group bg-gray-100 dark:bg-gray-800 p-2 rounded-lg';
+                itemEl.dataset.id = item.id;
+                            
+                let content = '';
+                if (item.type === 'section') {
+                    content = `
+                        <span class="font-bold w-6 text-center">${index + 1}</span>
+                        <input type="text" value="${item.text}" class="quest-item-text flex-grow bg-transparent p-1 rounded border border-transparent focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none">
+                        <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
+                        <span class="text-sm">分</span>
+                    `;
+                } else { // break
+                    content = `
+                        <span class="font-bold w-6 text-center">☕</span>
+                        <span class="flex-grow p-1 text-gray-500 dark:text-gray-400 font-semibold">ブレイクタイム</span>
+                        <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
+                        <span class="text-sm">分</span>
+                    `;
+                }
+
+                itemEl.innerHTML = `
+                    ${content}
+                    <button class="delete-item-btn text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                `;
+                questPlanListEl.appendChild(itemEl);
+
+                // イベントリスナー
+                itemEl.querySelector('.quest-item-text')?.addEventListener('change', (e) => {
+                    item.text = e.target.value;
+                });
+                itemEl.querySelector('.quest-item-duration').addEventListener('change', (e) => {
+                    item.duration = parseInt(e.target.value) * 60;
+                });
+                itemEl.querySelector('.delete-item-btn').addEventListener('click', () => {
+                    quest.plan = quest.plan.filter(p => p.id !== item.id);
+                    renderQuestPlan();
+                });
+            });
+            lucide.createIcons();
+        };
+
+        // クエスト用のタイマーを開始する関数
+        const startQuestTimer = (duration, onTick, onEnd) => {
+            quest.timeLeft = duration;
+            onTick(quest.timeLeft);
+            quest.timerInterval = setInterval(() => {
+                quest.timeLeft--;
+                onTick(quest.timeLeft);
+                if (quest.timeLeft <= 0) {
+                    clearInterval(quest.timerInterval);
+                    onEnd();
+                }
+            }, 1000);
+        };
+
+        // 次のクエストステップを実行する関数
+        const runNextQuestStep = () => {
+            quest.currentIndex++;
+            if (quest.currentIndex >= quest.plan.length) {
+                endQuest(true); // クエスト完了
+                return;
+            }
+
+            const currentStep = quest.plan[quest.currentIndex];
+            
+            // アプリ2のトースト関数とNotification APIを使用
+            const showQuestNotification = (title, body) => {
+                showToast(body);
+                if (Notification.permission === "granted") {
+                    new Notification(title, { body });
+                }
+            };
+
+            if (currentStep.type === 'section') {
+                showQuestNotification('セクション開始', `「${currentStep.text}」を始めましょう！`);
+                questSectionView.style.display = 'block';
+                questBreakView.style.display = 'none';
+                questSectionTitle.textContent = currentStep.text;
+                questProgressEl.textContent = `${quest.currentIndex + 1} / ${quest.plan.length}`;
+                startQuestTimer(
+                    currentStep.duration,
+                    (timeLeft) => { questTimerEl.textContent = formatTime(timeLeft); }, // 既存のformatTimeを流用
+                    () => {
+                        showQuestNotification('セクション終了', 'お疲れ様でした！休憩に入ります。');
+                        runNextQuestStep();
+                    }
+                );
+            } else { // break
+                showQuestNotification('休憩時間', '少し休みましょう！');
+                questSectionView.style.display = 'none';
+                questBreakView.style.display = 'block';
+                breakContentSelector.style.display = 'grid'; // 常に初期表示
+                breakSnsSelector.style.display = 'none';
+                startQuestTimer(
+                    currentStep.duration,
+                    (timeLeft) => { breakTimerEl.textContent = formatTime(timeLeft); },
+                    () => {
+                        showQuestNotification('休憩終了', '次のセクションを始めましょう！');
+                        closeIframe();
+                        runNextQuestStep();
+                    }
+                );
+            }
+        };
+
+        // クエストを開始する関数
+        const startQuest = () => {
+            if (quest.plan.length === 0) {
+                showToast('クエストの予定がありません。');
+                return;
+            }
+            quest.active = true;
+            quest.currentIndex = -1;
+            questActiveScreen.style.display = 'flex';
+            
+            // アプリ2のヘッダーとタブバーを隠す
+            $('header').style.display = 'none';
+            $('nav').style.display = 'none';
+            $('#mini-timer-container').classList.remove('visible'); // ミニタイマーも隠す
+
+            document.body.style.overflow = 'hidden';
+            runNextQuestStep();
+        };
+
+        // クエストを終了する関数
+        const endQuest = (completed = false) => {
+            clearInterval(quest.timerInterval);
+            quest.active = false;
+            questActiveScreen.style.display = 'none';
+
+            // アプリ2のヘッダーとタブバーを再表示
+            $('header').style.display = 'flex';
+            $('nav').style.display = 'flex';
+
+            document.body.style.overflow = 'auto';
+            confirmationModal.style.display = 'none';
+            closeIframe();
+            if (completed) {
+                showToast('クエスト完了！お疲れ様でした！');
+            }
+        };
+
+        // 休憩用iframeを開く/閉じる関数
+        const openIframe = (url) => {
+            breakIframe.src = url;
+            iframeOverlay.style.display = 'flex';
+            lucide.createIcons(); // ボタンのアイコンを描画
+        };
+
+        const closeIframe = () => {
+            breakIframe.src = 'about:blank';
+            iframeOverlay.style.display = 'none';
+        };
+
+        /* ▲▲▲ 追加: クエスト機能の関数群 ▲▲▲ */
             
             init();
         });
