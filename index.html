@@ -1611,35 +1611,52 @@
             
             // --- Notification Check ---
             function checkCountdownNotifications() {
-                if (Notification.permission !== 'granted') return;
-                
-                const now = new Date();
-                const lastCheck = new Date(state.lastNotificationCheck);
+                if (Notification.permission !== 'granted') return;
+                
+                const now = new Date();
+                const lastCheck = new Date(state.lastNotificationCheck);
 
-                state.countdowns.forEach(cd => {
-                    if (!cd.notifications.enabled) return;
-                    
-                    const eventDate = new Date(cd.date);
-                    const [hours, minutes] = cd.notifications.time.split(':');
-                    
-                    cd.notifications.daysBefore.forEach(day => {
-                        const notifDate = new Date(eventDate.getTime());
-                        notifDate.setDate(notifDate.getDate() - day);
-                        notifDate.setHours(hours, minutes, 0, 0);
+                state.countdowns.forEach(cd => {
+                    // --- ▼▼▼ 修正箇所 ▼▼▼ ---
+                    // オブジェクトが古い形式の場合を考慮し、存在チェックを強化
+                    if (!cd.notifications || !cd.notifications.enabled || !cd.notifications.time) {
+                        return; // 必要なデータがなければこのカウントダウンの処理をスキップ
+                    }
+                    
+                    const eventDate = new Date(cd.date);
+                    
+                    // timeが文字列であることを確認してからsplit
+                    const timeParts = typeof cd.notifications.time === 'string' ? cd.notifications.time.split(':') : null;
+                    if (!timeParts || timeParts.length < 2) {
+                        return; // 不正な形式ならスキップ
+                    }
+                    
+                    const [hours, minutes] = timeParts;
+                    
+                    // daysBeforeも配列であることを確認
+                    if (!Array.isArray(cd.notifications.daysBefore)) {
+                        return; // 配列でなければスキップ
+                    }
+                    // --- ▲▲▲ 修正ここまで ▲▲▲ ---
+                    
+                    cd.notifications.daysBefore.forEach(day => {
+                        const notifDate = new Date(eventDate.getTime());
+                        notifDate.setDate(notifDate.getDate() - day);
+                        notifDate.setHours(hours, minutes, 0, 0);
 
-                        if (notifDate > lastCheck && notifDate <= now) {
-                            new Notification(`【${day}日前】${cd.name}`, {
-                                body: `イベント「${cd.name}」が${day}日後に迫っています！`,
-                                icon: 'https://placehold.co/180x180/4f46e5/ffffff?text=Q'
-                            });
-                        }
-                    });
-                });
-                
-                state.lastNotificationCheck = now.toISOString();
-                saveState();
-            }
-
+                        if (notifDate > lastCheck && notifDate <= now) {
+                            new Notification(`【${day}日前】${cd.name}`, {
+                                body: `イベント「${cd.name}」が${day}日後に迫っています！`,
+                                icon: 'https://placehold.co/180x180/4f46e5/ffffff?text=Q'
+                            });
+                        }
+                    });
+                });
+                
+                state.lastNotificationCheck = now.toISOString();
+                saveState();
+            }
+            
             const restoreFocusState = () => {
             // 保存された実行中のタイマー/SWがなければ何もしない
             if (!state.focus.isRunning || !state.focus.startTime) {
