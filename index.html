@@ -19,6 +19,23 @@
         darkMode: 'class' // ここでダークモードの制御方法を'class'に指定します
       }
     </script>
+    <!--これを追加2025年11月11日-->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <div>
+        <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center mb-3">
+            <i data-lucide="check-square" class="w-5 h-5 mr-2 primary-text"></i> 今日の予定
+        </h2>
+        <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm">
+            <div id="home-task-list" class="space-y-2">
+                <p class="text-center text-sm text-gray-500">今日の予定はありません。</p>
+            </div>
+            <div class="flex items-center space-x-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
+                <span id="new-task-number" class="font-bold w-6 text-center text-gray-500 dark:text-gray-400">1</span>
+                <input type="text" id="new-task-input" placeholder="新しいタスクを追加 (Enterで確定)" class="flex-grow bg-transparent p-1 border-b-2 border-gray-300 dark:border-gray-600 focus:border-indigo-500 focus:outline-none transition-colors">
+            </div>
+        </div>
+    </div>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -97,6 +114,23 @@
             background-color: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
         }
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #e2e8f0; /* light gray */
+        }
+        .dark .sortable-ghost {
+            background-color: #374151; /* dark gray */
+        }
+        .task-item .task-text-input {
+            border-bottom: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .task-item:hover .task-text-input {
+            background-color: rgba(0,0,0,0.03);
+        }
+        .dark .task-item:hover .task-text-input {
+            background-color: rgba(255,255,255,0.05);
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen antialiased">
@@ -145,12 +179,16 @@
                 </div>
             </div>             
             <div id="focus-page" class="page p-4 flex flex-col h-full">
-                <div class="flex-shrink-0 mb-4">
+                <div class="flex-shrink-0 mb-4 space-y-4">
+                    <button class="focus-mode-btn w-full p-3 rounded-lg font-bold text-lg shadow-md flex items-center justify-center space-x-2 bg-gray-200 dark:bg-gray-700" data-mode="quest">
+                        <i data-lucide="award" class="w-6 h-6"></i>
+                        <span>クエスト</span>
+                    </button>
+                    
                     <div class="flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
                         <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="timer">タイマー</button>
                         <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="stopwatch">ストップウォッチ</button>
-                        <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="quest">クエスト</button>
-                        </div>
+                    </div>
                 </div>
             
                 <div id="timer-view" class="focus-view-bg flex-grow flex flex-col items-center justify-center text-center relative text-white rounded-lg">
@@ -169,8 +207,8 @@
                             </div>
                         </div>
             
-                        <div id="focus-timer-display" class="text-7xl font-bold tabular-nums mb-6">25:00</div>
-                        <button id="focus-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center mx-auto"><i data-lucide="play" class="w-6 h-6 mr-2"></i>集中モード開始</button>
+                        <div id="focus-timer-display" class="text-7xl font-bold tabular-nums mb-6">30:00</div>
+                        <button id="focus-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center mx-auto"><i data-lucide="play" class="w-6 h-6 mr-2"></i>スタート</button>
                         <div id="focus-controls" class="hidden flex flex-wrap items-center justify-center gap-4">
                             <button id="focus-pause-btn" class="bg-gray-500/70 hover:bg-gray-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
                             <button id="focus-end-btn" class="bg-red-500/70 hover:bg-red-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="stop-circle" class="w-6 h-6 mr-2"></i>終了</button>
@@ -240,7 +278,6 @@
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                     <h3 class="font-semibold mb-2">通知設定</h3>
                     <button id="notification-permission-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center mb-4"><i data-lucide="bell-ring" class="w-5 h-5 mr-2"></i>ブラウザ通知を許可</button>
-                    <div class="flex items-center justify-between"><p>復習リマインダー通知</p><input type="checkbox" id="review-notification-toggle" class="toggle-checkbox"></div>
                 </div>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                      <h3 class="font-semibold mb-2">テーマカラーを選択</h3>
@@ -423,6 +460,8 @@
 
             const $ = (s) => document.querySelector(s);
             const $$ = (s) => document.querySelectorAll(s);
+            
+            let homeTaskListEl, newTaskInput, newTaskNumberEl;
 
             let quest = {
                 plan: [], // { id, type: 'section' | 'break', text?, duration }
@@ -469,6 +508,7 @@
                         unlockedBackgrounds: ['default'],
                         activeBackground: 'default'
                     },
+                    tasks: [],
                     progress: {},
                     reviewSchedule: [],
                     pinnedQuizzes: [],
@@ -481,9 +521,9 @@
                         duration: 0       // タイマーの総時間
                     },
                     studyLog: {}, 
-                    settings: { reviewNotifications: true, backgroundScopeGlobal: true , manualDarkMode: false },
+                    settings: { backgroundScopeGlobal: true , manualDarkMode: false },
                     lastLogin: null,
-                    lastNotificationCheck: new Date().toISOString(),
+                    //lastNotificationCheck: new Date().toISOString(),＜削除する
                 };
                 
                 // --- ▼▼▼ 修正箇所 ▼▼▼ ---
@@ -604,6 +644,7 @@
                               return `<div class="bg-white dark:bg-gray-700 p-2 rounded-lg shadow-sm text-center min-w-[100px]"><i data-lucide="award" class="mx-auto w-8 h-8 text-yellow-500"></i><p class="text-xs font-semibold mt-1">${title.name}</p></div>`;
                           }).join('') 
                           : `<p class="text-sm text-gray-500">称号を獲得してここに表示しよう！</p>`;
+                        renderHomeTasks();
                     },
                     'study-page': () => {
                         const pinnedContainer = $('#pinned-quizzes');
@@ -675,7 +716,6 @@
                         renderChart('study-time-chart', 'bar', { labels, datasets: [{ label: '学習時間 (分)', data, backgroundColor: chartBarColor, borderColor: chartBorderColor, borderWidth: 1 }] }, { scales: { y: { beginAtZero: true } } });
                     },
                     'settings-page': () => {
-                        $('#review-notification-toggle').checked = state.settings.reviewNotifications;
                         
                         $('#theme-selector').innerHTML = state.profile.unlockedThemes.map(id => {
                             const theme = initialData.themes[id];
@@ -779,6 +819,43 @@
                 const today = new Date().toISOString().split('T')[0];
                 if (!state.studyLog[today]) state.studyLog[today] = { focus: 0, quiz: 0 };
                 state.studyLog[today][type] += seconds;
+            };
+
+            const renderHomeTasks = () => {
+                if (!homeTaskListEl) return; // init前は実行しない
+    
+                if (!state.tasks || state.tasks.length === 0) {
+                    homeTaskListEl.innerHTML = `<p class="text-center text-sm text-gray-500">今日の予定はありません。</p>`;
+                } else {
+                    homeTaskListEl.innerHTML = ''; // 一旦クリア
+                    state.tasks.forEach((task, index) => {
+                        const taskEl = document.createElement('div');
+                        taskEl.className = 'flex items-center space-x-2 group task-item';
+                        taskEl.dataset.id = task.id;
+                        taskEl.innerHTML = `
+                            <span class="font-bold w-6 text-center text-gray-600 dark:text-gray-400">${index + 1}</span>
+                            <input type="text" value="${task.text}" class="task-text-input flex-grow bg-transparent p-1 focus:outline-none rounded">
+                            <button class="task-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                            </button>
+                            <button class="delete-task-btn text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        `;
+                        homeTaskListEl.appendChild(taskEl);
+                        
+                        // テキスト変更イベント
+                        taskEl.querySelector('.task-text-input').addEventListener('change', (e) => {
+                            const taskToUpdate = state.tasks.find(t => t.id == taskEl.dataset.id);
+                            if (taskToUpdate) {
+                                taskToUpdate.text = e.target.value;
+                                saveState();
+                            }
+                        });
+                    });
+                }
+                newTaskNumberEl.textContent = state.tasks.length + 1;
+                lucide.createIcons();
             };
 
             document.body.addEventListener('click', e => {
@@ -1078,22 +1155,47 @@
             };
 
             const updateFocusModeUI = () => {
-                // ▼▼▼ 変更 ▼▼▼
                 const mode = state.focus.mode;
-                $('#timer-view').style.display = (mode === 'timer') ? 'flex' : 'none';
-                $('#stopwatch-view').style.display = (mode === 'stopwatch') ? 'flex' : 'none';
-                $('#quest-view').style.display = (mode === 'quest') ? 'flex' : 'none'; // クエストビューの表示切替
-
+                
+                // 1. メインビューの表示切替
+                $('#timer-view').style.display = (mode === 'timer') ? 'flex' : 'none';
+                $('#stopwatch-view').style.display = (mode === 'stopwatch') ? 'flex' : 'none';
+                $('#quest-view').style.display = (mode === 'quest') ? 'flex' : 'none';
+    
                 if (mode === 'quest') {
-                    renderQuestPlan(); // クエストタブを開いたときにプランを再描画
+                    renderQuestPlan(); // クエストタブ表示時にプランを再描画
                 }
-                // ▲▲▲ 変更 ▲▲▲
-
-                $$('.focus-mode-btn').forEach(btn => {
-                    btn.classList.toggle('primary-bg', btn.dataset.mode === state.focus.mode);
-                    btn.classList.toggle('text-white', btn.dataset.mode === state.focus.mode);
-                });
-            };
+    
+                // 2. ボタンのハイライト処理
+                const questMainBtn = $('.focus-mode-btn[data-mode="quest"]');
+                const timerBtn = $('.focus-mode-btn[data-mode="timer"]');
+                const stopwatchBtn = $('.focus-mode-btn[data-mode="stopwatch"]');
+                
+                // 全てリセット
+                [questMainBtn, timerBtn, stopwatchBtn].forEach(btn => {
+                    if(btn) { // 念のため存在チェック
+                        btn.classList.remove('primary-bg', 'text-white');
+                        if (btn.dataset.mode === 'quest') { // クエストボタンはスタイルが違う
+                            btn.classList.add('bg-gray-200', 'dark:bg-gray-700');
+                        }
+                    }
+                });
+    
+                // アクティブなものだけハイライト
+                if (mode === 'timer') {
+                    timerBtn.classList.add('primary-bg', 'text-white');
+                } else if (mode === 'stopwatch') {
+                    stopwatchBtn.classList.add('primary-bg', 'text-white');
+                } else if (mode === 'quest') {
+                    questMainBtn.classList.add('primary-bg', 'text-white');
+                    questMainBtn.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+                } else {
+                     // デフォルト（タイマー）
+                    timerBtn.classList.add('primary-bg', 'text-white');
+                }
+                
+                lucide.createIcons(); // クエストボタンのアイコン再描画用
+            };
 
             const resetTimerUI = () => {
                 clearInterval(focusTimer.interval);
@@ -1449,6 +1551,9 @@
 
                 itemEl.innerHTML = `
                     ${content}
+                    <button class="quest-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                    </button>
                     <button class="delete-item-btn text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                         <i data-lucide="trash-2" class="w-5 h-5"></i>
                     </button>
@@ -1608,54 +1713,7 @@
         };
 
         /* ▲▲▲ 追加: クエスト機能の関数群 ▲▲▲ */
-            
-            // --- Notification Check ---
-            function checkCountdownNotifications() {
-                if (Notification.permission !== 'granted') return;
-                
-                const now = new Date();
-                const lastCheck = new Date(state.lastNotificationCheck);
-
-                state.countdowns.forEach(cd => {
-                    // --- ▼▼▼ 修正箇所 ▼▼▼ ---
-                    // オブジェクトが古い形式の場合を考慮し、存在チェックを強化
-                    if (!cd.notifications || !cd.notifications.enabled || !cd.notifications.time) {
-                        return; // 必要なデータがなければこのカウントダウンの処理をスキップ
-                    }
-                    
-                    const eventDate = new Date(cd.date);
-                    
-                    // timeが文字列であることを確認してからsplit
-                    const timeParts = typeof cd.notifications.time === 'string' ? cd.notifications.time.split(':') : null;
-                    if (!timeParts || timeParts.length < 2) {
-                        return; // 不正な形式ならスキップ
-                    }
-                    
-                    const [hours, minutes] = timeParts;
-                    
-                    // daysBeforeも配列であることを確認
-                    if (!Array.isArray(cd.notifications.daysBefore)) {
-                        return; // 配列でなければスキップ
-                    }
-                    // --- ▲▲▲ 修正ここまで ▲▲▲ ---
-                    
-                    cd.notifications.daysBefore.forEach(day => {
-                        const notifDate = new Date(eventDate.getTime());
-                        notifDate.setDate(notifDate.getDate() - day);
-                        notifDate.setHours(hours, minutes, 0, 0);
-
-                        if (notifDate > lastCheck && notifDate <= now) {
-                            new Notification(`【${day}日前】${cd.name}`, {
-                                body: `イベント「${cd.name}」が${day}日後に迫っています！`,
-                                icon: 'https://placehold.co/180x180/4f46e5/ffffff?text=Q'
-                            });
-                        }
-                    });
-                });
-                
-                state.lastNotificationCheck = now.toISOString();
-                saveState();
-            }
+        
             
             const restoreFocusState = () => {
             // 保存された実行中のタイマー/SWがなければ何もしない
@@ -1719,7 +1777,6 @@
                 }
                 
                 loadState();
-                checkCountdownNotifications();
                 
                 // ページ描画の前にタイマーの状態を復元・設定する
                 restoreFocusState();
@@ -1731,6 +1788,66 @@
                 if (reviewsToday > 0) { 
                     showToast(`今日やるべき復習が ${reviewsToday} 件あります！`); 
                 }
+
+                // 1. 新しいDOM要素を変数に割り当て
+                homeTaskListEl = $('#home-task-list');
+                newTaskInput = $('#new-task-input');
+                newTaskNumberEl = $('#new-task-number');
+                
+                // 2. Sortable.js の初期化 (今日の予定)
+                if (homeTaskListEl) {
+                    Sortable.create(homeTaskListEl, {
+                        handle: '.task-handle', // 三本線アイコンでドラッグ
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        onEnd: (evt) => {
+                            // state.tasks 配列を並び替え
+                            const item = state.tasks.splice(evt.oldIndex, 1)[0];
+                            state.tasks.splice(evt.newIndex, 0, item);
+                            saveState();
+                            renderHomeTasks(); // 番号を振り直すために再描画
+                        }
+                    });
+
+                    // 3. タスク削除のイベントリスナー (イベント委任)
+                    homeTaskListEl.addEventListener('click', (e) => {
+                        const deleteBtn = e.target.closest('.delete-task-btn');
+                        if (deleteBtn) {
+                            const taskItem = deleteBtn.closest('.task-item');
+                            const taskId = parseInt(taskItem.dataset.id);
+                            state.tasks = state.tasks.filter(t => t.id !== taskId);
+                            saveState();
+                            renderHomeTasks();
+                        }
+                    });
+                }
+
+                // 4. 新規タスク追加 (Enterキー)
+                if (newTaskInput) {
+                    newTaskInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter' && e.target.value.trim() !== '') {
+                            state.tasks.push({ id: Date.now(), text: e.target.value.trim() });
+                            e.target.value = '';
+                            saveState();
+                            renderHomeTasks();
+                        }
+                    });
+
+                 // Sortable.js の初期化 (クエストプラン)
+                    if (questPlanListEl) { // questPlanListEl はグローバルスコープで定義済み
+                        Sortable.create(questPlanListEl, {
+                            handle: '.quest-handle', // クエストのハンドル
+                            animation: 150,
+                            ghostClass: 'sortable-ghost',
+                            onEnd: (evt) => {
+                                // quest.plan 配列を並び替え
+                                // (quest.plan は state に保存されない一時的なもの)
+                                const item = quest.plan.splice(evt.oldIndex, 1)[0];
+                                quest.plan.splice(evt.newIndex, 0, item);
+                                renderQuestPlan(); // 番号を振り直すために再描画
+                            }
+                        });
+                    }
                 
                 // 最後に外観を更新
                 $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
