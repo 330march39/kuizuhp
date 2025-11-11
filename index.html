@@ -486,18 +486,34 @@
                     lastNotificationCheck: new Date().toISOString(),
                 };
                 
-                // 1. 保存されたデータを読み込む
-                const loaded = JSON.parse(localStorage.getItem('quizAppUltimateV8')) || {};
+                // --- ▼▼▼ 修正箇所 ▼▼▼ ---
                 
-                // 2. デフォルト値をベースに、読み込んだ値で上書き（ネストされたオブジェクトも安全にマージ）
+                // 1. 読み込み先の変数を `let` で宣言
+                let loaded = {};
+                try {
+                    // 2. 保存されたデータを取得
+                    const savedData = localStorage.getItem('quizAppUltimateV8');
+                    // 3. データが null や空文字でない場合のみ、JSONとしてパース（解析）する
+                    if (savedData) {
+                        loaded = JSON.parse(savedData);
+                    }
+                } catch (e) {
+                    // 4. パースに失敗（データが破損）した場合
+                    console.error("ローカルストレージの読み込みに失敗しました。データをリセットします:", e);
+                    // 5. 破損したデータを削除し、`loaded` は空のままにする
+                    localStorage.removeItem('quizAppUltimateV8');
+                }
+                
+                // 6. デフォルト値をベースに、読み込んだ値で上書き（ネストされたオブジェクトも安全にマージ）
+                // (ここは元のコードと同じ)
                 state = {
                     ...defaultState,
                     ...loaded,
-                    // ネストされたオブジェクトをマージして、新しいプロパティが必ず存在するようにする
                     profile: { ...defaultState.profile, ...(loaded.profile || {}) },
                     focus: { ...defaultState.focus, ...(loaded.focus || {}) },
                     settings: { ...defaultState.settings, ...(loaded.settings || {}) }
                 };
+                // --- ▲▲▲ 修正ここまで ▲▲▲ ---
 
                 // 3. ログインボーナス処理 (元のロジックをそのまま流用)
                 if(state.lastLogin !== new Date().toDateString()){
