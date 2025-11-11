@@ -477,6 +477,7 @@
                 currentIndex: -1,
                 timerInterval: null,
                 timeLeft: 0,
+                breakWindow: null
             };
 
             // クエスト用 DOM要素
@@ -1362,7 +1363,7 @@
             breakSnsSelector.addEventListener('click', (e) => {
                 const btn = e.target.closest('.break-content-btn');
                 if (btn && btn.dataset.url) {
-                    openIframe(btn.dataset.url);
+                    quest.breakWindow = window.open(btn.dataset.url, '_blank');
                 }
             });
 
@@ -1661,6 +1662,14 @@
                     (timeLeft) => { breakTimerEl.textContent = formatTime(timeLeft); },
                     () => {
                         showQuestNotification('休憩終了', '次のセクションを始めましょう！');
+                        if (quest.breakWindow && !quest.breakWindow.closed) {
+                            try {
+                                quest.breakWindow.close();
+                            } catch (e) {
+                                console.error('ウィンドウを閉じられませんでした:', e);
+                            }
+                            quest.breakWindow = null;
+                        }
                         closeIframe();
                         runNextQuestStep();
                     }
@@ -1706,6 +1715,16 @@
                     }
                 }
             }
+            
+            if (quest.breakWindow && !quest.breakWindow.closed) {
+                try {
+                    quest.breakWindow.close();
+                } catch (e) {
+                    console.error('ウィンドウを閉じられませんでした:', e);
+                }
+                quest.breakWindow = null;
+            }
+            
             quest.active = false;
             questActiveScreen.style.display = 'none';
 
