@@ -1547,21 +1547,21 @@
                                 
                     let content = '';
                     if (item.type === 'section') {
-                        content = `
-                            <span class="font-bold w-6 text-center">${sectionNumber}</span> 
-                            <input type="text" value="${item.text}" data-original-id="${item.originalTaskId || ''}" class="quest-item-text flex-1 bg-transparent p-1 rounded border border-transparent focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none min-w-0 truncate">
-                            <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
-                            <span class="text-sm">分</span>
-                        `;
-                        sectionNumber++; // <-- ▼▼▼ セクションの場合のみカウンターを増やす ▼▼▼
-                    } else { // break
-                        content = `
-                            <span class="font-bold w-6 text-center">☕</span>
-                            <span class="flex-grow p-1 text-gray-500 dark:text-gray-400 font-semibold">ブレイクタイム</span>
-                            <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
-                            <span class="text-sm">分</span>
-                        `;
-                    }
+                        content = `
+                            <span class="font-bold w-6 text-center">${sectionNumber}</span> 
+                            <input type="text" value="${item.text}" data-original-id="${item.originalTaskId || ''}" class="quest-item-text flex-1 bg-transparent p-1 rounded border border-transparent focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none min-w-0">
+                            <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
+                            <span class="text-sm">分</span>
+                        `;
+                        sectionNumber++; 
+                    } else { // break
+                        content = `
+                            <span class="font-bold w-6 text-center">☕</span>
+                            <span class="flex-1 min-w-0 p-1 text-gray-500 dark:text-gray-400 font-semibold">ブレイクタイム</span>
+                            <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
+                            <span class="text-sm">分</span>
+                        `;
+                    }
     
                     // ... (残りの innerHTML, appendChild, イベントリスナー は変更なし) ...
                     itemEl.innerHTML = `
