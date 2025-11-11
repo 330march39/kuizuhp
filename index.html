@@ -1423,7 +1423,7 @@
             /* ▼▼▼ 追加: クエスト機能の関数群 ▼▼▼ */
 
         // クエストプランのリストをレンダリングする関数
-        const renderQuestPlan = () => {
+        function renderQuestPlan() {
             questPlanListEl.innerHTML = '';
             quest.plan.forEach((item, index) => {
                 const itemEl = document.createElement('div');
@@ -1471,7 +1471,7 @@
         };
 
         // クエスト用のタイマーを開始する関数
-        const startQuestTimer = (duration, onTick, onEnd) => {
+        function startQuestTimer(duration, onTick, onEnd) {
             quest.timeLeft = duration;
             onTick(quest.timeLeft);
             quest.timerInterval = setInterval(() => {
@@ -1485,7 +1485,7 @@
         };
 
         // 次のクエストステップを実行する関数
-        const runNextQuestStep = () => {
+        function runNextQuestStep() {
             quest.currentIndex++;
             if (quest.currentIndex >= quest.plan.length) {
                 endQuest(true); // クエスト完了
@@ -1544,7 +1544,7 @@
         };
 
         // クエストを開始する関数
-        const startQuest = () => {
+        function startQuest() {
             if (quest.plan.length === 0) {
                 showToast('クエストの予定がありません。');
                 return;
@@ -1563,7 +1563,7 @@
         };
 
         // クエストを終了する関数
-        const endQuest = (completed = false) => {
+        function endQuest(completed = false) {
             clearInterval(quest.timerInterval);
             if (!completed && quest.currentIndex >= 0 && quest.currentIndex < quest.plan.length) {
                 const currentStep = quest.plan[quest.currentIndex];
@@ -1596,13 +1596,13 @@
         };
 
         // 休憩用iframeを開く/閉じる関数
-        const openIframe = (url) => {
+        function openIframe(url) {
             breakIframe.src = url;
             iframeOverlay.style.display = 'flex';
             lucide.createIcons(); // ボタンのアイコンを描画
         };
 
-        const closeIframe = () => {
+        function closeIframe() {
             breakIframe.src = 'about:blank';
             iframeOverlay.style.display = 'none';
         };
