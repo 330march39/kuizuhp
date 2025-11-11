@@ -1496,6 +1496,14 @@
                     currentStep.duration,
                     (timeLeft) => { questTimerEl.textContent = formatTime(timeLeft); }, // 既存のformatTimeを流用
                     () => {
+                        const elapsed = currentStep.duration;
+                        if (elapsed > 0) {
+                            logStudyTime('focus', elapsed); // 学習ログに記録
+                            addLP(Math.floor(elapsed / 60), 'クエストセクション'); // LPを付与
+                            state.focus.totalTime += elapsed; // 総集中時間に追加
+                            checkTitles(); // 称号をチェック
+                            saveState(); // 状態を保存
+                        }
                         showQuestNotification('セクション終了', 'お疲れ様でした！休憩に入ります。');
                         runNextQuestStep();
                     }
@@ -1541,6 +1549,21 @@
         // クエストを終了する関数
         const endQuest = (completed = false) => {
             clearInterval(quest.timerInterval);
+            if (!completed && quest.currentIndex >= 0 && quest.currentIndex < quest.plan.length) {
+                const currentStep = quest.plan[quest.currentIndex];
+                // 現在のステップが 'section' (学習中) の場合のみ記録
+                if (currentStep.type === 'section') {
+                    const elapsed = currentStep.duration - quest.timeLeft; // 経過時間
+                    if (elapsed > 0) {
+                        logStudyTime('focus', elapsed);
+                        addLP(Math.floor(elapsed / 60), 'クエスト（中断）');
+                        state.focus.totalTime += elapsed;
+                        checkTitles();
+                        saveState();
+                        showToast(`セクションの ${formatTime(elapsed)} を記録しました。`);
+                    }
+                }
+            }
             quest.active = false;
             questActiveScreen.style.display = 'none';
 
