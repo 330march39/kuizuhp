@@ -117,6 +117,19 @@
         .dark .task-item:hover .task-text-input {
             background-color: rgba(255,255,255,0.05);
         }
+        /* クエスト設定のセクションリストの高さを制御 */
+        #quest-plan-list {
+          max-height: 60vh;       /* 最大高さを画面の60%に制限 */
+          overflow-y: auto;        /* 内容が溢れたらスクロール表示 */
+          padding-bottom: 1rem;    /* 下に余白を確保 */
+        }
+        
+        /* 各セクション項目の不要な拡大を防ぐ */
+        #quest-plan-list > div {
+          flex: none;              /* flexboxによる自動伸縮を無効化 */
+          height: auto;            /* コンテンツ量に応じて高さを調整 */
+          min-height: unset;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen antialiased">
