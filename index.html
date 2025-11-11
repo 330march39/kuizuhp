@@ -181,85 +181,98 @@
                 </div>
             </div>             
             <div id="focus-page" class="page p-4 flex flex-col h-full">
-                <div class="flex-shrink-0 mb-4 space-y-4">
-                    <button class="focus-mode-btn w-full p-3 rounded-lg font-bold text-lg shadow-md flex items-center justify-center space-x-2 bg-gray-200 dark:bg-gray-700" data-mode="quest">
-                        <i data-lucide="award" class="w-6 h-6"></i>
-                        <span>クエスト</span>
-                    </button>
-                    
-                    <div class="flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
-                        <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="timer">タイマー</button>
-                        <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="stopwatch">ストップウォッチ</button>
-                    </div>
-                </div>
-            
-                <div id="timer-view" class="focus-view-bg flex-grow flex flex-col items-center justify-center text-center relative text-white rounded-lg">
-                    <div class="absolute inset-0 bg-black/50 rounded-lg"></div>
-                    <div class="relative z-10 p-4">
+                
+                <div id="focus-main-view" class="flex flex-col h-full">
+                    <div class="flex-shrink-0 mb-4 space-y-4">
+                        <button id="show-quest-btn" class="w-full p-3 rounded-lg font-bold text-lg shadow-md flex items-center justify-center space-x-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" data-mode="quest">
+                            <i data-lucide="award" class="w-6 h-6"></i>
+                            <span>クエスト</span>
+                        </button>
                         
-                        <div id="timer-settings-container">
-                            <div class="flex items-center justify-center space-x-2 mb-6">
-                                <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="60">1分</button>
-                                <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="300">5分</button>
-                                <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="1800">30分</button>
-                                <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="3600">60分</button>
-                                <button id="timer-reset-btn" class="bg-white/20 hover:bg-white/30 w-10 h-10 rounded-full flex items-center justify-center">
-                                    <i data-lucide="rotate-cw" class="w-5 h-5"></i>
-                                </button>
+                        <div class="flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
+                            <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="timer">タイマー</button>
+                            <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="stopwatch">ストップウォッチ</button>
+                        </div>
+                    </div>
+            
+                    <div id="timer-view" class="focus-view-bg flex-grow flex flex-col items-center justify-center text-center relative text-white rounded-lg">
+                        <div class="absolute inset-0 bg-black/50 rounded-lg"></div>
+                        <div class="relative z-10 p-4">
+                            <div id="timer-settings-container">
+                                <div class="flex items-center justify-center space-x-2 mb-6">
+                                    <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="60">1分</button>
+                                    <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="300">5分</button>
+                                    <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="1800">30分</button>
+                                    <button class="time-add-btn bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full" data-time="3600">60分</button>
+                                    <button id="timer-reset-btn" class="bg-white/20 hover:bg-white/30 w-10 h-10 rounded-full flex items-center justify-center">
+                                        <i data-lucide="rotate-cw" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="focus-timer-display" class="text-7xl font-bold tabular-nums mb-6">30:00</div>
+                            <button id="focus-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center mx-auto"><i data-lucide="play" class="w-6 h-6 mr-2"></i>スタート</button>
+                            <div id="focus-controls" class="hidden flex flex-wrap items-center justify-center gap-4">
+                                <button id="focus-pause-btn" class="bg-gray-500/70 hover:bg-gray-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
+                                <button id="focus-end-btn" class="bg-red-500/70 hover:bg-red-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="stop-circle" class="w-6 h-6 mr-2"></i>終了</button>
                             </div>
                         </div>
-            
-                        <div id="focus-timer-display" class="text-7xl font-bold tabular-nums mb-6">30:00</div>
-                        <button id="focus-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center mx-auto"><i data-lucide="play" class="w-6 h-6 mr-2"></i>スタート</button>
-                        <div id="focus-controls" class="hidden flex flex-wrap items-center justify-center gap-4">
-                            <button id="focus-pause-btn" class="bg-gray-500/70 hover:bg-gray-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
-                            <button id="focus-end-btn" class="bg-red-500/70 hover:bg-red-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="stop-circle" class="w-6 h-6 mr-2"></i>終了</button>
-                        </div>
-            
                     </div>
-                </div>
-            
-                <div id="stopwatch-view" class="focus-view-bg hidden flex-grow flex-col items-center justify-center text-center relative text-white rounded-lg">
-                    <div class="absolute inset-0 bg-black/50 rounded-lg"></div>
-                    <div class="relative z-10 p-4">
-                        <div id="stopwatch-display" class="text-7xl font-bold tabular-nums mb-6">00:00</div>
-                        <button id="stopwatch-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center mx-auto"><i data-lucide="play" class="w-6 h-6 mr-2"></i>スタート</button>
-                        <div id="stopwatch-controls" class="hidden flex flex-wrap items-center justify-center gap-4">
-                            <button id="stopwatch-pause-btn" class="bg-gray-500/70 hover:bg-gray-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
-                            <button id="stopwatch-end-btn" class="bg-red-500/70 hover:bg-red-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="flag" class="w-6 h-6 mr-2"></i>記録して終了</button>
-                        </div>
-                    </div>
-                </div>
-                            <div id="quest-view" class="hidden flex-grow flex-col text-left relative rounded-lg">
-                
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">クエスト設定</h2>
-                
-                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm mb-4">
-                    <h3 class="font-semibold mb-2 text-gray-700 dark:text-gray-300">セクション設定</h3>
-                    <div class="flex items-center space-x-2 text-sm">
-                        <input type="number" id="break-interval-input" value="2" class="w-16 p-1 border rounded dark:bg-gray-800 dark:border-gray-600">
-                        <span>セクションごとに</span>
-                        <input type="number" id="break-duration-input" value="5" class="w-16 p-1 border rounded dark:bg-gray-800 dark:border-gray-600">
-                        <span>分休憩</span>
-                    </div>
-                     <button id="add-breaks-btn" class="mt-2 text-sm bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition">休憩を自動挿入</button>
-                </div>
-            
-                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm flex-grow overflow-y-auto">
-                    <div id="quest-plan-list" class="space-y-2">
-                        </div>
                     
-                    <div class="flex justify-between mt-4">
-                        <button id="add-section-btn" class="text-sm bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition">セクション追加</button>
-                        <button id="add-break-btn" class="text-sm bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition">休憩追加</button>
+                    <div id="stopwatch-view" class="focus-view-bg hidden flex-grow flex-col items-center justify-center text-center relative text-white rounded-lg">
+                        <div class="absolute inset-0 bg-black/50 rounded-lg"></div>
+                        <div class="relative z-10 p-4">
+                            <div id="stopwatch-display" class="text-7xl font-bold tabular-nums mb-6">00:00</div>
+                            <button id="stopwatch-start-btn" class="primary-bg primary-bg-hover text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center mx-auto"><i data-lucide="play" class="w-6 h-6 mr-2"></i>スタート</button>
+                            <div id="stopwatch-controls" class="hidden flex flex-wrap items-center justify-center gap-4">
+                                <button id="stopwatch-pause-btn" class="bg-gray-500/70 hover:bg-gray-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="pause" class="w-6 h-6 mr-2"></i>一時停止</button>
+                                <button id="stopwatch-end-btn" class="bg-red-500/70 hover:bg-red-600/70 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg flex items-center"><i data-lucide="flag" class="w-6 h-6 mr-2"></i>記録して終了</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <button id="start-quest-btn" class="mt-4 w-full primary-bg primary-bg-hover text-white py-3 px-4 rounded-lg font-bold text-lg shadow-md hover:scale-105 transition-transform transform flex items-center justify-center space-x-2">
-                    <i data-lucide="play" class="w-6 h-6"></i>
-                    <span>クエストを開始する</span>
-                </button>
-            </div>
+            
+                <div id="quest-view" class="hidden absolute inset-0 z-10 bg-gray-100 dark:bg-gray-900 flex-col p-4">
+                    
+                    <div class="flex-shrink-0 flex items-center justify-between mb-4">
+                        <button id="quest-back-btn" class="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full">
+                            <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                        </button>
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">クエスト設定</h2>
+                        <div class="w-10"></div> </div>
+                    
+                    <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm mb-4">
+                        <button id="load-tasks-btn" class="w-full mb-2 primary-bg primary-bg-hover text-white py-2 px-4 rounded-lg font-bold flex items-center justify-center space-x-2">
+                            <i data-lucide="check-square" class="w-5 h-5"></i>
+                            <span>「今日の予定」を読み込む</span>
+                        </button>
+                        <hr class="my-3 border-gray-200 dark:border-gray-600">
+                        <h3 class="font-semibold mb-2 text-gray-700 dark:text-gray-300">セクション設定</h3>
+                        <div class="flex items-center space-x-2 text-sm">
+                            <input type="number" id="break-interval-input" value="2" class="w-16 p-1 border rounded dark:bg-gray-800 dark:border-gray-600">
+                            <span>セクションごとに</span>
+                            <input type="number" id="break-duration-input" value="5" class="w-16 p-1 border rounded dark:bg-gray-800 dark:border-gray-600">
+                            <span>分休憩</span>
+                        </div>
+                        <button id="add-breaks-btn" class="mt-2 text-sm bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition">休憩を自動挿入</button>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm flex-grow overflow-y-auto pb-20"> <div id="quest-plan-list" class="space-y-2">
+                            </div>
+                        
+                        <div class="flex justify-between mt-4">
+                            <button id="add-section-btn" class="text-sm bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition">セクション追加</button>
+                            <button id="add-break-btn" class="text-sm bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition">休憩追加</button>
+                        </div>
+                    </div>
+                    
+                    <div class="fixed bottom-16 left-0 right-0 max-w-lg mx-auto p-4 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+                        <button id="start-quest-btn" class="w-full primary-bg primary-bg-hover text-white py-3 px-4 rounded-lg font-bold text-lg shadow-md hover:scale-105 transition-transform transform flex items-center justify-center space-x-2">
+                            <i data-lucide="play" class="w-6 h-6"></i>
+                            <span>クエストを開始する</span>
+                        </button>
+                    </div>
+            
+                </div>
             </div>
             <div id="my-chart-page" class="page p-4 space-y-6">
                 <div>
@@ -509,6 +522,7 @@
                         activeTheme: 'default',
                         unlockedBackgrounds: ['default'],
                         activeBackground: 'default'
+                        tasksLastUpdated: null
                     },
                     tasks: [],
                     progress: {},
@@ -562,6 +576,14 @@
                     addLP(10000, 'ログインボーナス', false);
                     state.lastLogin = new Date().toDateString();
                     saveState(); // stateが完全に構築された後に保存
+                }
+
+                // 4. 今日の予定リセット処理
+                const today = new Date().toDateString();
+                if (state.profile.tasksLastUpdated !== today) {
+                    console.log('日付が変わったため、タスクをリセットします。');
+                    state.tasks = []; // タスクを空にする
+                    state.profile.tasksLastUpdated = today; // 更新日を今日に設定
                 }
             };
             
@@ -1001,12 +1023,33 @@
                     openCountdownModal(id);
                 }
 
-                const focusModeBtn = e.target.closest('.focus-mode-btn');
-                if(focusModeBtn) {
-                    const mode = focusModeBtn.dataset.mode;
-                    state.focus.mode = mode;
-                    updateFocusModeUI();
-                }
+                // ▼▼▼ 集中モードボタン（タイマー/SW）のリスナー修正 ▼▼▼
+                const focusModeBtn = e.target.closest('.focus-mode-btn');
+                if(focusModeBtn) {
+                    const mode = focusModeBtn.dataset.mode;
+                    state.focus.mode = mode; // 'timer' か 'stopwatch' が入る
+                    updateFocusModeUI(); // UIを更新
+                }
+                // ▲▲▲ 修正ここまで ▲▲▲
+
+                // ▼▼▼ クエスト表示ボタンのリスナーを「新規追加」 ▼▼▼
+                const showQuestBtn = e.target.closest('#show-quest-btn');
+                if (showQuestBtn) {
+                    $('#focus-main-view').style.display = 'none';
+                    $('#quest-view').style.display = 'flex';
+                    // クエストプランをレンダリング
+                    renderQuestPlan();
+                    lucide.createIcons();
+                }
+
+                // ▼▼▼ クエスト戻るボタンのリスナーを「新規追加」 ▼▼▼
+                const questBackBtn = e.target.closest('#quest-back-btn');
+                if (questBackBtn) {
+                    $('#focus-main-view').style.display = 'flex';
+                    $('#quest-view').style.display = 'none';
+                    // 念のためタイマー/SWの表示を更新
+                    updateFocusModeUI();
+                }
 
                 // 時間加算ボタンの処理
                 const timeAddBtn = e.target.closest('.time-add-btn');
@@ -1157,47 +1200,24 @@
             };
 
             const updateFocusModeUI = () => {
-                const mode = state.focus.mode;
-                
-                // 1. メインビューの表示切替
-                $('#timer-view').style.display = (mode === 'timer') ? 'flex' : 'none';
-                $('#stopwatch-view').style.display = (mode === 'stopwatch') ? 'flex' : 'none';
-                $('#quest-view').style.display = (mode === 'quest') ? 'flex' : 'none';
-    
-                if (mode === 'quest') {
-                    renderQuestPlan(); // クエストタブ表示時にプランを再描画
-                }
-    
-                // 2. ボタンのハイライト処理
-                const questMainBtn = $('.focus-mode-btn[data-mode="quest"]');
-                const timerBtn = $('.focus-mode-btn[data-mode="timer"]');
-                const stopwatchBtn = $('.focus-mode-btn[data-mode="stopwatch"]');
-                
-                // 全てリセット
-                [questMainBtn, timerBtn, stopwatchBtn].forEach(btn => {
-                    if(btn) { // 念のため存在チェック
-                        btn.classList.remove('primary-bg', 'text-white');
-                        if (btn.dataset.mode === 'quest') { // クエストボタンはスタイルが違う
-                            btn.classList.add('bg-gray-200', 'dark:bg-gray-700');
-                        }
-                    }
-                });
-    
-                // アクティブなものだけハイライト
-                if (mode === 'timer') {
-                    timerBtn.classList.add('primary-bg', 'text-white');
-                } else if (mode === 'stopwatch') {
-                    stopwatchBtn.classList.add('primary-bg', 'text-white');
-                } else if (mode === 'quest') {
-                    questMainBtn.classList.add('primary-bg', 'text-white');
-                    questMainBtn.classList.remove('bg-gray-200', 'dark:bg-gray-700');
-                } else {
-                     // デフォルト（タイマー）
-                    timerBtn.classList.add('primary-bg', 'text-white');
-                }
-                
-                lucide.createIcons(); // クエストボタンのアイコン再描画用
-            };
+                const mode = state.focus.mode;
+                
+                // メインビュー内の表示切替
+                $('#timer-view').style.display = (mode === 'timer') ? 'flex' : 'none';
+                $('#stopwatch-view').style.display = (mode === 'stopwatch') ? 'flex' : 'none';
+    
+                // ボタンのハイライト処理
+                const timerBtn = $('.focus-mode-btn[data-mode="timer"]');
+                const stopwatchBtn = $('.focus-mode-btn[data-mode="stopwatch"]');
+                
+                if (mode === 'timer') {
+                    timerBtn.classList.add('primary-bg', 'text-white');
+                    stopwatchBtn.classList.remove('primary-bg', 'text-white');
+                } else if (mode === 'stopwatch') {
+                    timerBtn.classList.remove('primary-bg', 'text-white');
+                    stopwatchBtn.classList.add('primary-bg', 'text-white');
+                }
+            };
 
             const resetTimerUI = () => {
                 clearInterval(focusTimer.interval);
@@ -1529,6 +1549,9 @@
         // クエストプランのリストをレンダリングする関数
         function renderQuestPlan() {
             questPlanListEl.innerHTML = '';
+            if (quest.plan.length === 0) {
+                questPlanListEl.innerHTML = `<p class="text-center text-sm text-gray-500">「今日の予定」を読み込むか、<br>「セクション追加」を押してください。</p>`;
+            }
             quest.plan.forEach((item, index) => {
                 const itemEl = document.createElement('div');
                 itemEl.className = 'flex items-center space-x-2 group bg-gray-100 dark:bg-gray-800 p-2 rounded-lg';
@@ -1538,7 +1561,7 @@
                 if (item.type === 'section') {
                     content = `
                         <span class="font-bold w-6 text-center">${index + 1}</span>
-                        <input type="text" value="${item.text}" class="quest-item-text flex-grow bg-transparent p-1 rounded border border-transparent focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none">
+                        <input type="text" value="${item.text}" data-original-id="${item.originalTaskId || ''} class="quest-item-text flex-grow bg-transparent p-1 rounded border border-transparent focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none">
                         <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
                         <span class="text-sm">分</span>
                     `;
@@ -1565,6 +1588,7 @@
                 // イベントリスナー
                 itemEl.querySelector('.quest-item-text')?.addEventListener('change', (e) => {
                     item.text = e.target.value;
+                    item.originalTaskId = e.target.dataset.originalId || null;
                 });
                 itemEl.querySelector('.quest-item-duration').addEventListener('change', (e) => {
                     item.duration = parseInt(e.target.value) * 60;
@@ -1624,6 +1648,11 @@
                             logStudyTime('focus', elapsed); // 学習ログに記録
                             addLP(Math.floor(elapsed / 60), 'クエストセクション'); // LPを付与
                             state.focus.totalTime += elapsed; // 総集中時間に追加
+                            if (currentStep.originalTaskId) {
+                                const taskId = parseInt(currentStep.originalTaskId);
+                                state.tasks = state.tasks.filter(t => t.id !== taskId);
+                                console.log(`タスクID ${taskId} を完了として削除しました。`);
+                            }
                             checkTitles(); // 称号をチェック
                             saveState(); // 状態を保存
                         }
@@ -1851,7 +1880,30 @@
                             }
                         });
                     }
-                
+                
+                // 5. 「今日の予定」読み込みボタン
+                const loadTasksBtn = $('#load-tasks-btn');
+                if (loadTasksBtn) {
+                    loadTasksBtn.addEventListener('click', () => {
+                        if (state.tasks.length === 0) {
+                            showToast('「今日の予定」にタスクがありません。');
+                            quest.plan = []; // プランをクリア
+                        } else {
+                            // state.tasks を quest.plan にマッピング
+                            quest.plan = state.tasks.map(task => ({
+                                id: Date.now() + Math.random(), // クエスト用の一時ID
+                                type: 'section',
+                                text: task.text,
+                                duration: 25 * 60, // デフォルト25分
+                                originalTaskId: task.id // ★元のタスクIDを保持
+                            }));
+                            showToast(`「今日の予定」から ${state.tasks.length} 件のタスクを読み込みました。`);
+                        }
+                        // クエストプランのUIを再描画
+                        renderQuestPlan();
+                    });
+                }
+                
                 // 最後に外観を更新
                 $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
                 updateAppearance();
