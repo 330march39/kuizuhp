@@ -1544,7 +1544,7 @@
                 quest.plan.forEach((item, index) => {
                     const itemEl = document.createElement('div');
                     // ▼▼▼ 修正 1: 背景を半透明に変更 ▼▼▼
-                    itemEl.className = 'flex items-center space-x-2 group p-1';
+                    itemEl.className = 'flex items-center space-x-2 group bg-white/30 dark:bg-black/30 py-1 px-2 rounded-lg';
                     itemEl.dataset.id = item.id;
                                     
                     let content = '';
