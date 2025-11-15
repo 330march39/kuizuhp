@@ -843,7 +843,7 @@
                         taskEl.className = 'flex items-center space-x-2 group task-item';
                         taskEl.dataset.id = task.id;
                         taskEl.innerHTML = `
-                            <span class="font-bold w-6 text-center text-gray-600 dark:text-gray-400">${index + 1}</span>
+                            <span class="font-bold w-6 text-center text-gray-600 dark:text-gray-400">${sectionCounter}</span>
                             <input type="text" value="${task.text}" class="task-text-input flex-grow bg-transparent p-1 focus:outline-none rounded">
                             <button class="task-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-opacity">
                                 <i data-lucide="grip-vertical" class="w-5 h-5"></i>
@@ -1799,14 +1799,14 @@
                 
                 // ページ描画の前にタイマーの状態を復元・設定する
                 restoreFocusState();
-                
-                // 全てのページを描画
-                renderEngine.renderAll();
 
                 // 1. 新しいDOM要素を変数に割り当て
                 homeTaskListEl = $('#home-task-list');
                 newTaskInput = $('#new-task-input');
                 newTaskNumberEl = $('#new-task-number');
+                
+                // 全てのページを描画
+                renderEngine.renderAll();
                 
                 // 2. Sortable.js の初期化 (今日の予定)
                 if (homeTaskListEl) {
