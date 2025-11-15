@@ -1794,16 +1794,16 @@
                         .then(registration => console.log('Service Worker登録成功:', registration))
                         .catch(error => console.log('Service Worker登録失敗:', error));
                 }
-                
-                loadState();
-                
-                // ページ描画の前にタイマーの状態を復元・設定する
-                restoreFocusState();
 
                 // 1. 新しいDOM要素を変数に割り当て
                 homeTaskListEl = $('#home-task-list');
                 newTaskInput = $('#new-task-input');
                 newTaskNumberEl = $('#new-task-number');
+                
+                loadState();
+                
+                // ページ描画の前にタイマーの状態を復元・設定する
+                restoreFocusState();
                 
                 // 全てのページを描画
                 renderEngine.renderAll();
