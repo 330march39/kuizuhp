@@ -117,19 +117,7 @@
         .dark .task-item:hover .task-text-input {
             background-color: rgba(255,255,255,0.05);
         }
-        /* クエスト設定のセクションリストの高さを制御 */
-        #quest-plan-list {
-          max-height: 60vh;       /* 最大高さを画面の60%に制限 */
-          overflow-y: auto;        /* 内容が溢れたらスクロール表示 */
-          padding-bottom: 1rem;    /* 下に余白を確保 */
-        }
         
-        /* 各セクション項目の不要な拡大を防ぐ */
-        #quest-plan-list > div {
-          flex: none;              /* flexboxによる自動伸縮を無効化 */
-          height: auto;            /* コンテンツ量に応じて高さを調整 */
-          min-height: unset;
-        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen antialiased">
@@ -1546,67 +1534,59 @@
             /* ▼▼▼ 追加: クエスト機能の関数群 ▼▼▼ */
 
             // クエストプランのリストをレンダリングする関数
-            function renderQuestPlan() {
-                questPlanListEl.innerHTML = '';
-                if (quest.plan.length === 0) {
-                    questPlanListEl.innerHTML = `<p class="text-center text-sm text-gray-500">「今日の予定」を読み込むか、<br>「セクション追加」を押してください。</p>`;
-                }
-                
-                let sectionNumber = 1; // <-- セクション専用のカウンター
-    
-                quest.plan.forEach((item, index) => {
-                    const itemEl = document.createElement('div');
-                    // ▼▼▼ 修正 1: 背景を半透明に変更 ▼▼▼
-                    itemEl.className = 'flex items-center space-x-2 group bg-white/30 dark:bg-black/30 py-1 px-2 rounded-lg';
-                    itemEl.dataset.id = item.id;
-                                    
-                    let content = '';
-                    if (item.type === 'section') {
-                        // ▼▼▼ 修正 2: `flex-1` にし、`truncate` を削除 ▼▼▼
-                        content = `
-                            <span class="font-bold w-6 text-center">${sectionNumber}</span> 
-                            <input type="text" value="${item.text}" data-original-id="${item.originalTaskId || ''}" class="quest-item-text flex-1 min-w-0 bg-transparent p-1 rounded border border-transparent focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none ">
-                            <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
-                            <span class="text-sm">分</span>
-                        `;
-                        sectionNumber++; // <-- セクションの場合のみカウンターを増やす
-                    } else { // break
-                        // ▼▼▼ 修正 3: `flex-1` にし、`truncate` を追加 ▼▼▼
-                        content = `
-                            <span class="font-bold w-6 text-center">☕</span>
-                            <span class="flex-1 min-w-0 p-1 text-gray-500 dark:text-gray-400 font-semibold truncate">ブレイクタイム</span>
-                            <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
-                            <span class="text-sm">分</span>
-                        `;
-                    }
-    
-                    // ... (残りの innerHTML, appendChild, イベントリスナー は変更なし) ...
-                    itemEl.innerHTML = `
-                        ${content}
-                        <button class="quest-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-opacity">
-                            <i data-lucide="grip-vertical" class="w-5 h-5"></i>
-                        </button>
-                        <button class="delete-item-btn text-gray-400 hover:text-red-500 transition-opacity">
-                            <i data-lucide="trash-2" class="w-5 h-5"></i>
-                        </button>
-                    `;
-                     questPlanListEl.appendChild(itemEl);
-    
-                    // イベントリスナー
-                    itemEl.querySelector('.quest-item-text')?.addEventListener('change', (e) => {
-                        item.text = e.target.value;
-                        item.originalTaskId = e.target.dataset.originalId || null;
-                    });
-                    itemEl.querySelector('.quest-item-duration').addEventListener('change', (e) => {
-                        item.duration = parseInt(e.target.value) * 60;
-                    });
-                    itemEl.querySelector('.delete-item-btn').addEventListener('click', () => {
-                        quest.plan = quest.plan.filter(p => p.id !== item.id);
-                        renderQuestPlan();
-                    });
-                });
-                lucide.createIcons();
-            };
+        function renderQuestPlan() {
+            questPlanListEl.innerHTML = '';
+            if (quest.plan.length === 0) {
+                questPlanListEl.innerHTML = `<p class="text-center text-sm text-gray-500">「今日の予定」を読み込むか、<br>「セクション追加」を押してください。</p>`;
+            }
+            quest.plan.forEach((item, index) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'flex items-center space-x-2 group bg-gray-100 dark:bg-gray-800 p-2 rounded-lg';
+                itemEl.dataset.id = item.id;
+                            
+                let content = '';
+                if (item.type === 'section') {
+                    content = `
+                        <span class="font-bold w-6 text-center">${index + 1}</span>
+                        <input type="text" value="${item.text}" data-original-id="${item.originalTaskId || ''}" class="quest-item-text flex-grow bg-transparent p-1 rounded border border-transparent focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none min-w-0 truncate">
+                        <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
+                        <span class="text-sm">分</span>
+                    `;
+                } else { // break
+                    content = `
+                        <span class="font-bold w-6 text-center">☕</span>
+                        <span class="flex-grow p-1 text-gray-500 dark:text-gray-400 font-semibold">ブレイクタイム</span>
+                        <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
+                        <span class="text-sm">分</span>
+                    `;
+                }
+
+                itemEl.innerHTML = `
+                    ${content}
+                    <button class="quest-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-opacity">
+                        <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                    </button>
+                    <button class="delete-item-btn text-gray-400 hover:text-red-500 transition-opacity">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                `;
+                questPlanListEl.appendChild(itemEl);
+
+                // イベントリスナー
+                itemEl.querySelector('.quest-item-text')?.addEventListener('change', (e) => {
+                    item.text = e.target.value;
+                    item.originalTaskId = e.target.dataset.originalId || null;
+                });
+                itemEl.querySelector('.quest-item-duration').addEventListener('change', (e) => {
+                    item.duration = parseInt(e.target.value) * 60;
+                });
+                itemEl.querySelector('.delete-item-btn').addEventListener('click', () => {
+                    quest.plan = quest.plan.filter(p => p.id !== item.id);
+                    renderQuestPlan();
+                });
+            });
+            lucide.createIcons();
+        };
             
         // クエスト用のタイマーを開始する関数
         function startQuestTimer(duration, onTick, onEnd) {
