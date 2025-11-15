@@ -1547,7 +1547,7 @@
                 let content = '';
                 if (item.type === 'section') {
                     content = `
-                        <span class="font-bold w-6 text-center">${index + 1}</span>
+                        <span class="font-bold w-6 text-center">${sectionCounter}</span>
                         <input type="text" value="${item.text}" data-original-id="${item.originalTaskId || ''}" class="quest-item-text flex-grow bg-transparent p-1 rounded border border-transparent focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none min-w-0 truncate">
                         <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
                         <span class="text-sm">分</span>
