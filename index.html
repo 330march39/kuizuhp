@@ -243,7 +243,7 @@
                             <span>「今日の予定」を読み込む</span>
                         </button>
                         <hr class="my-3 border-gray-200 dark:border-gray-600">
-                        <h3 class="font-semibold mb-2 text-gray-700 dark:text-gray-300">セクション設定</h3>
+                        
                         <div class="flex items-center space-x-2 text-sm">
                             <input type="number" id="break-interval-input" value="2" class="w-16 p-1 border rounded dark:bg-gray-800 dark:border-gray-600">
                             <span>セクションごとに</span>
@@ -1796,17 +1796,17 @@
                 }
                 
                 loadState();
+
+                // 1. 新しいDOM要素を変数に割り当て
+                homeTaskListEl = $('#home-task-list');
+                newTaskInput = $('#new-task-input');
+                newTaskNumberEl = $('#new-task-number');
                 
                 // ページ描画の前にタイマーの状態を復元・設定する
                 restoreFocusState();
                 
                 // 全てのページを描画
                 renderEngine.renderAll();
-
-                // 1. 新しいDOM要素を変数に割り当て
-                homeTaskListEl = $('#home-task-list');
-                newTaskInput = $('#new-task-input');
-                newTaskNumberEl = $('#new-task-number');
                 
                 // 2. Sortable.js の初期化 (今日の予定)
                 if (homeTaskListEl) {
