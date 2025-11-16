@@ -95,6 +95,7 @@
             font-weight: bold;
             transition: all 0.2s;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100px;
         }
         .break-content-btn:hover {
             background-color: rgba(255, 255, 255, 0.2);
@@ -385,24 +386,24 @@
                     <h2 class="text-2xl md:text-3xl font-bold text-gray-400">☕ ブレイクタイム</h2>
                     <p class="text-5xl md:text-7xl font-mono font-extrabold" id="break-timer">05:00</p>
                 </div>
-                <div id="break-icon-grid" class="grid grid-cols-3 gap-4 w-full max-w-sm">
-                                        <button class="break-content-btn" data-url="https://x.com">
+                <div id="break-icon-grid" class="flex flex-wrap justify-center gap-4 w-full max-w-sm">
+                                        <button class="break-content-btn" data-url="https://x.com" data-open-mode="external">
                         <i data-lucide="message-circle" class="w-10 h-10"></i>
                         <span>X (Twitter)</span>
                     </button>
-                    <button class="break-content-btn" data-url="https://www.instagram.com/">
+                    <button class="break-content-btn" data-url="https://www.instagram.com/" data-open-mode="external">
                         <i data-lucide="instagram" class="w-10 h-10"></i>
                         <span>Instagram</span>
                     </button>
-                    <button class="break-content-btn" data-url="https://www.youtube.com/">
+                    <button class="break-content-btn" data-url="https://www.youtube.com/" data-open-mode="external">
                         <i data-lucide="youtube" class="w-10 h-10"></i>
                         <span>YouTube</span>
                     </button>
-                                        <button class="break-content-btn" data-url="https://scratch.mit.edu/projects/543610448/fullscreen/">
+                                        <button class="break-content-btn" data-url="https://scratch.mit.edu/projects/543610448/fullscreen/" data-open-mode="external">
                         <i data-lucide="gamepad-2" class="w-10 h-10"></i>
                         <span>ﾎﾞﾗﾝﾃｨｱ</span>
                     </button>
-                    <button class="break-content-btn" data-url="https://scratch.mit.edu/projects/415836558/fullscreen/">
+                    <button class="break-content-btn" data-url="https://scratch.mit.edu/projects/415836558/fullscreen/" data-open-mode="external">
                         <i data-lucide="gamepad-2" class="w-10 h-10"></i>
                         <span>ﾌﾞﾘｻﾞｰｽﾞ</span>
                     </button>
@@ -1354,15 +1355,20 @@
             });
 
            // 休憩中のコンテンツ (アイコンホーム画面)
-            if(breakIconGrid) { // 新しいグリッドの要素が存在するか確認
+            if(breakIconGrid) {
                 breakIconGrid.addEventListener('click', (e) => {
                     const btn = e.target.closest('.break-content-btn');
-                    // data-url があるボタンがクリックされた場合
                     if (btn && btn.dataset.url) {
-                        // 用意されている openIframe 関数を呼び出し、アプリ内で開く
-                        openIframe(btn.dataset.url);
+                        // ★ここから変更★
+                        if (btn.dataset.openMode === 'external') {
+                            // 外部タブで開く (強制クローズ不可)
+                            window.open(btn.dataset.url, '_blank');
+                        } else {
+                            // 従来通りアプリ内 (iframe) で開く (強制クローズ可能)
+                            openIframe(btn.dataset.url);
+                        }
+                        // ★ここまで変更★
                     }
-                    // ここにあったエラー行を削除しました
                 });
             }
             closeIframeBtn.addEventListener('click', closeIframe);
