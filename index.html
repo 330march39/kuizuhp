@@ -1362,7 +1362,6 @@
                         // 用意されている openIframe 関数を呼び出し、アプリ内で開く
                         openIframe(btn.dataset.url);
                     }
-          _blank');
                     }
                 });
             }
@@ -1625,7 +1624,7 @@
                 questSectionView.style.display = 'block';
                 questBreakView.style.display = 'none';
                 questSectionTitle.textContent = currentStep.text;
-                questProgressEl.textContent = `${quest.currentIndex + 1} / ${quest.plan.length}`;
+                //questProgressEl.textContent = `${quest.currentIndex + 1} / ${quest.plan.length}`;
                 // 1. セクションタイプのアイテムだけをフィルタリング
                 const totalSections = quest.plan.filter(p => p.type === 'section').length;
                 // 2. 現在までのインデックスで、セクションが何番目かをカウント
