@@ -82,13 +82,17 @@
             background-position: center;
             background-repeat: no-repeat;
         }
+        /* 休憩アイコンのグリッドコンテナ (CSS Grid版) */
         .break-icon-grid-container {
-            display: flex;             /* "flex" */
-            flex-wrap: wrap;           /* "flex-wrap" */
-            justify-content: center;   /* "justify-center" */
-            gap: 1rem;                 /* "gap-4" (1rem = 16px) */
-            width: 100%;               /* "w-full" */
-            max-width: 24rem;          /* "max-w-sm" (24rem = 384px) */
+            display: grid;
+            /* 100pxのボタン幅を基準に、コンテナ幅(max-w-sm)に
+              入るだけのカラムを自動で生成します。
+            */
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;              /* 隙間 (gap-4) */
+            width: 100%;            /* 横幅 (w-full) */
+            max-width: 24rem;       /* 最大幅 (max-w-sm) */
+            justify-items: center;  /* 各アイテムをセル内で中央揃え */
         }
 
         .break-content-btn {
@@ -125,6 +129,25 @@
         }
         .dark .task-item:hover .task-text-input {
             background-color: rgba(255,255,255,0.05);
+        }
+        /* 休憩設定モーダルのアイテム */
+        .break-settings-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem; /* p-3 */
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem; /* rounded-lg */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e5e7eb; /* text-gray-200 */
+        }
+        .break-settings-handle {
+            cursor: move; /* "cursor-move" */
+            margin-right: 0.75rem; /* mr-3 */
+            color: #9ca3af; /* text-gray-400 */
+        }
+        .break-settings-item span {
+            flex-grow: 1; /* "flex-grow" */
+            text-align: left;
         }
     </style>
 </head>
@@ -390,31 +413,15 @@
             </div>
     
             <div id="quest-break-view" class="hidden w-full h-full flex flex-col items-center pt-16">
+                <button id="break-settings-btn" class="absolute top-4 right-4 text-gray-400 p-2 rounded-full hover:bg-gray-700 transition-colors">
+                    <i data-lucide="settings" class="w-6 h-6"></i>
+                </button>
                 <div class="text-center mb-8">
                     <h2 class="text-2xl md:text-3xl font-bold text-gray-400">☕ ブレイクタイム</h2>
                     <p class="text-5xl md:text-7xl font-mono font-extrabold" id="break-timer">05:00</p>
                 </div>
                 <div id="break-icon-grid" class="break-icon-grid-container">
-                                        <button class="break-content-btn" data-url="https://x.com" data-open-mode="external">
-                        <i data-lucide="message-circle" class="w-10 h-10"></i>
-                        <span>X (Twitter)</span>
-                    </button>
-                    <button class="break-content-btn" data-url="https://www.instagram.com/" data-open-mode="external">
-                        <i data-lucide="instagram" class="w-10 h-10"></i>
-                        <span>Instagram</span>
-                    </button>
-                    <button class="break-content-btn" data-url="https://www.youtube.com/" data-open-mode="external">
-                        <i data-lucide="youtube" class="w-10 h-10"></i>
-                        <span>YouTube</span>
-                    </button>
-                                        <button class="break-content-btn" data-url="https://scratch.mit.edu/projects/543610448/fullscreen/" data-open-mode="external">
-                        <i data-lucide="gamepad-2" class="w-10 h-10"></i>
-                        <span>ﾎﾞﾗﾝﾃｨｱ</span>
-                    </button>
-                    <button class="break-content-btn" data-url="https://scratch.mit.edu/projects/415836558/fullscreen/" data-open-mode="external">
-                        <i data-lucide="gamepad-2" class="w-10 h-10"></i>
-                        <span>ﾌﾞﾘｻﾞｰｽﾞ</span>
-                    </button>
+                                        
                 </div>
         
             </div>
@@ -437,6 +444,20 @@
                 <button id="modal-cancel-btn" class="px-6 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold hover:bg-gray-300 dark:hover:bg-gray-500 transition">キャンセル</button>
                 <button id="modal-confirm-btn" class="px-6 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition">終了</button>
             </div>
+        </div>
+    </div>
+    
+    <div id="break-settings-modal" class="hidden fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
+        <div class="bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-sm flex flex-col max-h-[80vh]">
+            <h3 class="text-lg font-bold text-white mb-2 text-center">休憩アイコンの編集</h3>
+            <p class="text-sm text-gray-400 mb-4 text-center">ドラッグで並び替え、スイッチで表示/非表示を切り替えられます。</p>
+            
+            <div id="break-settings-list" class="space-y-2 overflow-y-auto py-2">
+                </div>
+            
+            <button id="break-settings-close-btn" class="mt-6 px-6 py-2 rounded-lg primary-bg primary-bg-hover text-white font-semibold transition">
+                閉じる
+            </button>
         </div>
     </div>
     
@@ -547,7 +568,14 @@
                     studyLog: {}, 
                     settings: { backgroundScopeGlobal: true , manualDarkMode: false },
                     lastLogin: null,
-                    //lastNotificationCheck: new Date().toISOString(),＜削除する
+                    breakIcons: [
+                        { id: 'x', name: 'X (Twitter)', icon: 'message-circle', url: 'https://x.com', openMode: 'external', visible: true },
+                        { id: 'instagram', name: 'Instagram', icon: 'instagram', url: 'https://www.instagram.com/', openMode: 'external', visible: true },
+                        { id: 'youtube', name: 'YouTube', icon: 'youtube', url: 'https://www.youtube.com/', openMode: 'external', visible: true },
+                        { id: 'scratch1', name: 'ﾎﾞﾗﾝﾃｨｱ', icon: 'gamepad-2', url: 'https://scratch.mit.edu/projects/543610448/fullscreen/', openMode: 'external', visible: true },
+                        { id: 'scratch2', name: 'ﾌﾞﾘｻﾞｰｽﾞ', icon: 'gamepad-2', url: 'https://scratch.mit.edu/projects/415836558/fullscreen/', openMode: 'external', visible: true }
+                    ],
+                    
                 };
                 
                 // --- ▼▼▼ 修正箇所 ▼▼▼ ---
@@ -575,7 +603,8 @@
                     ...loaded,
                     profile: { ...defaultState.profile, ...(loaded.profile || {}) },
                     focus: { ...defaultState.focus, ...(loaded.focus || {}) },
-                    settings: { ...defaultState.settings, ...(loaded.settings || {}) }
+                    settings: { ...defaultState.settings, ...(loaded.settings || {}) },
+                    breakIcons: loaded.breakIcons || defaultState.breakIcons
                 };
                 // --- ▲▲▲ 修正ここまで ▲▲▲ ---
 
@@ -1063,6 +1092,19 @@
                 const timerResetBtn = e.target.closest('#timer-reset-btn');
                 if(timerResetBtn) {
                     resetTimerDisplay();
+                }
+                // ★新規追加★ 休憩設定ボタン（クエスト中）
+                const breakSettingsBtn = e.target.closest('#break-settings-btn');
+                if (breakSettingsBtn) {
+                    openBreakSettingsModal();
+                }
+    
+                // ★新規追加★ 休憩設定モーダルを閉じる
+                const breakSettingsCloseBtn = e.target.closest('#break-settings-close-btn');
+                if (breakSettingsCloseBtn) {
+                    $('#break-settings-modal').style.display = 'none';
+                    // 変更を即座に反映
+                    renderBreakIcons();
                 }
             });
             
@@ -1672,6 +1714,7 @@
                 showQuestNotification('休憩時間', '少し休みましょう！');
                 questSectionView.style.display = 'none';
                 questBreakView.style.display = 'block';
+                renderBreakIcons();
                 if(breakIconGrid) { // (修正)
                     breakIconGrid.style.display = 'flex'; // (修正) 新しいグリッドを表示
                 }
@@ -1754,6 +1797,74 @@
             breakIframe.src = 'about:blank';
             iframeOverlay.style.display = 'none';
         };
+            
+        // ★新規追加★ 休憩アイコンをレンダリングする関数
+        function renderBreakIcons() {
+            if (!breakIconGrid) return;
+            // 1. stateから表示がオンのアイコンだけをフィルタリング
+            const visibleIcons = state.breakIcons.filter(icon => icon.visible);
+            
+            // 2. HTMLを生成
+            breakIconGrid.innerHTML = visibleIcons.map(icon => `
+                <button class="break-content-btn" data-url="${icon.url}" data-open-mode="${icon.openMode}" data-id="${icon.id}">
+                    <i data-lucide="${icon.icon}" class="w-10 h-10"></i>
+                    <span>${icon.name}</span>
+                </button>
+            `).join('');
+            
+            lucide.createIcons(); // 3. アイコンを再描画
+        }
+
+        // ★新規追加★ 休憩設定モーダルの中身を描画する関数
+        function renderBreakSettingsModal() {
+            const listEl = $('#break-settings-list');
+            if (!listEl) return;
+            
+            // 1. stateの全アイコンリストからHTMLを生成
+            listEl.innerHTML = state.breakIcons.map(icon => `
+                <div class="break-settings-item" data-id="${icon.id}">
+                    <i data-lucide="grip-vertical" class="break-settings-handle"></i>
+                    <span>${icon.name}</span>
+                    <input type="checkbox" class="toggle-checkbox break-icon-toggle" ${icon.visible ? 'checked' : ''}>
+                </div>
+            `).join('');
+            
+            lucide.createIcons();
+            
+            // 2. トグルスイッチにイベントリスナーを設定
+            listEl.querySelectorAll('.break-icon-toggle').forEach(toggle => {
+                toggle.addEventListener('change', (e) => {
+                    const itemId = e.target.closest('.break-settings-item').dataset.id;
+                    const icon = state.breakIcons.find(i => i.id === itemId);
+                    if (icon) {
+                        icon.visible = e.target.checked;
+                        saveState(); // 変更を保存
+                    }
+                });
+            });
+            
+            // 3. Sortable.jsを初期化
+            Sortable.create(listEl, {
+                handle: '.break-settings-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: (evt) => {
+                    // 並び替え後のDOMの順番を元にIDの配列を作成
+                    const idOrder = Array.from(listEl.children).map(child => child.dataset.id);
+                    // state.breakIcons を idOrder に基づいて並び替える
+                    state.breakIcons.sort((a, b) => {
+                        return idOrder.indexOf(a.id) - idOrder.indexOf(b.id);
+                    });
+                    saveState(); // 新しい順序を保存
+                }
+            });
+        }
+
+        // ★新規追加★ 休憩設定モーダルを開く関数
+        function openBreakSettingsModal() {
+            renderBreakSettingsModal(); // 1. 中身を描画
+            $('#break-settings-modal').style.display = 'flex'; // 2. モーダルを表示
+        }
 
         /* ▲▲▲ 追加: クエスト機能の関数群 ▲▲▲ */
         
