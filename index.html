@@ -83,29 +83,35 @@
             background-repeat: no-repeat;
         }
         .break-icon-grid-container {
-            display: grid;
-            /* ★修正★ 3列固定に変更 (これが正しい指定です) */
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            width: 100%;
-            /* ★削除★ (この判断も正しいです) */
-            justify-items: center;
-        }
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 👈 3 を 4 に変更 */
+            gap: 0.5rem; /* 👈 隙間を 8px に狭めます (任意ですが推奨) */
+            width: 100%;
+        }
 
         .break-content-btn {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #edfcff;
-            padding: 16px;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start; /* 👈 左揃えに変更 */
-            justify-content: center;
-            font-weight: bold;
-            transition: all 0.2s;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            width: 100%; /* 👈 100px から 100% に変更 */
-        }
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #edfcff;
+            padding: 0.75rem; /* 👈 16px から 12px に変更 */
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 👈 flex-start から center に変更 (最重要) */
+            justify-content: flex-start; /* 👈 center から flex-start に変更 (上から配置) */
+            /* font-weight: bold; */ /* 👈 この行は削除（span側で指定） */
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            /* 高さを均一にするため (任意) */
+            min-height: 100px;
+        }
+        .break-content-btn span {
+            font-size: 0.75rem; /* 12px */
+            font-weight: bold;
+            line-height: 1.1;
+            text-align: center;
+            word-break: break-word; /* 英語などがはみ出た場合に備える */
+        }
         .break-content-btn:hover {
             background-color: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
@@ -1810,7 +1816,7 @@
             // 2. HTMLを生成
             breakIconGrid.innerHTML = visibleIcons.map(icon => `
                 <button class="break-content-btn" data-url="${icon.url}" data-open-mode="${icon.openMode}" data-id="${icon.id}">
-                    <i data-lucide="${icon.icon}" class="w-10 h-10"></i>
+                    <i data-lucide="${icon.icon}" class="w-8 h-8 mb-1"></i>
                     <span>${icon.name}</span>
                 </button>
             `).join('');
