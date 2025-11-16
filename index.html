@@ -152,6 +152,27 @@
             flex-grow: 1; /* "flex-grow" */
             text-align: left;
         }
+        /* 1. ページ全体のテキスト選択を禁止 */
+        body {
+            -webkit-user-select: none; /* Safari/Chrome */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* IE */
+            user-select: none;         /* 標準 */
+        }
+        
+        /* 2. input や textarea は選択できるように許可する（コピペなどに必要） */
+        input, 
+        textarea {
+            -webkit-user-select: text; /* Safari/Chrome */
+            -moz-user-select: text;    /* Firefox */
+            -ms-user-select: text;     /* IE */
+            user-select: text;         /* 標準 */
+        }
+        
+        /* 3. 画像やSVGアイコンの長押しメニュー（保存など）を禁止 (主にiOS) */
+        img, svg {
+            -webkit-touch-callout: none;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen antialiased">
