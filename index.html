@@ -385,23 +385,29 @@
                     <h2 class="text-2xl md:text-3xl font-bold text-gray-400">☕ ブレイクタイム</h2>
                     <p class="text-5xl md:text-7xl font-mono font-extrabold" id="break-timer">05:00</p>
                 </div>
-                
-                <div id="break-content-selector" class="grid grid-cols-2 gap-4 w-full max-w-sm">
-                    <button class="break-content-btn" data-type="sns">
-                        <i data-lucide="smartphone" class="w-10 h-10"></i>
-                        <span>SNS</span>
-                    </button>
-                    <button class="break-content-btn" data-type="game">
-                        <i data-lucide="gamepad-2" class="w-10 h-10"></i>
-                        <span>ゲーム</span>
-                    </button>
-                </div>
-                
-                <div id="break-sns-selector" class="hidden grid grid-cols-3 gap-4 w-full max-w-sm mt-4">
-                    <button class="break-content-btn" data-url="https://x.com">X</button>
-                    <button class="break-content-btn" data-url="https://www.instagram.com/">Instagram</button>
-                    <button class="break-content-btn" data-url="https://www.youtube.com/">YouTube</button>
-                </div>
+                <div id="break-icon-grid" class="grid grid-cols-3 gap-4 w-full max-w-sm">
+                                        <button class="break-content-btn" data-url="https://x.com">
+                        <i data-lucide="message-circle" class="w-10 h-10"></i>
+                        <span>X (Twitter)</span>
+                    </button>
+                    <button class="break-content-btn" data-url="https://www.instagram.com/">
+                        <i data-lucide="instagram" class="w-10 h-10"></i>
+                        <span>Instagram</span>
+                    </button>
+                    <button class="break-content-btn" data-url="https://www.youtube.com/">
+                        <i data-lucide="youtube" class="w-10 h-10"></i>
+                        <span>YouTube</span>
+                    </button>
+                                        <button class="break-content-btn" data-url="https://scratch.mit.edu/projects/543610448/fullscreen/">
+                        <i data-lucide="gamepad-2" class="w-10 h-10"></i>
+                        <span>ﾎﾞﾗﾝﾃｨｱ</span>
+                    </button>
+                    <button class="break-content-btn" data-url="https://scratch.mit.edu/projects/415836558/fullscreen/">
+                        <i data-lucide="gamepad-2" class="w-10 h-10"></i>
+                        <span>ﾌﾞﾘｻﾞｰｽﾞ</span>
+                    </button>
+                </div>
+        
             </div>
         </div>
     </div>
@@ -505,9 +511,8 @@
             const iframeOverlay = $('#iframe-overlay');
             const breakIframe = $('#break-iframe');
             const closeIframeBtn = $('#close-iframe-btn');
-            const breakContentSelector = $('#break-content-selector');
-            const breakSnsSelector = $('#break-sns-selector');
-
+            const breakIconGrid = $('#break-icon-grid');
+            
             const loadState = () => {
                 const defaultState = {
                     profile: { 
@@ -1348,26 +1353,19 @@
                 confirmationModal.style.display = 'none';
             });
 
-            // 休憩中のコンテンツ
-            breakContentSelector.addEventListener('click', (e) => {
-                const btn = e.target.closest('.break-content-btn');
-                if (!btn) return;
-                const type = btn.dataset.type;
-                if (type === 'sns') {
-                    breakContentSelector.style.display = 'none';
-                    breakSnsSelector.style.display = 'grid';
-                } else if (type === 'game') {
-                    quest.breakWindow = window.open('https://www.google.com/search?q=pacman+doodle', '_blank');  // 例
-                }
-            });
-
-            breakSnsSelector.addEventListener('click', (e) => {
-                const btn = e.target.closest('.break-content-btn');
-                if (btn && btn.dataset.url) {
-                    quest.breakWindow = window.open(btn.dataset.url, '_blank');
-                }
-            });
-
+           // 休憩中のコンテンツ (アイコンホーム画面)
+            if(breakIconGrid) { // 新しいグリッドの要素が存在するか確認
+                breakIconGrid.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.break-content-btn');
+                    // data-url があるボタンがクリックされた場合
+                    if (btn && btn.dataset.url) {
+                        // 用意されている openIframe 関数を呼び出し、アプリ内で開く
+                        openIframe(btn.dataset.url);
+                    }
+          _blank');
+                    }
+                });
+            }
             closeIframeBtn.addEventListener('click', closeIframe);
 
             /* ▲▲▲ 追加: クエスト機能のイベントリスナー ▲▲▲ */
@@ -1628,6 +1626,14 @@
                 questBreakView.style.display = 'none';
                 questSectionTitle.textContent = currentStep.text;
                 questProgressEl.textContent = `${quest.currentIndex + 1} / ${quest.plan.length}`;
+                // 1. セクションタイプのアイテムだけをフィルタリング
+                const totalSections = quest.plan.filter(p => p.type === 'section').length;
+                // 2. 現在までのインデックスで、セクションが何番目かをカウント
+                const currentSectionNumber = quest.plan.slice(0, quest.currentIndex + 1).filter(p => p.type === 'section').length;
+                
+                // 3. 修正したロジックでテキストを設定
+                questProgressEl.textContent = `${currentSectionNumber} / ${totalSections}`;
+                
                 startQuestTimer(
                     currentStep.duration,
                     (timeLeft) => { questTimerEl.textContent = formatTime(timeLeft); }, // 既存のformatTimeを流用
@@ -1650,24 +1656,19 @@
                     }
                 );
             } else { // break
-                showQuestNotification('休憩時間', '少し休みましょう！');
-                questSectionView.style.display = 'none';
-                questBreakView.style.display = 'block';
-                breakContentSelector.style.display = 'grid'; // 常に初期表示
-                breakSnsSelector.style.display = 'none';
-                startQuestTimer(
+                showQuestNotification('休憩時間', '少し休みましょう！');
+                questSectionView.style.display = 'none';
+                questBreakView.style.display = 'block';
+                if(breakIconGrid) { // (修正)
+                    breakIconGrid.style.display = 'grid'; // (修正) 新しいグリッドを表示
+                }
+                // (breakContentSelector と breakSnsSelector の行は削除)
+                startQuestTimer(
                     currentStep.duration,
                     (timeLeft) => { breakTimerEl.textContent = formatTime(timeLeft); },
                     () => {
                         showQuestNotification('休憩終了', '次のセクションを始めましょう！');
-                        if (quest.breakWindow && !quest.breakWindow.closed) {
-                            try {
-                                quest.breakWindow.close();
-                            } catch (e) {
-                                console.error('ウィンドウを閉じられませんでした:', e);
-                            }
-                            quest.breakWindow = null;
-                        }
+                        
                         closeIframe();
                         runNextQuestStep();
                     }
@@ -1713,14 +1714,7 @@
                     }
                 }
             }
-            if (quest.breakWindow && !quest.breakWindow.closed) {
-                try {
-                    quest.breakWindow.close();
-                } catch (e) {
-                    console.error('ウィンドウを閉じられませんでした:', e);
-                }
-                quest.breakWindow = null;
-            }
+            
             quest.active = false;
             questActiveScreen.style.display = 'none';
 
