@@ -1830,7 +1830,7 @@
             if (!breakSettingsListEl) return;
             
             // 1. stateの全アイコンリストからHTMLを生成
-            listEl.innerHTML = state.breakIcons.map(icon => `
+            breakSettingsListEl.innerHTML = state.breakIcons.map(icon => `
                 <div class="break-settings-item" data-id="${icon.id}">
                     <i data-lucide="grip-vertical" class="break-settings-handle"></i>
                     <span>${icon.name}</span>
@@ -1841,7 +1841,7 @@
             lucide.createIcons();
             
             // 2. トグルスイッチにイベントリスナーを設定
-            listEl.querySelectorAll('.break-icon-toggle').forEach(toggle => {
+            breakSettingsListEl.querySelectorAll('.break-icon-toggle').forEach(toggle => {
                 toggle.addEventListener('change', (e) => {
                     const itemId = e.target.closest('.break-settings-item').dataset.id;
                     const icon = state.breakIcons.find(i => i.id === itemId);
