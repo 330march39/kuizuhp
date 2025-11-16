@@ -528,6 +528,7 @@
             // クエスト用 DOM要素
             const questView = $('#quest-view');
             const questPlanListEl = $('#quest-plan-list');
+            const breakSettingsListEl = $('#break-settings-list');
             const startQuestBtn = $('#start-quest-btn');
             const addBreaksBtn = $('#add-breaks-btn');
             const addSectionBtn = $('#add-section-btn');
@@ -1826,8 +1827,7 @@
 
         // ★新規追加★ 休憩設定モーダルの中身を描画する関数
         function renderBreakSettingsModal() {
-            const listEl = $('#break-settings-list');
-            if (!listEl) return;
+            if (!breakSettingsListEl) return;
             
             // 1. stateの全アイコンリストからHTMLを生成
             listEl.innerHTML = state.breakIcons.map(icon => `
@@ -1852,24 +1852,7 @@
                 });
             });
             
-            // 3. Sortable.jsを初期化
-            Sortable.create(listEl, {
-                handle: '.break-settings-handle',
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                delay: 100, // ★追加★ 100msの遅延（長押し）でドラッグ開始
-                delayOnTouchOnly: true, // ★追加★ タッチ操作時のみ遅延を有効化
-                forceFallback: true,
-                onEnd: (evt) => {
-                    // 並び替え後のDOMの順番を元にIDの配列を作成
-                    const idOrder = Array.from(listEl.children).map(child => child.dataset.id);
-                    // state.breakIcons を idOrder に基づいて並び替える
-                    state.breakIcons.sort((a, b) => {
-                        return idOrder.indexOf(a.id) - idOrder.indexOf(b.id);
-                    });
-                    saveState(); // 新しい順序を保存
-                }
-            });
+            
         }
 
         // ★新規追加★ 休憩設定モーダルを開く関数
@@ -2010,6 +1993,26 @@
                             }
                         });
                     }
+                // Sortable.js の初期化 (休憩設定リスト)
+                if (breakSettingsListEl) {
+                    Sortable.create(breakSettingsListEl, {
+                        handle: '.break-settings-handle',
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        delay: 100,
+                        delayOnTouchOnly: true,
+                        forceFallback: true,
+                        onEnd: (evt) => {
+                            // 並び替え後のDOMの順番を元にIDの配列を作成
+                            const idOrder = Array.from(breakSettingsListEl.children).map(child => child.dataset.id);
+                            // state.breakIcons を idOrder に基づいて並び替える
+                            state.breakIcons.sort((a, b) => {
+                                return idOrder.indexOf(a.id) - idOrder.indexOf(b.id);
+                            });
+                            saveState(); // 新しい順序を保存
+                        }
+                    });
+                }
                 
                 // 5. 「今日の予定」読み込みボタン
                 const loadTasksBtn = $('#load-tasks-btn');
