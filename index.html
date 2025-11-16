@@ -82,18 +82,15 @@
             background-position: center;
             background-repeat: no-repeat;
         }
-        /* 休憩アイコンのグリッドコンテナ (CSS Grid版) */
         .break-icon-grid-container {
-            display: grid;
-            /* 100pxのボタン幅を基準に、コンテナ幅(max-w-sm)に
-              入るだけのカラムを自動で生成します。
-            */
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 1rem;              /* 隙間 (gap-4) */
-            width: 100%;            /* 横幅 (w-full) */
-            max-width: 24rem;       /* 最大幅 (max-w-sm) */
-            justify-items: center;  /* 各アイテムをセル内で中央揃え */
-        }
+            display: grid;
+            /* ★修正★ 3列固定に変更 */
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            width: 100%;
+            /* ★削除★ max-widthは親のラッパーに移動したため不要 */
+            justify-items: center;
+        }
 
         .break-content-btn {
             background-color: rgba(255, 255, 255, 0.1);
@@ -401,9 +398,14 @@
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300 z-50 transform -translate-y-10"></div>
         
     <div id="quest-active-screen" class="hidden fixed inset-0 bg-gray-900 dark:bg-black text-gray-100 z-50 flex flex-col items-center justify-center p-4">
-        <button id="end-quest-btn" class="absolute top-6 right-6 text-gray-300 p-2 rounded-full hover:bg-gray-700 transition-colors">
-            <i data-lucide="x" class="w-8 h-8"></i>
-        </button>
+        
+        <div class="absolute top-6 right-6 flex items-center space-x-2">
+            <button id="break-settings-btn" class="text-gray-400 p-2 rounded-full hover:bg-gray-700 transition-colors hidden">
+                <i data-lucide="settings" class="w-7 h-7"></i>
+            </button>
+            <button id="end-quest-btn" class="text-gray-300 p-2 rounded-full hover:bg-gray-700 transition-colors">
+                <i data-lucide="x" class="w-7 h-7"></i> </button>
+        </div>
                 
         <div id="quest-content-area" class="w-full h-full flex flex-col items-center justify-center">
             <div id="quest-section-view" class="hidden text-center">
@@ -412,19 +414,19 @@
                 <p id="quest-progress" class="mt-4 text-lg text-gray-400"></p>
             </div>
     
-            <div id="quest-break-view" class="hidden w-full h-full flex flex-col items-center pt-16">
-                <button id="break-settings-btn" class="absolute top-4 right-4 text-gray-400 p-2 rounded-full hover:bg-gray-700 transition-colors">
-                    <i data-lucide="settings" class="w-6 h-6"></i>
-                </button>
-                <div class="text-center mb-8">
-                    <h2 class="text-2xl md:text-3xl font-bold text-gray-400">☕ ブレイクタイム</h2>
-                    <p class="text-5xl md:text-7xl font-mono font-extrabold" id="break-timer">05:00</p>
-                </div>
-                <div id="break-icon-grid" class="break-icon-grid-container">
-                                        
+            <div id="quest-break-view" class="hidden w-full h-full flex flex-col items-center pt-16 relative">
+                
+                                                <div class="text-center mb-8 flex-shrink-0">
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-400">☕ ブレイクタイム</h2>
+                    <p class="text-5xl md:text-7xl font-mono font-extrabold" id="break-timer">05:00</p>
                 </div>
-        
-            </div>
+
+                <div class="w-full max-w-sm flex-grow overflow-y-auto pb-4">
+                    <div id="break-icon-grid" class="break-icon-grid-container">
+                                        </div>
+                </div>
+        
+            </div>
         </div>
     </div>
     
@@ -1679,6 +1681,7 @@
                 showQuestNotification('セクション開始', `「${currentStep.text}」を始めましょう！`);
                 questSectionView.style.display = 'block';
                 questBreakView.style.display = 'none';
+                $('#break-settings-btn').classList.add('hidden');
                 questSectionTitle.textContent = currentStep.text;
                 //questProgressEl.textContent = `${quest.currentIndex + 1} / ${quest.plan.length}`;
                 // 1. セクションタイプのアイテムだけをフィルタリング
@@ -1714,6 +1717,7 @@
                 showQuestNotification('休憩時間', '少し休みましょう！');
                 questSectionView.style.display = 'none';
                 questBreakView.style.display = 'block';
+                $('#break-settings-btn').classList.remove('hidden');
                 renderBreakIcons();
                 if(breakIconGrid) { // (修正)
                     breakIconGrid.style.display = 'flex'; // (修正) 新しいグリッドを表示
@@ -1754,6 +1758,7 @@
 
         // クエストを終了する関数
         function endQuest(completed = false) {
+            $('#break-settings-btn').classList.add('hidden');
             clearInterval(quest.timerInterval);
             if (!completed && quest.currentIndex >= 0 && quest.currentIndex < quest.plan.length) {
                 const currentStep = quest.plan[quest.currentIndex];
@@ -1848,6 +1853,8 @@
                 handle: '.break-settings-handle',
                 animation: 150,
                 ghostClass: 'sortable-ghost',
+                delay: 100, // ★追加★ 100msの遅延（長押し）でドラッグ開始
+                delayOnTouchOnly: true, // ★追加★ タッチ操作時のみ遅延を有効化
                 onEnd: (evt) => {
                     // 並び替え後のDOMの順番を元にIDの配列を作成
                     const idOrder = Array.from(listEl.children).map(child => child.dataset.id);
