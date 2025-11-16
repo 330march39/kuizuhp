@@ -147,7 +147,17 @@
             cursor: move; /* "cursor-move" */
             margin-right: 0.75rem; /* mr-3 */
             color: #9ca3af; /* text-gray-400 */
+            padding: 0.5rem;       /* 上下左右に 8px の当たり判定を追加 */
+            margin-top: -0.5rem;   /* 上の 8px を相殺 */
+            margin-bottom: -0.5rem; /* 下の 8px を相殺 */
+            margin-left: -0.5rem;   /* 左の 8px を相殺 */
+            /* 右の余白は padding(8px) と margin(4px) で合計 12px になるよう調整 */
+            margin-right: 0.25rem; /* 12px -> 4px に変更 */
+            border-radius: 6px;   /* 触った時の反応を良くするため（任意） */
         }
+        .break-settings-handle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
         .break-settings-item span {
             flex-grow: 1; /* "flex-grow" */
             text-align: left;
