@@ -451,16 +451,16 @@
     
     <div id="break-settings-modal" class="hidden fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
         <div class="bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-sm flex flex-col max-h-[80vh]">
-            <h3 class="text-lg font-bold text-white mb-2 text-center">休憩アイコンの編集</h3>
-            <p class="text-sm text-gray-400 mb-4 text-center">ドラッグで並び替え、スイッチで表示/非表示を切り替えられます。</p>
-            
-            <div id="break-settings-list" class="space-y-2 overflow-y-auto py-2">
-                </div>
-            
-            <button id="break-settings-close-btn" class="mt-6 px-6 py-2 rounded-lg primary-bg primary-bg-hover text-white font-semibold transition">
-                閉じる
-            </button>
-        </div>
+            <h3 class="text-lg font-bold text-white mb-2 text-center flex-shrink-0">休憩アイコンの編集</h3>
+            <p class="text-sm text-gray-400 mb-4 text-center flex-shrink-0">ドラッグで並び替え、スイッチで表示/非表示を切り替えられます。</p>
+            
+                        <div id="break-settings-list" class="space-y-2 overflow-y-auto py-2 flex-grow">
+            </div>
+            
+                        <button id="break-settings-close-btn" class="mt-6 px-6 py-2 rounded-lg primary-bg primary-bg-hover text-white font-semibold transition flex-shrink-0">
+                閉じる
+            </button>
+        </div>
     </div>
     
     <script>
@@ -1719,9 +1719,7 @@
                 questBreakView.style.display = 'block';
                 $('#break-settings-btn').classList.remove('hidden');
                 renderBreakIcons();
-                if(breakIconGrid) { // (修正)
-                    breakIconGrid.style.display = 'flex'; // (修正) 新しいグリッドを表示
-                }
+                
                 // (breakContentSelector と breakSnsSelector の行は削除)
                 startQuestTimer(
                     currentStep.duration,
@@ -1855,6 +1853,7 @@
                 ghostClass: 'sortable-ghost',
                 delay: 100, // ★追加★ 100msの遅延（長押し）でドラッグ開始
                 delayOnTouchOnly: true, // ★追加★ タッチ操作時のみ遅延を有効化
+                forceFallback: true,
                 onEnd: (evt) => {
                     // 並び替え後のDOMの順番を元にIDの配列を作成
                     const idOrder = Array.from(listEl.children).map(child => child.dataset.id);
