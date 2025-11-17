@@ -1699,7 +1699,13 @@
                 // (breakContentSelector と breakSnsSelector の行は削除)
                 startQuestTimer(
                     currentStep.duration,
-                    (timeLeft) => { breakTimerEl.textContent = formatTime(timeLeft); },
+                    (timeLeft) => {
+                        breakTimerEl.textContent = formatTime(timeLeft);
+                        if (timeLeft === 30) {
+                            showQuestNotification('まもなく休憩終了', '30秒後に次のセクションが始まります。');
+                        }
+                    },
+                    
                     () => {
                         showQuestNotification('休憩終了', '次のセクションを始めましょう！');
                         
