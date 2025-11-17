@@ -1644,12 +1644,15 @@
             const currentStep = quest.plan[quest.currentIndex];
             
             // アプリ2のトースト関数とNotification APIを使用
-            const showQuestNotification = (title, body) => {
-                showToast(body);
-                if (Notification.permission === "granted") {
-                    new Notification(title, { body });
-                }
-            };
+            const showQuestNotification = (title, body) => {
+                showToast(body);
+                if (Notification.permission === "granted") {
+                    new Notification(title, { 
+                        body: body,
+                        tag: 'quest-status'
+                    });
+                }
+            };
 
             if (currentStep.type === 'section') {
                 showQuestNotification('セクション開始', `「${currentStep.text}」を始めましょう！`);
