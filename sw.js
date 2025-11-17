@@ -5,57 +5,58 @@ let timeLeft = 0;
 
 // メインのアプリからメッセージを受け取ったときの処理
 self.addEventListener('message', (event) => {
-    const { command, timeLeft: time } = event.data;
+    // ★ どのコマンドでも event.data は使えるので、ここで command を取り出します
+    const { command, timeLeft: time } = event.data;
 
-    if (command === 'startTimer') {
-        // もし既存のタイマーがあれば停止
-        if (timerInterval) {
-            clearInterval(timerInterval);
-        }
-        
-        timeLeft = time;
-        
-        // 1秒ごとに時間を減らすタイマーを開始
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            if (timeLeft <= 0) {
-                // 時間が来たら通知を表示してタイマーを停止
-                showNotification();
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-        }, 1000);
-    } else if (command === 'stopTimer') {
-        // タイマーを停止
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-    }
+    if (command === 'startTimer') {
+        // もし既存のタイマーがあれば停止
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+        
+        timeLeft = time;
+        
+        // 1秒ごとに時間を減らすタイマーを開始
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                // 時間が来たら通知を表示してタイマーを停止
+                showNotification(); // ← これはタイマー完了通知用の関数
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }, 1000);
+
+    } else if (command === 'stopTimer') {
+        // タイマーを停止
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    
+    // ★★★ ここです！ "if" を "else if" に変更し、リスナーの内側（この位置）に移動 ★★★
+    } else if (command === 'showQuestNotification') {
+        const { title, body } = event.data;
+        const tag = 'quest-status';
+
+        // event.waitUntil() で、この処理が終わるまでサービスワーカーを起動させておきます
+        event.waitUntil(
+            self.registration.getNotifications({ tag: tag }) // 1. 同じタグの古い通知を検索
+                .then(notifications => {
+                    // 2. 見つかった古い通知をすべて閉じる
+                    notifications.forEach(notification => notification.close());
+                })
+                .then(() => {
+                    // 3. 古い通知が閉じた後、新しい通知を表示する
+                    return self.registration.showNotification(title, {
+                        body: body,
+                        tag: tag,
+                        icon: 'https://placehold.co/180x180/4f46e5/ffffff?text=Q' // アイコンを指定
+                    });
+                })
+        );
+    }
 });
-
-if (event.data.command === 'showQuestNotification') {
-        const { title, body } = event.data;
-        const tag = 'quest-status';
-
-        // event.waitUntil() で、この処理が終わるまでサービスワーカーを起動させておきます
-        event.waitUntil(
-            self.registration.getNotifications({ tag: tag }) // 1. 同じタグの古い通知を検索
-                .then(notifications => {
-                    // 2. 見つかった古い通知をすべて閉じる
-                    notifications.forEach(notification => notification.close());
-                })
-                .then(() => {
-                    // 3. 古い通知が閉じた後、新しい通知を表示する
-                    return self.registration.showNotification(title, {
-                        body: body,
-                        tag: tag,
-                        icon: 'https://placehold.co/180x180/4f46e5/ffffff?text=Q' // アイコンを指定
-                    });
-                })
-        );
-    }
-
 // 通知を表示する関数
 const showNotification = () => {
     // self.registration.showNotification(タイトル, { オプション });
