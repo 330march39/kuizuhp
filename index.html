@@ -1627,6 +1627,30 @@
                 const itemEl = document.createElement('div');
                 itemEl.className = 'flex items-center space-x-2 group bg-gray-100 dark:bg-gray-800 p-2 rounded-lg';
                 itemEl.dataset.id = item.id;
+
+                // 選択肢（秒をキー、表示名を値）
+                const durationOptions = {
+                    60: '1分', 300: '5分', 600: '10分', 900: '15分',
+                    1200: '20分', 1500: '25分', 1800: '30分', 2100: '35分',
+                    2400: '40分', 2700: '45分', 3000: '50分', 3300: '55分', 3600: '60分'
+                };
+
+                // optionタグのHTMLを生成する
+                // (もし現在のdurationが選択肢にない場合、それも選択肢の先頭に追加する)
+                let optionsHtml = '';
+                if (!durationOptions[item.duration]) {
+                    optionsHtml += `<option value="${item.duration}" selected>${item.duration / 60}分 (カスタム)</option>`;
+                }
+                for (const seconds in durationOptions) {
+                    const isSelected = item.duration == seconds ? 'selected' : '';
+                    optionsHtml += `<option value="${seconds}" ${isSelected}>${durationOptions[seconds]}</option>`;
+                }
+                
+                const selectHtml = `
+                    <select class="quest-item-duration w-24 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500 appearance-none">
+                        ${optionsHtml}
+                    </select>
+                `;
                             
                 let content = '';
                 if (item.type === 'section') {
