@@ -337,11 +337,10 @@
             </div>
 
             <div id="settings-page" class="page p-4 space-y-4">
-                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
+                <div id="notification-settings-card" class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                     <h3 class="font-semibold mb-2">通知設定</h3>
                     <button id="notification-permission-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center mb-4"><i data-lucide="bell-ring" class="w-5 h-5 mr-2"></i>ブラウザ通知を許可</button>
-                    <p id="notification-status" class="hidden font-semibold text-gray-600 dark:text-gray-400">通知は許可されています</p>
-                </div>
+                    </div>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                      <h3 class="font-semibold mb-2">テーマカラーを選択</h3>
                      <div id="theme-selector" class="grid grid-cols-4 gap-4"></div>
@@ -780,16 +779,13 @@
                     },
                     'settings-page': () => {
                         
-                        const notifBtn = $('#notification-permission-btn');
-                        const notifStatus = $('#notification-status');
-                        if (notifStatus && notifBtn) {
+                        const notifCard = $('#notification-settings-card');
+                        if (notifCard) {
                             if ('Notification' in window && Notification.permission === 'granted') {
-                                notifBtn.style.display = 'none';
-                                notifStatus.style.display = 'block';
+                                notifCard.style.display = 'none'; // カードごと非表示
                             } else {
-                                notifBtn.style.display = 'flex';
-                                notifStatus.style.display = 'none';
-                            }
+                                notifCard.style.display = 'block'; // 表示
+                            }   
                         }
                         
                         $('#theme-selector').innerHTML = state.profile.unlockedThemes.map(id => {
@@ -1462,8 +1458,8 @@
             $('#notification-permission-btn').addEventListener('click', async () => {
                 if (!('Notification' in window)) { showToast('お使いのブラウザは通知に対応していません。'); return; }
                 const permission = await Notification.requestPermission();
-                if (permission === 'granted') { showToast('通知が許可されました！'); new Notification('クイズHPへようこそ！', { body: '通知設定がオンになりました。' }); $('#notification-permission-btn').style.display = 'none'; $('#notification-status').style.display = 'block';} 
-                else { showToast('通知が拒否されました。設定から変更できます。'); }
+                if (permission === 'granted') { showToast('通知が許可されました！'); new Notification('クイズHPへようこそ！', { body: '通知設定がオンになりました。' }); $('#notification-settings-card').style.display = 'none';} 
+                else { showToast('通知が拒否されました。端末の設定アプリから変更できます。'); }
             });
 
             $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
