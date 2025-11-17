@@ -1,7 +1,6 @@
-// sw.js (完成版)
+// sw.js (このコードで完全に置き換えてください)
 
-// 集中タイマーの終了通知を管理するための変数
-let focusTimerTimeout = null;
+let timerTimeout = null; // 予約された通知タイマーを管理する変数
 
 /**
  * サービスワーカーがインストールされたときに呼ばれます。
@@ -25,71 +24,68 @@ self.addEventListener('activate', event => {
  * メインのHTML/JSから 'postMessage' でメッセージを受け取ったときの処理
  */
 self.addEventListener('message', event => {
-  if (!event.data) return; // データがなければ何もしない
+  if (!event.data) return;
+  const { command } = event.data;
 
-  const command = event.data.command;
+  if (command === 'startTimer') {
+    // (これは「未来の」通知を予約するコマンド)
+    const { timeLeft, title, body } = event.data;
+    
+    // 既存のタイマー（通知予約）があればキャンセル
+    if (timerTimeout) {
+      clearTimeout(timerTimeout);
+    }
+    
+    if (!timeLeft || timeLeft <= 0) {
+      console.log('SW: startTimer の時間が指定されていません。');
+      return; 
+    }
 
-  // --- 1. クエスト通知の処理 (これは即時表示) ---
-  if (command === 'showQuestNotification') {
-    console.log("SW: 'showQuestNotification' を受信");
+    console.log(`SW: タイマーを ${timeLeft} 秒後にセット (Title: ${title})`);
+
+    // 指定された時間後に通知を実行
+    timerTimeout = setTimeout(() => {
+      console.log('SW: タイマーが終了。通知を表示します。');
+      // ★ 渡された title と body を使う。なければデフォルト
+      self.registration.showNotification(title || '時間です！', {
+        body: body || '設定した時間になりました。',
+        tag: 'timer-complete', // タグで通知を上書き
+        icon: 'https://placehold.co/180x180/4f46e5/ffffff?text=Q'
+      });
+      timerTimeout = null;
+    }, timeLeft * 1000); // ミリ秒に変換
+  } 
+
+  else if (command === 'stopTimer') {
+    // (これは「未来の」通知をキャンセルするコマンド)
+    console.log("SW: 'stopTimer' を受信");
+    if (timerTimeout) {
+      clearTimeout(timerTimeout);
+      timerTimeout = null;
+      console.log("SW: 予約されていたタイマーをキャンセルしました。");
+    }
+  } 
+
+  else if (command === 'showQuestNotification') {
+    // (これは「今すぐ」通知を出すコマンド)
+    console.log("SW: 'showQuestNotification' を受信 (即時)");
     const { title, body } = event.data;
-    const tag = 'quest-status'; // クエスト通知用のタグ
-
-    // event.waitUntil() で、この処理が終わるまでSWの生存を保証
+    const tag = 'quest-status-immediate'; // 即時通知用のタグ
+    
     event.waitUntil(
       self.registration.getNotifications({ tag: tag })
         .then(notifications => {
-          notifications.forEach(notification => notification.close()); // 古い通知を閉じる
+          // 古い即時通知を閉じる
+          notifications.forEach(notification => notification.close());
         })
         .then(() => {
-          // 新しい通知を表示
+          // 新しい即時通知を表示
           return self.registration.showNotification(title, { 
             body: body,
-            tag: tag, // 連続する通知を上書きするためのタグ
+            tag: tag,
             icon: 'https://placehold.co/180x180/4f46e5/ffffff?text=Q'
           });
         })
     );
   }
-
-  // --- 2. 集中タイマーの開始処理 (これは遅延通知) ---
-  else if (command === 'startTimer') {
-    console.log("SW: 'startTimer' を受信");
-    const timeLeftInSeconds = event.data.timeLeft;
-    
-    // 既存のタイマーがあればキャンセル
-    if (focusTimerTimeout) {
-      clearTimeout(focusTimerTimeout);
-    }
-    
-    console.log(`SW: 集中タイマーを ${timeLeftInSeconds} 秒後にセットしました。`);
-
-    // ★★★
-    //  setInterval ではなく setTimeout を使います 
-    //  (これならSWがスリープしても、時間になればブラウザが起こしてくれます)
-    // ★★★
-    focusTimerTimeout = setTimeout(() => {
-      console.log('SW: 集中タイマーが終了。通知を表示します。');
-      self.registration.showNotification('集中モード 完了！', {
-        body: 'お疲れ様でした！タイマーが終了しました。',
-        tag: 'focus-complete', // 完了通知用のタグ
-        icon: 'https://placehold.co/180x180/4f46e5/ffffff?text=Q'
-      });
-      focusTimerTimeout = null; // タイマーをクリア
-    }, timeLeftInSeconds * 1000); // ミリ秒に変換
-  }
-
-  // --- 3. 集中タイマーの停止処理 ---
-  else if (command === 'stopTimer') {
-    console.log("SW: 'stopTimer' を受信");
-    // ユーザーが手動でタイマーを停止した場合
-    if (focusTimerTimeout) {
-      clearTimeout(focusTimerTimeout); // 予約されていた通知をキャンセル
-      focusTimerTimeout = null;
-      console.log("SW: 予約されていた集中タイマーをキャンセルしました。");
-    }
-  }
 });
-
-// `showNotification` 関数は `setTimeout` のコールバック内で直接実行されるため、
-// あなたのコードにあったグローバルな showNotification() 関数は削除しても大丈夫です。
