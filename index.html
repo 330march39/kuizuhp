@@ -1645,11 +1645,14 @@
             
             // アプリ2のトースト関数とNotification APIを使用
             const showQuestNotification = (title, body) => {
-                showToast(body);
-                if (Notification.permission === "granted") {
-                    new Notification(title, { 
-                        body: body,
-                        tag: 'quest-status'
+                showToast(body); // 画面上のトーストはそのまま表示
+
+                // ★★★ new Notification() の代わりに、サービスワーカーにメッセージを送信 ★★★
+                if (Notification.permission === "granted" && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        command: 'showQuestNotification',
+                        title: title,
+                        body: body
                     });
                 }
             };
