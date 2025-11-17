@@ -1619,19 +1619,57 @@
             lucide.createIcons();
         };
 
-        // クエスト用のタイマーを開始する関数
-        function startQuestTimer(duration, onTick, onEnd) {
-            quest.timeLeft = duration;
-            onTick(quest.timeLeft);
-            quest.timerInterval = setInterval(() => {
-                quest.timeLeft--;
-                onTick(quest.timeLeft);
-                if (quest.timeLeft <= 0) {
-                    clearInterval(quest.timerInterval);
-                    onEnd();
-                }
-            }, 1000);
-        };
+        // クエスト用のタイマーを開始する関数 (バックグラウンド耐性強化版)
+        function startQuestTimer(duration, onTick, onEnd) {
+            // 1. 既存のインターバルをクリア
+            if (quest.timerInterval) {
+                clearInterval(quest.timerInterval);
+            }
+            
+            // 2. このステップの「絶対的な終了時刻」を計算
+            const endTime = Date.now() + duration * 1000;
+
+            // 3. 1秒ごとにチェックするインターバルを開始
+            quest.timerInterval = setInterval(() => {
+                const now = Date.now();
+                // 4. 終了時刻と現在時刻から、本当の残り時間を計算 (0秒未満にはしない)
+                const timeLeft = Math.max(0, Math.floor((endTime - now) / 1000));
+
+                // 5. ログ記録用に、グローバルの残り時間を更新
+                quest.timeLeft = timeLeft; 
+                
+                // 6. UIを更新 (onTick)
+                onTick(timeLeft);
+
+                // 7. 終了時刻を過ぎていたら、タイマーを停止して onEnd を呼ぶ
+                if (now >= endTime) {
+                    clearInterval(quest.timerInterval);
+                    quest.timerInterval = null;
+                    onEnd(); // 終了コールバック
+                }
+            }, 1000); // 1秒ごとにチェック (厳密には100ms等の方が精度は良いが、1000msでも十分)
+        };
+
+        function cancelQuestAlarm() {
+            if (navigator.serviceWorker.controller) {
+                // 'stopTimer' コマンドを (集中モードと) 共有して使用
+                navigator.serviceWorker.controller.postMessage({
+                    command: 'stopTimer' 
+                });
+            }
+        }
+
+        function sendQuestAlarm(durationInSeconds, title, body) {
+            if (Notification.permission === "granted" && navigator.serviceWorker.controller) {
+                // 'startTimer' コマンドを (集中モードと) 共有して使用
+                navigator.serviceWorker.controller.postMessage({
+                    command: 'startTimer', 
+                    timeLeft: durationInSeconds,
+                    title: title, // 通知のタイトル
+                    body: body  // 通知の本文
+                });
+            }
+        }
 
         // 次のクエストステップを実行する関数
         function runNextQuestStep() {
@@ -1657,6 +1695,8 @@
                 }
             };
 
+            cancelQuestAlarm();
+
             if (currentStep.type === 'section') {
                 showQuestNotification('セクション開始', `「${currentStep.text}」を始めましょう！`);
                 questSectionView.style.display = 'block';
@@ -1671,6 +1711,12 @@
                 
                 // 3. 修正したロジックでテキストを設定
                 questProgressEl.textContent = `${currentSectionNumber} / ${totalSections}`;
+
+                sendQuestAlarm(
+                    currentStep.duration,
+                    'セクション終了', // title for notification
+                    'お疲れ様でした！休憩に入ります。' // body for notification
+                );
                 
                 startQuestTimer(
                     currentStep.duration,
@@ -1698,6 +1744,12 @@
                 questBreakView.style.display = 'block';
                 $('#break-settings-btn').classList.remove('hidden');
                 renderBreakIcons();
+
+                sendQuestAlarm(
+                    currentStep.duration,
+                    '休憩終了', // title for notification
+                    '次のセクションを始めましょう！' // body for notification
+                );
                 
                 // (breakContentSelector と breakSnsSelector の行は削除)
                 startQuestTimer(
@@ -1743,6 +1795,10 @@
         function endQuest(completed = false) {
             $('#break-settings-btn').classList.add('hidden');
             clearInterval(quest.timerInterval);
+            quest.timerInterval = null; // 忘れずにクリア
+
+            // --- ★追加★ クエスト終了時にSWのアラームをキャンセルする ---
+            cancelQuestAlarm();
             if (!completed && quest.currentIndex >= 0 && quest.currentIndex < quest.plan.length) {
                 const currentStep = quest.plan[quest.currentIndex];
                 // 現在のステップが 'section' (学習中) の場合のみ記録
