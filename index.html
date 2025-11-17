@@ -1202,7 +1202,7 @@
             
                     // 【追加】Service Workerにタイマー停止を通知（完了時）
                     if (navigator.serviceWorker.controller) {
-                        navigator.serviceWorker.controller.postMessage({ command: 'stopTimer' });
+                        navigator.serviceWorker.controller.postMessage({ command: 'focusTimer_stop' });
                     }
                 }
             };
@@ -1295,7 +1295,7 @@
             
                 // 【追加】Service Workerにタイマー停止を通知
                 if (navigator.serviceWorker.controller) {
-                    navigator.serviceWorker.controller.postMessage({ command: 'stopTimer' });
+                    navigator.serviceWorker.controller.postMessage({ command: 'focusTimer_stop' });
                 }
                 // ▼▼▼【追加】ここから▼▼▼
                 state.focus.isRunning = false;
@@ -1342,11 +1342,13 @@
             
                 // 【追加】Service Workerにタイマー開始を通知
                 if (navigator.serviceWorker.controller) {
-                    navigator.serviceWorker.controller.postMessage({
-                        command: 'startTimer',
-                        timeLeft: focusTimer.timeLeft
-                    });
-                }
+                    navigator.serviceWorker.controller.postMessage({
+                        command: 'focusTimer_start', // ★ 'startTimer' から変更
+                        timeLeft: focusTimer.timeLeft,
+                        title: '集中モード完了！', // ★ 通知タイトルを追加
+                        body: 'お疲れ様でした！タイマーが終了しました。' // ★ 通知本文を追加
+                    });
+                }
             });
             /* ▼▼▼ 追加: クエスト機能のイベントリスナー ▼▼▼ */
 
@@ -1629,6 +1631,11 @@
             // 2. このステップの「絶対的な終了時刻」を計算
             const endTime = Date.now() + duration * 1000;
 
+            // 2.5. 呼び出し直後に、まずUIを現在の時間で更新する
+            const initialTimeLeft = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+            onTick(initialTimeLeft);
+            quest.timeLeft = initialTimeLeft;
+
             // 3. 1秒ごとにチェックするインターバルを開始
             quest.timerInterval = setInterval(() => {
                 const now = Date.now();
@@ -1654,7 +1661,7 @@
             if (navigator.serviceWorker.controller) {
                 // 'stopTimer' コマンドを (集中モードと) 共有して使用
                 navigator.serviceWorker.controller.postMessage({
-                    command: 'stopTimer' 
+                    command: 'questTimer_stop' 
                 });
             }
         }
@@ -1663,7 +1670,7 @@
             if (Notification.permission === "granted" && navigator.serviceWorker.controller) {
                 // 'startTimer' コマンドを (集中モードと) 共有して使用
                 navigator.serviceWorker.controller.postMessage({
-                    command: 'startTimer', 
+                    command: 'questTimer_start', 
                     timeLeft: durationInSeconds,
                     title: title, // 通知のタイトル
                     body: body  // 通知の本文
