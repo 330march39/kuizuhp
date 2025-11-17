@@ -34,6 +34,28 @@ self.addEventListener('message', (event) => {
     }
 });
 
+if (event.data.command === 'showQuestNotification') {
+        const { title, body } = event.data;
+        const tag = 'quest-status';
+
+        // event.waitUntil() で、この処理が終わるまでサービスワーカーを起動させておきます
+        event.waitUntil(
+            self.registration.getNotifications({ tag: tag }) // 1. 同じタグの古い通知を検索
+                .then(notifications => {
+                    // 2. 見つかった古い通知をすべて閉じる
+                    notifications.forEach(notification => notification.close());
+                })
+                .then(() => {
+                    // 3. 古い通知が閉じた後、新しい通知を表示する
+                    return self.registration.showNotification(title, {
+                        body: body,
+                        tag: tag,
+                        icon: 'https://placehold.co/180x180/4f46e5/ffffff?text=Q' // アイコンを指定
+                    });
+                })
+        );
+    }
+
 // 通知を表示する関数
 const showNotification = () => {
     // self.registration.showNotification(タイトル, { オプション });
