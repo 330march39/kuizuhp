@@ -162,12 +162,12 @@
         
         /* 2. input や textarea は選択できるように許可する（コピペなどに必要） */
         input, 
-        textarea {
-            -webkit-user-select: text; /* Safari/Chrome */
-            -moz-user-select: text;    /* Firefox */
-            -ms-user-select: text;     /* IE */
-            user-select: text;         /* 標準 */
-        }
+        select {
+            -webkit-user-select: auto; /* Safari/Chrome (OSデフォルト動作) */
+            -moz-user-select: auto;    /* Firefox */
+            -ms-user-select: auto;     /* IE */
+            user-select: auto;         /* 標準 */
+        }
         
         /* 3. 画像やSVGアイコンの長押しメニュー（保存など）を禁止 (主にiOS) */
         img, svg {
