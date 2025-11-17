@@ -216,10 +216,7 @@
                     <div id="countdown-list" class="space-y-3"></div>
                 </div>
                 
-                 <div>
-                    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center mb-3"><i data-lucide="award" class="w-5 h-5 mr-2 primary-text"></i> 最近獲得した称号</h2>
-                    <div id="recent-titles" class="flex space-x-3 overflow-x-auto pb-2"></div>
-                </div>
+                 
             </div>
 
             <div id="study-page" class="page p-4">
@@ -343,6 +340,7 @@
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                     <h3 class="font-semibold mb-2">通知設定</h3>
                     <button id="notification-permission-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center mb-4"><i data-lucide="bell-ring" class="w-5 h-5 mr-2"></i>ブラウザ通知を許可</button>
+                    <p id="notification-status" class="hidden font-semibold text-gray-600 dark:text-gray-400">通知は許可されています</p>
                 </div>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                      <h3 class="font-semibold mb-2">テーマカラーを選択</h3>
@@ -421,7 +419,7 @@
     
     <div id="countdown-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6"><h2 id="countdown-modal-title" class="text-xl font-bold mb-4">カウントダウン設定</h2><div class="space-y-4"><input id="countdown-name" type="text" placeholder="イベント名 (例: 期末テスト)" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600"><input id="countdown-date" type="date" class="w-full block p-2 border rounded dark:bg-gray-800 dark:border-gray-600"></div><div class="mt-6"><h3 class="font-semibold mb-2">通知設定</h3><div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg space-y-3"><div class="flex items-center justify-between"><p>通知をオンにする</p><input type="checkbox" id="countdown-notification-toggle" class="toggle-checkbox"></div><div id="countdown-notification-details" class="space-y-3"><div class="flex items-center justify-between"><p>通知時刻</p><input id="countdown-notification-time" type="time" class="p-1 border rounded dark:bg-gray-600 dark:border-gray-500"></div><div><p class="mb-2">通知するタイミング (複数選択可)</p><div id="countdown-notification-days" class="flex flex-wrap gap-2"></div></div></div></div></div><div class="flex justify-between items-center mt-6"><button id="countdown-delete-btn" class="text-red-500 hover:text-red-700 font-semibold p-2 hidden"><i data-lucide="trash-2" class="w-5 h-5 inline-block mr-1"></i>削除</button><div class="flex space-x-2"><button id="countdown-cancel-btn" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">キャンセル</button><button id="countdown-save-btn" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg">保存</button></div></div></div></div>
 
-    <div id="point-details-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 flex flex-col max-h-[90vh]"><div class="flex justify-between items-center mb-4 flex-shrink-0"><h2 class="text-xl font-bold">マイステータス</h2><button id="close-point-modal-btn" class="p-1"><i data-lucide="x"></i></button></div><div class="space-y-6 overflow-y-auto"><div class="text-center"><p class="text-sm text-gray-500">現在の学習ポイント</p><p class="text-4xl font-bold primary-text" id="modal-lp-display"></p></div><div><h3 class="font-semibold mb-2">テーマカラー</h3><div id="modal-theme-selector" class="grid grid-cols-4 gap-4"></div></div><div><h3 class="font-semibold mb-2">壁紙</h3><div id="modal-background-selector" class="grid grid-cols-3 gap-2"></div></div><div><h3 class="font-semibold mb-2">獲得した称号</h3><div id="modal-titles-list" class="flex flex-wrap gap-2"></div></div></div></div></div>
+    <div id="point-details-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 flex flex-col max-h-[90vh]"><div class="flex justify-between items-center mb-4 flex-shrink-0"><h2 class="text-xl font-bold">マイステータス</h2><button id="close-point-modal-btn" class="p-1"><i data-lucide="x"></i></button></div><div class="space-y-6 overflow-y-auto"><div class="text-center"><p class="text-sm text-gray-500">現在の学習ポイント</p><p class="text-4xl font-bold primary-text" id="modal-lp-display"></p></div><div><h3 class="font-semibold mb-2">テーマカラー</h3><div id="modal-theme-selector" class="grid grid-cols-4 gap-4"></div></div><div><h3 class="font-semibold mb-2">壁紙</h3><div id="modal-background-selector" class="grid grid-cols-3 gap-2"></div></div></div></div></div>
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300 z-50 transform -translate-y-10"></div>
         
     <div id="quest-active-screen" class="hidden fixed inset-0 bg-gray-900 dark:bg-black text-gray-100 z-50 flex flex-col items-center justify-center p-4">
@@ -500,11 +498,7 @@
                     { id: 'japanese1', title: "国語 - 枕草子", subject: "国語", genre: "古典", tags: ['history1'], url: "https://docs.google.com/forms/d/e/1FAIpQLSe-0P7p_L-rT9c-yS_eD-wA9iR_bO8kM-nL-u_V-iE7xS-tQ/viewform?usp=sf_link" },
                     { id: 'history1', title: "社会 - 鎌倉時代", subject: "社会", genre: "歴史", tags: ['japanese1'], url: "https://docs.google.com/forms/d/e/1FAIpQLSeLprqPbZCZv2ufQ2qYqltnRiUE1FsBYODa_eNwOVO1NqZwBw/viewform?usp=pp_url" },
                 ],
-                titles: [
-                    { id: 'math_master', name: '数学マスター', condition: (s) => initialData.quizzes.filter(q => q.subject === '数学' && s.progress[q.id]?.level === 3).length >= 1 },
-                    { id: 'perfect_day', name: 'パーフェクトデイ', condition: (s) => Object.values(s.progress).filter(p => new Date(p.date).toDateString() === new Date().toDateString() && p.level === 3).length >= 3 },
-                    { id: 'focus_1hr', name: '集中力の初星', condition: (s) => s.focus.totalTime >= 3600 },
-                ],
+                
                 themes: {
                     default: { name: 'デフォルト', color: '#4f46e5', hover: '#4338ca', cost: 0 },
                     green: { name: 'フォレスト', color: '#16a34a', hover: '#15803d', cost: 100 },
@@ -578,7 +572,6 @@
                     profile: { 
                         lp: 0, 
                         unlockedThemes: ['default'], 
-                        earnedTitles: [], 
                         activeTheme: 'default',
                         unlockedBackgrounds: ['default'],
                         activeBackground: 'default',
@@ -716,22 +709,7 @@
                             const dayText = diffDays > 0 ? `あと <span class="text-2xl font-bold primary-text">${diffDays}</span> 日` : diffDays === 0 ? `<span class="text-xl font-bold text-red-500">今日です！</span>` : `<span class="text-gray-500">終了</span>`;
                             return `<div class="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-3 flex items-center justify-between"><div><h3 class="font-semibold text-gray-800 dark:text-gray-200">${cd.name}</h3><p class="text-sm text-gray-500 dark:text-gray-400">${cd.date.replace(/-/g, '/')}</p></div><div class="flex items-center"><div class="mr-4">${dayText}</div><button class="edit-countdown-btn p-2 text-gray-400 hover:text-gray-600" data-id="${cd.id}"><i data-lucide="edit" class="w-4 h-4"></i></button></div></div>`;
                         }).join('') : `<p class="text-sm text-gray-500 text-center">右上の「+」ボタンでテストなどの日程を追加できます。</p>`;
-
                         
-                        const titlesContainer = $('#recent-titles');
-                        // 1. 称号オブジェクトの配列を取得
-                        const titles = state.profile.earnedTitles
-                            .slice(-5)
-                            .reverse()
-                            .map(tid => initialData.titles.find(t => t.id === tid))
-                            .filter(Boolean); // <-- 【重要】ここで undefined を取り除く
-
-                        // 2. 取得できた称号が1件以上ある場合のみ描画
-                        titlesContainer.innerHTML = titles.length 
-                          ? titles.map(title => { // 安全な配列を map する
-                              return `<div class="bg-white dark:bg-gray-700 p-2 rounded-lg shadow-sm text-center min-w-[100px]"><i data-lucide="award" class="mx-auto w-8 h-8 text-yellow-500"></i><p class="text-xs font-semibold mt-1">${title.name}</p></div>`;
-                          }).join('') 
-                          : `<p class="text-sm text-gray-500">称号を獲得してここに表示しよう！</p>`;
                         renderHomeTasks();
                     },
                     'study-page': () => {
@@ -802,6 +780,18 @@
                     },
                     'settings-page': () => {
                         
+                        const notifBtn = $('#notification-permission-btn');
+                        const notifStatus = $('#notification-status');
+                        if (notifStatus && notifBtn) {
+                            if ('Notification' in window && Notification.permission === 'granted') {
+                                notifBtn.style.display = 'none';
+                                notifStatus.style.display = 'block';
+                            } else {
+                                notifBtn.style.display = 'flex';
+                                notifStatus.style.display = 'none';
+                            }
+                        }
+                        
                         $('#theme-selector').innerHTML = state.profile.unlockedThemes.map(id => {
                             const theme = initialData.themes[id];
                             const isActive = state.profile.activeTheme === id;
@@ -857,7 +847,6 @@
                 if(show) showToast(`${reason}で ${amount} LP 獲得！`);
                 updateLpDisplay();
             };
-            const checkTitles = () => initialData.titles.forEach(t => !state.profile.earnedTitles.includes(t.id) && t.condition(state) && (state.profile.earnedTitles.push(t.id), showToast(`称号「${t.name}」獲得！`)));
             
             const formatTime = (s) => {
                 const totalSeconds = Math.floor(s);
@@ -1004,7 +993,7 @@
                     const quizId = $('#assessment-modal').dataset.quizId;
                     state.progress[quizId] = { level, date: new Date().toISOString() };
                     addLP(level * 5, 'クイズ評価');
-                    checkTitles(); saveState();
+                    saveState();
                     renderEngine.renderAll();
                     $('#assessment-modal').style.display = 'none';
                 }
@@ -1156,12 +1145,7 @@
                 // 2. テーマと壁紙のリストを描画（関数呼び出し）
                 renderPointModalContent(); 
                 
-                // 3. 称号リストを描画
-                const titlesList = $('#modal-titles-list');
-                const earnedTitles = state.profile.earnedTitles.map(id => initialData.titles.find(t => t.id === id));
-                titlesList.innerHTML = earnedTitles.length ? earnedTitles.map(t => `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">${t.name}</span>`).join('') : '<p class="text-sm text-gray-500">まだ称号はありません</p>';
-            
-                // 4. モーダルを表示
+                // 3. モーダルを表示
                 $('#point-details-modal').style.display = 'flex';
                 lucide.createIcons();
             });
@@ -1222,7 +1206,6 @@
                     logStudyTime('focus', elapsed);
                     addLP(Math.floor(elapsed/60), 'タイマー完了');
                     state.focus.totalTime += elapsed;
-                    checkTitles();
                     saveState();
                     resetTimerUI();
             
@@ -1316,7 +1299,7 @@
             const endFocusTimer = () => {
                 if (!focusTimer.isRunning) return;
                 const elapsed = focusTimer.defaultTime - focusTimer.timeLeft;
-                if (elapsed > 0) { logStudyTime('focus', elapsed); addLP(Math.floor(elapsed / 60), '集中モード'); state.focus.totalTime += elapsed; checkTitles(); saveState(); }
+                if (elapsed > 0) { logStudyTime('focus', elapsed); addLP(Math.floor(elapsed / 60), '集中モード'); state.focus.totalTime += elapsed; saveState(); }
                 resetTimerUI();
             
                 // 【追加】Service Workerにタイマー停止を通知
@@ -1333,7 +1316,7 @@
             const endStopwatch = () => {
                 if (!stopwatch.isRunning) return;
                 const elapsed = Math.round(stopwatch.elapsedTime);
-                if (elapsed > 0) { logStudyTime('focus', elapsed); addLP(Math.floor(elapsed / 60), 'ストップウォッチ'); state.focus.totalTime += elapsed; checkTitles(); saveState(); }
+                if (elapsed > 0) { logStudyTime('focus', elapsed); addLP(Math.floor(elapsed / 60), 'ストップウォッチ'); state.focus.totalTime += elapsed; saveState(); }
                 resetStopwatchUI();
                 // ▼▼▼【追加】ここから▼▼▼
                 state.focus.isRunning = false;
@@ -1479,7 +1462,7 @@
             $('#notification-permission-btn').addEventListener('click', async () => {
                 if (!('Notification' in window)) { showToast('お使いのブラウザは通知に対応していません。'); return; }
                 const permission = await Notification.requestPermission();
-                if (permission === 'granted') { showToast('通知が許可されました！'); new Notification('クイズHPへようこそ！', { body: '通知設定がオンになりました。' }); } 
+                if (permission === 'granted') { showToast('通知が許可されました！'); new Notification('クイズHPへようこそ！', { body: '通知設定がオンになりました。' }); $('#notification-permission-btn').style.display = 'none'; $('#notification-status').style.display = 'block';} 
                 else { showToast('通知が拒否されました。設定から変更できます。'); }
             });
 
@@ -1734,7 +1717,6 @@
                                 state.tasks = state.tasks.filter(t => t.id !== taskId);
                                 console.log(`タスクID ${taskId} を完了として削除しました。`);
                             }
-                            checkTitles(); // 称号をチェック
                             saveState(); // 状態を保存
                         }
                         showQuestNotification('セクション終了', 'お疲れ様でした！休憩に入ります。');
@@ -1795,7 +1777,6 @@
                         logStudyTime('focus', elapsed);
                         addLP(Math.floor(elapsed / 60), 'クエスト（中断）');
                         state.focus.totalTime += elapsed;
-                        checkTitles();
                         saveState();
                         showToast(`セクションの ${formatTime(elapsed)} を記録しました。`);
                     }
