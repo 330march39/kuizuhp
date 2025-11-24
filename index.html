@@ -335,7 +335,26 @@
                 <div id="notification-settings-card" class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                     <h3 class="font-semibold mb-2">通知設定</h3>
                     <button id="notification-permission-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center mb-4"><i data-lucide="bell-ring" class="w-5 h-5 mr-2"></i>ブラウザ通知を許可</button>
+                </div>
+
+                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
+                    <h3 class="font-semibold mb-2 flex items-center justify-between">
+                        <span>BGM設定 (クエスト中)</span>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="bgm-toggle" class="toggle-checkbox">
+                        </div>
+                    </h3>
+                    <p class="text-xs text-gray-500 mb-4">ONにすると、クエストの「学習セクション」中に選択した曲がループ再生されます。</p>
+                    
+                    <h4 class="text-sm font-bold mb-2">プレイリスト</h4>
+                    <div id="playlist-container" class="space-y-2 mb-4">
+                        <p class="text-sm text-gray-400">曲がありません。LPで交換してください。</p>
                     </div>
+                    
+                    <h4 class="text-sm font-bold mb-2">交換済みの曲 (タップで追加)</h4>
+                    <div id="unlocked-music-list" class="flex flex-wrap gap-2">
+                        </div>
+                </div>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
                      <h3 class="font-semibold mb-2">テーマカラーを選択</h3>
                      <div id="theme-selector" class="grid grid-cols-4 gap-4"></div>
@@ -407,6 +426,34 @@
         <div class="flex justify-center space-x-4">
             <button id="background-purchase-cancel" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">やめる</button>
             <button id="background-purchase-confirm" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-500 disabled:cursor-not-allowed">交換する</button>
+        </div>
+    </div>
+</div>
+
+<div id="game-purchase-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4">
+    <div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
+        <h2 id="game-purchase-title" class="text-xl font-bold mb-2"></h2>
+        <div class="mx-auto my-4 text-primary">
+             <i data-lucide="gamepad-2" class="w-16 h-16 mx-auto"></i>
+        </div>
+        <p id="game-purchase-cost" class="mb-6"></p>
+        <div class="flex justify-center space-x-4">
+            <button id="game-purchase-cancel" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">やめる</button>
+            <button id="game-purchase-confirm" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg transition-colors">交換する</button>
+        </div>
+    </div>
+</div>
+
+<div id="music-purchase-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4">
+    <div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
+        <h2 id="music-purchase-title" class="text-xl font-bold mb-2"></h2>
+        <div class="mx-auto my-4 text-primary">
+             <i data-lucide="music" class="w-16 h-16 mx-auto"></i>
+        </div>
+        <p id="music-purchase-cost" class="mb-6"></p>
+        <div class="flex justify-center space-x-4">
+            <button id="music-purchase-cancel" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">やめる</button>
+            <button id="music-purchase-confirm" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg transition-colors">交換する</button>
         </div>
     </div>
 </div>
@@ -510,6 +557,25 @@
                     utyuu: { name: '壮大な宇宙', url: 'https://sozaino.site/wp-content/uploads/2021/02/utyuu.jpg', cost: 700, tone: 'dark' },
                     jyanguru: { name: 'ジャングル', url: 'https://sozaino.site/wp-content/uploads/2025/07/okumono_jungle1.png', cost: 700, tone: 'dark' },
                     wapop: { name: '和ポップ（ピンク）', url: 'okumono_wapop3.png', cost: 700, tone: 'dark' },
+                },
+                games: {
+                    // ID: { name: 'ゲーム名', url: 'URL', cost: 必要LP, icon: 'アイコン名' }
+                    just100: { name: 'Just 1.00s', url: 'https://330march39.github.io/games/just1m_37928/', cost: 100, icon: 'timer' },
+                    
+                    // 例: 新しいゲームを手動で追加する場合
+                    // myGame2: { name: 'My Game', url: 'https://example.com/game', cost: 200, icon: 'gamepad-2' },
+                },
+
+                // ▼▼▼ 【追加】ここに音楽を追加していきます ▼▼▼
+                // 音源ファイルはご自身でサーバー等にアップロードし、そのURLを貼ってください
+                // 動作確認用にフリー素材のURLを入れています
+                music: {
+                    // ID: { name: '曲名', url: '音声ファイルのURL', cost: 必要LP }
+                    chill1: { name: 'Chill Beats', url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3', cost: 150 },
+                    piano1: { name: 'Relaxing Piano', url: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3', cost: 200 },
+                    
+                    // 例: 自分の曲を追加する場合
+                    // mySong1: { name: 'My Study BGM', url: './music/mysong.mp3', cost: 300 },
                 }
             };
 
@@ -519,6 +585,10 @@
             let stopwatch = { interval: null, startTime: 0, elapsedTime: 0, isRunning: false, isPaused: false };
             let miniTimerTemporarilyHidden = false;
             let quizTimer = { startTime: null };
+            
+            const bgmAudio = new Audio();
+            bgmAudio.loop = false; // プレイリスト再生のためループは手動制御
+            let currentTrackIndex = 0;
 
             const $ = (s) => document.querySelector(s);
             const $$ = (s) => document.querySelectorAll(s);
@@ -569,6 +639,8 @@
                         activeTheme: 'default',
                         unlockedBackgrounds: ['default'],
                         activeBackground: 'default',
+                        unlockedGames: [], // 解放済みゲームID
+                        unlockedMusic: [], // 解放済み音楽ID
                         tasksLastUpdated: null
                     },
                     tasks: [],
@@ -583,7 +655,12 @@
                         duration: 0       // タイマーの総時間
                     },
                     studyLog: {}, 
-                    settings: { backgroundScopeGlobal: true , manualDarkMode: false },
+                    settings: { backgroundScopeGlobal: true , 
+                                manualDarkMode: false
+                                bgmEnabled: false,      // BGM機能のON/OFF
+                                playlist: [],           // 再生リスト(IDの配列)
+                                bgmVolume: 0.5          // 音量 (任意)
+                              },
                     lastLogin: null,
                     breakIcons: [
                         { id: 'x', name: 'X (Twitter)', icon: 'message-circle', url: 'https://x.com', openMode: 'external', visible: true },
@@ -782,6 +859,56 @@
                                 notifCard.style.display = 'block'; // 表示
                             }   
                         }
+
+                        const bgmToggle = $('#bgm-toggle');
+                        bgmToggle.checked = state.settings.bgmEnabled;
+                        bgmToggle.onchange = (e) => {
+                            state.settings.bgmEnabled = e.target.checked;
+                            saveState();
+                        };
+
+                        // プレイリスト表示
+                        const playlistContainer = $('#playlist-container');
+                        if (state.settings.playlist.length === 0) {
+                            playlistContainer.innerHTML = '<p class="text-sm text-gray-400">プレイリストが空です。下のリストから追加してください。</p>';
+                        } else {
+                            playlistContainer.innerHTML = state.settings.playlist.map((id, index) => {
+                                const track = initialData.music[id];
+                                return `<div class="flex justify-between items-center bg-gray-100 dark:bg-gray-600 p-2 rounded"><span class="text-sm truncate"><i data-lucide="music" class="w-3 h-3 inline mr-1"></i>${track.name}</span><button class="remove-from-playlist text-red-400 hover:text-red-600" data-index="${index}"><i data-lucide="minus-circle" class="w-5 h-5"></i></button></div>`;
+                            }).join('');
+                        }
+
+                        // 所持している曲リスト（プレイリスト追加用）
+                        const unlockedList = $('#unlocked-music-list');
+                        unlockedList.innerHTML = state.profile.unlockedMusic.map(id => {
+                            const track = initialData.music[id];
+                            // すでにプレイリストにある場合は薄くするなどの処理はお好みで
+                            return `<button class="add-to-playlist bg-gray-200 dark:bg-gray-600 hover:bg-primary hover:text-white px-3 py-1 rounded-full text-xs transition" data-id="${id}"><i data-lucide="plus" class="w-3 h-3 inline mr-1"></i>${track.name}</button>`;
+                        }).join('') || '<span class="text-xs text-gray-500">交換済みの曲がありません</span>';
+
+                        // イベントリスナー：プレイリストから削除
+                        playlistContainer.querySelectorAll('.remove-from-playlist').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const index = parseInt(e.currentTarget.dataset.index);
+                                state.settings.playlist.splice(index, 1);
+                                saveState();
+                                renderEngine.pages['settings-page']();
+                            });
+                        });
+
+                        // イベントリスナー：プレイリストに追加
+                        unlockedList.querySelectorAll('.add-to-playlist').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const id = e.currentTarget.dataset.id;
+                                if (!state.settings.playlist.includes(id)) {
+                                    state.settings.playlist.push(id);
+                                    saveState();
+                                    renderEngine.pages['settings-page']();
+                                } else {
+                                    showToast('すでにプレイリストに入っています');
+                                }
+                            });
+                        });
                         
                         $('#theme-selector').innerHTML = state.profile.unlockedThemes.map(id => {
                             const theme = initialData.themes[id];
@@ -847,6 +974,47 @@
                 if (hours > 0) return `${hours}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
                 return `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
             };
+
+            // ▼▼▼ 【追加】BGM制御関数群 ▼▼▼
+            const playBGM = () => {
+                if (!state.settings.bgmEnabled || state.settings.playlist.length === 0) return;
+                
+                // プレイリストが空でなければ再生
+                if (bgmAudio.paused) {
+                    const trackId = state.settings.playlist[currentTrackIndex];
+                    const track = initialData.music[trackId];
+                    if (track) {
+                        // ソースが設定されていなければ設定
+                        if (!bgmAudio.src || !bgmAudio.src.includes(track.url)) {
+                            bgmAudio.src = track.url;
+                        }
+                        bgmAudio.play().catch(e => console.log('再生エラー(ユーザー操作が必要かも):', e));
+                    }
+                }
+            };
+
+            const pauseBGM = () => {
+                bgmAudio.pause();
+            };
+
+            const stopBGM = () => {
+                bgmAudio.pause();
+                bgmAudio.currentTime = 0;
+            };
+
+            // 曲が終わったら次の曲へ
+            bgmAudio.addEventListener('ended', () => {
+                currentTrackIndex++;
+                if (currentTrackIndex >= state.settings.playlist.length) {
+                    currentTrackIndex = 0; // 最初に戻る
+                }
+                const nextTrackId = state.settings.playlist[currentTrackIndex];
+                const nextTrack = initialData.music[nextTrackId];
+                if (nextTrack) {
+                    bgmAudio.src = nextTrack.url;
+                    bgmAudio.play();
+                }
+            });
 
             // 【追加】タイマーに時間を加算する関数
             const addTimerTime = (seconds) => {
@@ -1143,20 +1311,43 @@
 
             function handlePurchase(e) {
                 const { itemId, itemType } = e.target.dataset;
-                const itemData = initialData[itemType + 's'][itemId];
+                
+                // itemTypeは 'theme', 'background', 'game', 'music' のいずれか
+                let dataList;
+                let unlockList;
+
+                if (itemType === 'theme') {
+                    dataList = initialData.themes;
+                    unlockList = state.profile.unlockedThemes;
+                } else if (itemType === 'background') {
+                    dataList = initialData.backgrounds;
+                    unlockList = state.profile.unlockedBackgrounds;
+                } else if (itemType === 'game') {
+                    dataList = initialData.games;
+                    unlockList = state.profile.unlockedGames;
+                } else if (itemType === 'music') {
+                    dataList = initialData.music;
+                    unlockList = state.profile.unlockedMusic;
+                }
+
+                const itemData = dataList[itemId];
             
                 if (state.profile.lp >= itemData.cost) {
-                    addLP(-itemData.cost, `アイテム「${itemData.name}」交換`);
-                    state.profile[`unlocked${itemType.charAt(0).toUpperCase() + itemType.slice(1)}s`].push(itemId);
+                    addLP(-itemData.cost, `アイテム「${itemData.name}」交換`, false); // トースト重複回避のためfalse
+                    unlockList.push(itemId);
                     showToast(`「${itemData.name}」を解放しました！`);
                     saveState();
-                    renderPointModalContent();
+                    renderPointModalContent(); // モーダル再描画
+                    
+                    // 設定ページが開かれていれば再描画
                     if ($('#settings-page').classList.contains('active')) {
                         renderEngine.pages['settings-page']();
                     }
-                } else { // ← if文の中に正しく入れる
+                } else {
                     showToast('LPが足りません！');
                 }
+                
+                // モーダルを閉じる
                 $(`#${itemType}-purchase-modal`).style.display = 'none';
             }
             
@@ -1705,6 +1896,7 @@
             cancelQuestAlarm();
 
             if (currentStep.type === 'section') {
+                playBGM();
                 showQuestNotification('セクション開始', `「${currentStep.text}」を始めましょう！`);
                 questSectionView.style.display = 'block';
                 questBreakView.style.display = 'none';
@@ -1746,6 +1938,7 @@
                     }
                 );
             } else { // break
+                pauseBGM();
                 showQuestNotification('休憩時間', '少し休みましょう！');
                 questSectionView.style.display = 'none';
                 questBreakView.style.display = 'block';
@@ -1800,6 +1993,7 @@
 
         // クエストを終了する関数
         function endQuest(completed = false) {
+            stopBGM();
             $('#break-settings-btn').classList.add('hidden');
             clearInterval(quest.timerInterval);
             quest.timerInterval = null; // 忘れずにクリア
@@ -1853,6 +2047,20 @@
             if (!breakIconGrid) return;
             // 1. stateから表示がオンのアイコンだけをフィルタリング
             const visibleIcons = state.breakIcons.filter(icon => icon.visible);
+
+            state.profile.unlockedGames.forEach(gameId => {
+                const game = initialData.games[gameId];
+                if(game) {
+                    items.push({
+                        id: gameId,
+                        name: game.name,
+                        icon: game.icon, // 'timer' など
+                        url: game.url,
+                        openMode: 'iframe', // アプリ内で開く
+                        type: 'game'
+                    });
+                }
+            });
             
             // 2. HTMLを生成
             breakIconGrid.innerHTML = visibleIcons.map(icon => `
@@ -2084,28 +2292,100 @@
                 lucide.createIcons();
             };
             const renderPointModalContent = () => {
-            const themeContainer = $('#modal-theme-selector');
-            themeContainer.innerHTML = Object.entries(initialData.themes).map(([id, theme]) => {
-                const isUnlocked = state.profile.unlockedThemes.includes(id);
-                if (isUnlocked) {
-                    return `<div class="text-center">
-                        <button class="theme-btn w-12 h-12 rounded-full border-4 ${state.profile.activeTheme === id ? 'border-blue-500' : 'border-transparent'} relative" style="background-color: ${theme.color}" data-theme="${id}">
-                            <div class="absolute inset-0 flex items-center justify-center rounded-full"><i data-lucide="check" class="w-6 h-6 text-white"></i></div>
-                        </button>
-                        <p class="text-xs mt-1">${theme.name}</p>
-                    </div>`;
-                } else {
-                    return `<div class="text-center">
-                        <button class="theme-btn w-12 h-12 rounded-full border-4 border-transparent relative" style="background-color: ${theme.color}" data-theme="${id}">
-                            <div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-full text-white">
-                                <i data-lucide="lock" class="w-5 h-5"></i>
-                                <span class="text-[10px] font-bold">${theme.cost}</span>
-                            </div>
-                        </button>
-                        <p class="text-xs mt-1">${theme.name}</p>
-                    </div>`;
-                }
-            }).join('');
+                // 1. テーマ
+                const themeContainer = $('#modal-theme-selector');
+                themeContainer.innerHTML = Object.entries(initialData.themes).map(([id, theme]) => {
+                    const isUnlocked = state.profile.unlockedThemes.includes(id);
+                    // (既存の表示ロジック...)
+                    if (isUnlocked) {
+                         return `<div class="text-center"><button class="theme-btn w-12 h-12 rounded-full border-4 ${state.profile.activeTheme === id ? 'border-blue-500' : 'border-transparent'} relative" style="background-color: ${theme.color}" data-theme="${id}"><div class="absolute inset-0 flex items-center justify-center rounded-full"><i data-lucide="check" class="w-6 h-6 text-white"></i></div></button><p class="text-xs mt-1">${theme.name}</p></div>`;
+                    } else {
+                        return `<div class="text-center"><button class="theme-btn w-12 h-12 rounded-full border-4 border-transparent relative" style="background-color: ${theme.color}" data-theme="${id}"><div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-full text-white"><i data-lucide="lock" class="w-5 h-5"></i><span class="text-[10px] font-bold">${theme.cost}</span></div></button><p class="text-xs mt-1">${theme.name}</p></div>`;
+                    }
+                }).join('');
+
+                // 2. 壁紙
+                const backgroundContainer = $('#modal-background-selector');
+                backgroundContainer.innerHTML = Object.entries(initialData.backgrounds).map(([id, bg]) => {
+                    const isUnlocked = state.profile.unlockedBackgrounds.includes(id);
+                    const style = bg.url ? `background-image: url(${bg.url})` : 'background-color: #6b7280;';
+                    // (既存の表示ロジック...)
+                     if (isUnlocked) {
+                        return `<div class="text-center"><button class="background-btn w-full h-20 rounded-lg border-4 ${state.profile.activeBackground === id ? 'border-blue-500' : 'border-transparent'} relative bg-cover bg-center" style="${style}" data-bg="${id}"><div class="absolute inset-0 flex items-center justify-center rounded-md"><i data-lucide="check" class="w-8 h-8 text-white"></i></div></button><p class="text-xs mt-1">${bg.name}</p></div>`;
+                    } else {
+                         return `<div class="text-center"><button class="background-btn w-full h-20 rounded-lg border-4 border-transparent relative bg-cover bg-center" style="${style}" data-bg="${id}"><div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-md text-white"><i data-lucide="lock" class="w-6 h-6"></i><span class="text-sm font-bold">${bg.cost}</span></div></button><p class="text-xs mt-1">${bg.name}</p></div>`;
+                    }
+                }).join('');
+
+                // ▼▼▼ 【追加】ゲーム＆音楽セクションの描画（マイステータスモーダル内に動的に追加） ▼▼▼
+                
+                // モーダル内のコンテンツコンテナを取得（なければ既存の場所に追加）
+                const container = $('#point-details-modal .space-y-6');
+                
+                // 既存のゲーム・音楽セクションがあれば削除（二重描画防止）
+                const existingGameSec = container.querySelector('#modal-game-section');
+                if(existingGameSec) existingGameSec.remove();
+                const existingMusicSec = container.querySelector('#modal-music-section');
+                if(existingMusicSec) existingMusicSec.remove();
+
+                // ゲームセクション作成
+                const gameHtml = Object.entries(initialData.games).map(([id, game]) => {
+                    const isUnlocked = state.profile.unlockedGames.includes(id);
+                    return isUnlocked 
+                        ? `<div class="text-center opacity-50"><div class="w-16 h-16 mx-auto bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center"><i data-lucide="check" class="w-8 h-8"></i></div><p class="text-xs mt-1">${game.name}</p></div>`
+                        : `<div class="text-center cursor-pointer game-purchase-btn" data-id="${id}"><div class="w-16 h-16 mx-auto bg-gray-200 dark:bg-gray-600 rounded-lg flex flex-col items-center justify-center relative hover:bg-gray-300 dark:hover:bg-gray-500 transition"><i data-lucide="${game.icon}" class="w-6 h-6 mb-1"></i><span class="text-xs font-bold">${game.cost} LP</span></div><p class="text-xs mt-1">${game.name}</p></div>`;
+                }).join('');
+
+                const gameSection = document.createElement('div');
+                gameSection.id = 'modal-game-section';
+                gameSection.innerHTML = `<h3 class="font-semibold mb-2">ミニゲーム</h3><div class="grid grid-cols-4 gap-4">${gameHtml || '<p class="text-sm text-gray-400">アイテムがありません</p>'}</div>`;
+                container.appendChild(gameSection);
+
+                // 音楽セクション作成
+                const musicHtml = Object.entries(initialData.music).map(([id, music]) => {
+                    const isUnlocked = state.profile.unlockedMusic.includes(id);
+                    return isUnlocked
+                        ? `<div class="text-center opacity-50"><div class="w-16 h-16 mx-auto bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center"><i data-lucide="check" class="w-8 h-8"></i></div><p class="text-xs mt-1">${music.name}</p></div>`
+                        : `<div class="text-center cursor-pointer music-purchase-btn" data-id="${id}"><div class="w-16 h-16 mx-auto bg-gray-200 dark:bg-gray-600 rounded-lg flex flex-col items-center justify-center relative hover:bg-gray-300 dark:hover:bg-gray-500 transition"><i data-lucide="music" class="w-6 h-6 mb-1"></i><span class="text-xs font-bold">${music.cost} LP</span></div><p class="text-xs mt-1">${music.name}</p></div>`;
+                }).join('');
+
+                const musicSection = document.createElement('div');
+                musicSection.id = 'modal-music-section';
+                musicSection.innerHTML = `<h3 class="font-semibold mb-2">BGM</h3><div class="grid grid-cols-4 gap-4">${musicHtml || '<p class="text-sm text-gray-400">アイテムがありません</p>'}</div>`;
+                container.appendChild(musicSection);
+
+                // アイコン更新とイベントリスナー再設定
+                lucide.createIcons();
+                
+                // 購入ボタンのリスナー設定
+                gameSection.querySelectorAll('.game-purchase-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        const item = initialData.games[id];
+                        $('#game-purchase-title').textContent = `「${item.name}」を交換しますか？`;
+                        $('#game-purchase-cost').textContent = `必要: ${item.cost} LP`;
+                        const confirmBtn = $('#game-purchase-confirm');
+                        confirmBtn.dataset.itemId = id;
+                        confirmBtn.dataset.itemType = 'game';
+                        confirmBtn.disabled = state.profile.lp < item.cost;
+                        $('#game-purchase-modal').style.display = 'flex';
+                    });
+                });
+
+                musicSection.querySelectorAll('.music-purchase-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        const item = initialData.music[id];
+                        $('#music-purchase-title').textContent = `「${item.name}」を交換しますか？`;
+                        $('#music-purchase-cost').textContent = `必要: ${item.cost} LP`;
+                        const confirmBtn = $('#music-purchase-confirm');
+                        confirmBtn.dataset.itemId = id;
+                        confirmBtn.dataset.itemType = 'music';
+                        confirmBtn.disabled = state.profile.lp < item.cost;
+                        $('#music-purchase-modal').style.display = 'flex';
+                    });
+                });
+            };
 
             const backgroundContainer = $('#modal-background-selector');
             backgroundContainer.innerHTML = Object.entries(initialData.backgrounds).map(([id, bg]) => {
@@ -2157,6 +2437,12 @@
             $('#countdown-modal').style.display = 'none';
         });
         $('#countdown-delete-btn').addEventListener('click', deleteCountdown);
+
+        // --- ゲーム・音楽購入モーダル関連のボタン ---
+        $('#game-purchase-confirm').addEventListener('click', handlePurchase);
+        $('#game-purchase-cancel').addEventListener('click', () => { $('#game-purchase-modal').style.display = 'none'; });
+        $('#music-purchase-confirm').addEventListener('click', handlePurchase);
+        $('#music-purchase-cancel').addEventListener('click', () => { $('#music-purchase-modal').style.display = 'none'; });
             
             init();
         });
