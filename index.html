@@ -2387,31 +2387,7 @@
                 });
             };
 
-            const backgroundContainer = $('#modal-background-selector');
-            backgroundContainer.innerHTML = Object.entries(initialData.backgrounds).map(([id, bg]) => {
-                const isUnlocked = state.profile.unlockedBackgrounds.includes(id);
-                const style = bg.url ? `background-image: url(${bg.url})` : 'background-color: #6b7280;';
-                if (isUnlocked) {
-                    return `<div class="text-center">
-                        <button class="background-btn w-full h-20 rounded-lg border-4 ${state.profile.activeBackground === id ? 'border-blue-500' : 'border-transparent'} relative bg-cover bg-center" style="${style}" data-bg="${id}">
-                             <div class="absolute inset-0 flex items-center justify-center rounded-md"><i data-lucide="check" class="w-8 h-8 text-white"></i></div>
-                        </button>
-                         <p class="text-xs mt-1">${bg.name}</p>
-                    </div>`;
-                } else {
-                     return `<div class="text-center">
-                        <button class="background-btn w-full h-20 rounded-lg border-4 border-transparent relative bg-cover bg-center" style="${style}" data-bg="${id}">
-                             <div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-md text-white">
-                                <i data-lucide="lock" class="w-6 h-6"></i>
-                                <span class="text-sm font-bold">${bg.cost}</span>
-                            </div>
-                        </button>
-                         <p class="text-xs mt-1">${bg.name}</p>
-                    </div>`;
-                }
-            }).join('');
-
-            lucide.createIcons();
+            
         
             
         // --- 購入モーダル関連のボタン ---
