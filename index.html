@@ -2063,7 +2063,7 @@
             });
             
             // 2. HTMLを生成
-            breakIconGrid.innerHTML = visibleIcons.map(icon => `
+            breakIconGrid.innerHTML = items.map(icon => `
                 <button class="break-content-btn" data-url="${icon.url}" data-open-mode="${icon.openMode}" data-id="${icon.id}">
                     <i data-lucide="${icon.icon}" class="w-8 h-8 mb-1"></i>
                     <span>${icon.name}</span>
