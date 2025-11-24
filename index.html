@@ -2046,7 +2046,7 @@
         function renderBreakIcons() {
             if (!breakIconGrid) return;
             // 1. stateから表示がオンのアイコンだけをフィルタリング
-            const visibleIcons = state.breakIcons.filter(icon => icon.visible);
+            let items = state.breakIcons.filter(icon => icon.visible).map(icon => ({...icon, type: 'default'}));
 
             state.profile.unlockedGames.forEach(gameId => {
                 const game = initialData.games[gameId];
