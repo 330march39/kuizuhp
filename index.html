@@ -1990,7 +1990,7 @@
 
                 if (currentStep.type === 'section') {
                     playBGM();
-                    questSectionView.style.display = 'block';
+                    questSectionView.style.display = 'flex';
                     questBreakView.style.display = 'none';
                     $('#break-settings-btn').classList.add('hidden');
                     
@@ -2037,7 +2037,7 @@
                 } else { // break
                     pauseBGM();
                     questSectionView.style.display = 'none';
-                    questBreakView.style.display = 'block';
+                    questBreakView.style.display = 'flex';
                     $('#break-settings-btn').classList.remove('hidden');
                     renderBreakIcons();
 
