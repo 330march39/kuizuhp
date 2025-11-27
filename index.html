@@ -406,7 +406,7 @@
                     <button class="assessment-btn p-2 w-24 flex flex-col items-center" data-level="2"><i data-lucide="thumbs-up" class="w-10 h-10 text-green-400 mb-1 mx-auto"></i><p>まあまあ</p></button>
                     <button class="assessment-btn p-2 w-24 flex flex-col items-center" data-level="1"><i data-lucide="book-open-check" class="w-10 h-10 text-blue-400 mb-1 mx-auto"></i><p>要復習</p></button>
                 </div>
-            </div>    </div><div id="theme-purchase-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4">
+            </div>    </div><div id="theme-purchase-modal" class="fixed inset-0 bg-black/70 z-[60] items-center justify-center hidden p-4">
     <div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
         <h2 id="theme-purchase-title" class="text-xl font-bold mb-2"></h2>
         <div id="theme-preview" class="w-20 h-20 rounded-full mx-auto my-4 border-4 border-gray-200 dark:border-gray-600 shadow-inner"></div>
@@ -418,7 +418,7 @@
     </div>
 </div>
 
-<div id="background-purchase-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4">
+<div id="background-purchase-modal" class="fixed inset-0 bg-black/70 z-[60] items-center justify-center hidden p-4">
     <div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
         <h2 id="background-purchase-title" class="text-xl font-bold mb-2"></h2>
         <div id="background-preview" class="w-5/6 aspect-[8/16] rounded-lg mx-auto my-4 bg-gray-200 dark:bg-gray-800 bg-cover bg-center shadow-inner"></div>
@@ -430,7 +430,7 @@
     </div>
 </div>
 
-<div id="game-purchase-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4">
+<div id="game-purchase-modal" class="fixed inset-0 bg-black/70 z-[60] items-center justify-center hidden p-4">
     <div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
         <h2 id="game-purchase-title" class="text-xl font-bold mb-2"></h2>
         <div class="mx-auto my-4 text-primary">
@@ -444,7 +444,7 @@
     </div>
 </div>
 
-<div id="music-purchase-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4">
+<div id="music-purchase-modal" class="fixed inset-0 bg-black/70 z-[60] items-center justify-center hidden p-4">
     <div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
         <h2 id="music-purchase-title" class="text-xl font-bold mb-2"></h2>
         <div class="mx-auto my-4 text-primary">
@@ -1337,6 +1337,9 @@
                     unlockList.push(itemId);
                     showToast(`「${itemData.name}」を解放しました！`);
                     saveState();
+                    if (itemType === 'game') {
+                        syncGamesToBreakIcons();
+                    }
                     renderPointModalContent(); // モーダル再描画
                     
                     // 設定ページが開かれていれば再描画
@@ -2042,35 +2045,48 @@
             iframeOverlay.style.display = 'none';
         };
             
-        // ★新規追加★ 休憩アイコンをレンダリングする関数
+        // ★修正後★ 休憩アイコンをレンダリングする関数
         function renderBreakIcons() {
             if (!breakIconGrid) return;
-            // 1. stateから表示がオンのアイコンだけをフィルタリング
-            let items = state.breakIcons.filter(icon => icon.visible).map(icon => ({...icon, type: 'default'}));
 
-            state.profile.unlockedGames.forEach(gameId => {
-                const game = initialData.games[gameId];
-                if(game) {
-                    items.push({
-                        id: gameId,
-                        name: game.name,
-                        icon: game.icon, // 'timer' など
-                        url: game.url,
-                        openMode: 'iframe', // アプリ内で開く
-                        type: 'game'
-                    });
-                }
-            });
-            
+            // 1. 表示がオンのアイコンだけを抽出
+            const items = state.breakIcons.filter(icon => icon.visible);
+
             // 2. HTMLを生成
             breakIconGrid.innerHTML = items.map(icon => `
-                <button class="break-content-btn" data-url="${icon.url}" data-open-mode="${icon.openMode}" data-id="${icon.id}">
+                <button class="break-content-btn" data-url="${icon.url}" data-open-mode="${icon.openMode || 'external'}" data-id="${icon.id}">
                     <i data-lucide="${icon.icon}" class="w-8 h-8 mb-1"></i>
                     <span>${icon.name}</span>
                 </button>
             `).join('');
             
-            lucide.createIcons(); // 3. アイコンを再描画
+            lucide.createIcons();
+        }
+
+        // ★新規追加★ 解禁済みゲームをbreakIconsに同期させる関数
+        function syncGamesToBreakIcons() {
+            state.profile.unlockedGames.forEach(gameId => {
+                // すでにbreakIconsにあるかチェック
+                const exists = state.breakIcons.find(icon => icon.id === gameId);
+                
+                if (!exists) {
+                    const game = initialData.games[gameId];
+                    if (game) {
+                        // 新しくbreakIconsに追加 (デフォルトで表示ON)
+                        state.breakIcons.push({
+                            id: gameId,
+                            name: game.name,
+                            icon: game.icon,
+                            url: game.url,
+                            openMode: 'iframe', // ゲームはiframeで開く
+                            type: 'game',
+                            visible: true
+                        });
+                    }
+                }
+            });
+            // 保存
+            saveState();
         }
 
         // ★新規追加★ 休憩設定モーダルの中身を描画する関数
@@ -2174,6 +2190,8 @@
                 }
                 
                 loadState();
+
+                syncGamesToBreakIcons();
 
                 // 1. 新しいDOM要素を変数に割り当て
                 homeTaskListEl = $('#home-task-list');
