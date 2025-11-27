@@ -482,25 +482,25 @@
     
             <div id="quest-break-view" class="hidden w-full h-full flex flex-col items-center pt-16 relative">
                 <div id="quest-transition-view" class="hidden w-full h-full flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
-                        <div class="mb-8">
-                            <i id="transition-icon" data-lucide="arrow-right-circle" class="w-24 h-24 text-white opacity-80 mx-auto mb-4"></i>
-                            <h2 id="transition-title" class="text-3xl md:text-4xl font-bold text-white mb-2"></h2>
-                            <p id="transition-message" class="text-xl text-gray-300"></p>
-                        </div>
-                        
-                        <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 w-full max-w-sm border border-white/20 mb-8">
-                            <p class="text-sm text-gray-400 mb-1">NEXT</p>
-                            <p id="transition-next-text" class="text-xl font-bold text-white truncate"></p>
-                            <p id="transition-next-duration" class="text-sm text-gray-400 font-mono mt-1"></p>
-                        </div>
-        
-                        <button id="transition-start-btn" class="primary-bg primary-bg-hover text-white text-xl font-bold py-4 px-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center">
-                            <i data-lucide="play" class="w-6 h-6 mr-2"></i>
-                            始める
-                        </button>
+                    <div class="mb-8">
+                        <i id="transition-icon" data-lucide="arrow-right-circle" class="w-24 h-24 text-white opacity-80 mx-auto mb-4"></i>
+                        <h2 id="transition-title" class="text-3xl md:text-4xl font-bold text-white mb-2"></h2>
+                        <p id="transition-message" class="text-xl text-gray-300"></p>
                     </div>
+                    
+                    <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 w-full max-w-sm border border-white/20 mb-8">
+                        <p class="text-sm text-gray-400 mb-1">NEXT</p>
+                        <p id="transition-next-text" class="text-xl font-bold text-white truncate"></p>
+                        <p id="transition-next-duration" class="text-sm text-gray-400 font-mono mt-1"></p>
                     </div>
-            </div>
+    
+                    <button id="transition-start-btn" class="primary-bg primary-bg-hover text-white text-xl font-bold py-4 px-12 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center">
+                        <i data-lucide="play" class="w-6 h-6 mr-2"></i>
+                        始める
+                    </button>
+                </div>
+                </div>
+        </div>
                 
                                                 <div class="text-center mb-8 flex-shrink-0">
                     <h2 class="text-2xl md:text-3xl font-bold text-gray-400">☕ ブレイクタイム</h2>
@@ -1074,20 +1074,23 @@
             };
 
             const renderHomeTasks = () => {
-                if (!homeTaskListEl) return; // init前は実行しない
-    
+                if (!homeTaskListEl) return; 
+
                 if (!state.tasks || state.tasks.length === 0) {
                     homeTaskListEl.innerHTML = `<p class="text-center text-sm text-gray-500">今日の予定はありません。</p>`;
                 } else {
                     homeTaskListEl.innerHTML = ''; // 一旦クリア
+                    
                     state.tasks.forEach((task, index) => {
                         // ▼▼▼ 変更: 完了済みタスクのスタイル適用 ▼▼▼
                         const isCompleted = task.completed || false;
                         const textStyle = isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : '';
                         const bgStyle = isCompleted ? 'bg-gray-100 dark:bg-gray-800' : '';
 
-                        taskEl.className = `flex items-center space-x-2 group task-item ${bgStyle}`; // 背景色も少し変える
+                        const taskEl = document.createElement('div'); // ここで定義
+                        taskEl.className = `flex items-center space-x-2 group task-item ${bgStyle}`; 
                         taskEl.dataset.id = task.id;
+                        
                         taskEl.innerHTML = `
                             <span class="font-bold w-6 text-center text-gray-600 dark:text-gray-400">${index + 1}</span>
                             <input type="text" value="${task.text}" class="task-text-input flex-grow bg-transparent p-1 focus:outline-none rounded ${textStyle}" ${isCompleted ? 'disabled' : ''}>
@@ -1098,7 +1101,8 @@
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         `;
-                        // ▲▲▲ 変更ここまで ▲▲▲
+                        
+                        // taskEl はこのスコープ内で利用可能
                         homeTaskListEl.appendChild(taskEl);
                         
                         // テキスト変更イベント
@@ -1109,6 +1113,7 @@
                                 saveState();
                             }
                         });
+                        // ▲▲▲ 変更ここまで ▲▲▲
                     });
                 }
                 newTaskNumberEl.textContent = state.tasks.length + 1;
@@ -1919,8 +1924,7 @@
 
                 const nextStep = quest.plan[quest.currentIndex];
 
-                // 最初のステップ、またはユーザー設定等で「自動進行」にしたい場合は即実行
-                // 今回は「確認画面で止める」が要件なので、初回以外は確認画面を出す
+                // 最初のステップは即開始し、それ以降は確認画面を出す
                 if (quest.currentIndex === 0) {
                     executeQuestStep(nextStep);
                 } else {
@@ -2365,26 +2369,28 @@
                 
                 // 5. 「今日の予定」読み込みボタン
                 const loadTasksBtn = $('#load-tasks-btn');
-                if (loadTasksBtn) {
-                    loadTasksBtn.addEventListener('click', () => {
-                        if (state.tasks.length === 0) {
-                            showToast('「今日の予定」にタスクがありません。');
-                            quest.plan = []; // プランをクリア
-                        } else {
-                            // state.tasks を quest.plan にマッピング
-                            quest.plan = state.tasks.map(task => ({
-                                id: Date.now() + Math.random(), // クエスト用の一時ID
-                                type: 'section',
-                                text: task.text,
-                                duration: 25 * 60, // デフォルト25分
-                                originalTaskId: task.id // ★元のタスクIDを保持
-                            }));
-                            showToast(`「今日の予定」から ${state.tasks.length} 件のタスクを読み込みました。`);
-                        }
-                        // クエストプランのUIを再描画
-                        renderQuestPlan();
-                    });
-                }
+                if (loadTasksBtn) {
+                    loadTasksBtn.addEventListener('click', () => {
+                        // 完了していないタスクのみをフィルタリングして読み込む
+                        const activeTasks = state.tasks.filter(t => !t.completed);
+
+                        if (activeTasks.length === 0) {
+                            showToast('「今日の予定」に未完了のタスクがありません。');
+                            // quest.plan = []; // 既存のプランを消したくない場合はコメントアウト
+                        } else {
+                            // state.tasks を quest.plan にマッピング
+                            quest.plan = activeTasks.map(task => ({
+                                id: Date.now() + Math.random(),
+                                type: 'section',
+                                text: task.text,
+                                duration: 25 * 60,
+                                originalTaskId: task.id
+                            }));
+                            showToast(`${activeTasks.length} 件の未完了タスクを読み込みました。`);
+                        }
+                        renderQuestPlan();
+                    });
+                }
                 
                 // 最後に外観を更新
                 $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
