@@ -171,6 +171,7 @@
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-screen antialiased">
+    <div id="global-background" class="fixed inset-0 -z-10 bg-cover bg-center transition-all duration-500"></div>
 
     <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto shadow-2xl">
         
@@ -487,7 +488,7 @@
         </div>
                 
         <div id="quest-content-area" class="w-full h-full flex flex-col items-center justify-center">
-            <div id="quest-section-view" class="hidden text-center">
+            <div id="quest-section-view" class="hidden w-full h-full flex flex-col items-center justify-center text-center">
                 <h2 id="quest-section-title" class="text-2xl md:text-3xl font-bold mb-2 text-gray-400"></h2>
                 <p class="text-7xl md:text-9xl font-mono font-extrabold" id="quest-timer">25:00</p>
                 <p id="quest-progress" class="mt-4 text-lg text-gray-400"></p>
@@ -736,39 +737,48 @@
            // 既存の updateAppearance 関数を、この新しいコードで完全に置き換えてください。
             
             const updateAppearance = () => {
-                const appContainer = $('#app-container');
-                const activeBgId = state.profile.activeBackground;
-                const activeBg = initialData.backgrounds[activeBgId] || initialData.backgrounds['default'];
-                const isGlobal = state.settings.backgroundScopeGlobal;
-                const hasImage = activeBg && activeBg.url;
-                
-                // --- 1. テーマ決定ロジック ---
-                let effectiveTone = activeBg.tone;
-                
-                if (effectiveTone === 'system') {
-                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                        effectiveTone = 'dark';
-                    } else {
-                        effectiveTone = 'light';
-                    }
-                }
-                
-                // --- 2. 決定したテーマをHTML要素に適用 (修正済みのロジック) ---
-                if (effectiveTone === 'dark') {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    document.documentElement.setAttribute('data-theme', 'light');
-                }
-                
-                // --- 3. 背景画像の適用ロジック ---
-                if (isGlobal && hasImage) {
-                    appContainer.style.backgroundImage = `url(${activeBg.url})`;
-                } else {
-                    appContainer.style.backgroundImage = 'none';
-                }
-            };
+                // ターゲットを新しい背景レイヤーに変更
+                const bgLayer = $('#global-background'); 
+                const activeBgId = state.profile.activeBackground;
+                const activeBg = initialData.backgrounds[activeBgId] || initialData.backgrounds['default'];
+                const isGlobal = state.settings.backgroundScopeGlobal;
+                const hasImage = activeBg && activeBg.url;
+                
+                // --- 1. テーマ（ダークモード）決定ロジック ---
+                let effectiveTone = activeBg.tone;
+                if (effectiveTone === 'system') {
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        effectiveTone = 'dark';
+                    } else {
+                        effectiveTone = 'light';
+                    }
+                }
+                
+                // --- 2. HTML要素へのテーマ適用 ---
+                if (effectiveTone === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+                
+                // --- 3. 背景画像の適用ロジック（修正済み） ---
+                if (isGlobal && hasImage) {
+                    bgLayer.style.backgroundImage = `url(${activeBg.url})`;
+                } else {
+                    bgLayer.style.backgroundImage = 'none';
+                }
+
+                // Focusページ個別の背景処理（全体適用がOFFの場合）
+                $$('.focus-view-bg').forEach(el => {
+                    if (!isGlobal && hasImage && $('#focus-page').classList.contains('active')) {
+                        el.style.backgroundImage = `url(${activeBg.url})`;
+                    } else {
+                        el.style.backgroundImage = 'none';
+                    }
+                });
+            };
 
             const updateLpDisplay = () => {
                 $('#lp-display').textContent = `${state.profile.lp} LP`;
@@ -1936,7 +1946,8 @@
             if (currentStep.type === 'section') {
                 playBGM();
                 showQuestNotification('セクション開始', `「${currentStep.text}」を始めましょう！`);
-                questSectionView.style.display = 'block';
+                questSectionView.style.display = 'flex';
+                questSectionView.classList.remove('hidden'); // Tailwindのhiddenを消す
                 questBreakView.style.display = 'none';
                 $('#break-settings-btn').classList.add('hidden');
                 questSectionTitle.textContent = currentStep.text;
@@ -1989,7 +2000,7 @@
                 pauseBGM();
                 showQuestNotification('休憩時間', '少し休みましょう！');
                 questSectionView.style.display = 'none';
-                questBreakView.style.display = 'block';
+                questBreakView.style.display = 'flex';
                 $('#break-settings-btn').classList.remove('hidden');
                 renderBreakIcons();
 
