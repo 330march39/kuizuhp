@@ -464,6 +464,19 @@
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300 z-50 transform -translate-y-10"></div>
         
     <div id="quest-active-screen" class="hidden fixed inset-0 bg-gray-900 dark:bg-black text-gray-100 z-50 flex flex-col items-center justify-center p-4">
+        <div id="quest-content-area" class="w-full h-full flex flex-col items-center justify-center">
+            <div id="quest-step-confirmation" class="hidden w-full max-w-sm bg-gray-800 p-6 rounded-xl shadow-2xl text-center z-20">
+                <div class="mb-4 text-yellow-400">
+                    <i data-lucide="check-circle-2" class="w-16 h-16 mx-auto"></i>
+                </div>
+                <h3 id="step-confirm-title" class="text-2xl font-bold mb-2">セクション終了！</h3>
+                <p id="step-confirm-message" class="text-gray-400 mb-6">お疲れ様でした。次は休憩です。</p>
+                <button id="quest-next-step-btn" class="w-full primary-bg primary-bg-hover text-white py-3 px-6 rounded-lg font-bold text-lg shadow-lg transform transition hover:scale-105">
+                    次へ進む
+                </button>
+            </div>
+            </div>
+    </div>
         
         <div class="absolute top-6 right-6 flex items-center space-x-2 z-10">
             <button id="break-settings-btn" class="text-gray-400 p-2 rounded-full hover:bg-gray-700 transition-colors hidden">
@@ -1064,6 +1077,10 @@
                         const taskEl = document.createElement('div');
                         taskEl.className = 'flex items-center space-x-2 group task-item';
                         taskEl.dataset.id = task.id;
+
+                        const completedClass = task.completed ? 'line-through text-gray-400 dark:text-gray-600' : 'text-gray-800 dark:text-gray-200';
+                        const inputDisabled = task.completed ? 'disabled' : '';
+                        
                         taskEl.innerHTML = `
                             <span class="font-bold w-6 text-center text-gray-600 dark:text-gray-400">${index + 1}</span>
                             <input type="text" value="${task.text}" class="task-text-input flex-grow bg-transparent p-1 focus:outline-none rounded">
@@ -1594,6 +1611,11 @@
 
             startQuestBtn.addEventListener('click', startQuest);
 
+            // ★新規追加★ 確認画面の「次へ進む」ボタン
+            $('#quest-next-step-btn').addEventListener('click', () => {
+                runNextQuestStep();
+            });
+
             // クエスト実行画面のボタン
             endQuestBtn.addEventListener('click', () => {
                 confirmationModal.style.display = 'flex';
@@ -1871,9 +1893,25 @@
                 });
             }
         }
+            
+        function showStepConfirmation(title, message) {
+            // 現在のビューを隠す
+            questSectionView.style.display = 'none';
+            questBreakView.style.display = 'none';
+            $('#break-settings-btn').classList.add('hidden');
+            
+            // 確認画面を表示
+            $('#step-confirm-title').textContent = title;
+            $('#step-confirm-message').textContent = message;
+            $('#quest-step-confirmation').style.display = 'block';
+            $('#quest-step-confirmation').classList.remove('hidden');
+        }
 
         // 次のクエストステップを実行する関数
         function runNextQuestStep() {
+            // 確認画面を隠す（次へボタンが押された後なので）
+            $('#quest-step-confirmation').style.display = 'none';
+
             quest.currentIndex++;
             if (quest.currentIndex >= quest.plan.length) {
                 endQuest(true); // クエスト完了
@@ -1882,19 +1920,16 @@
 
             const currentStep = quest.plan[quest.currentIndex];
             
-            // アプリ2のトースト関数とNotification APIを使用
-            const showQuestNotification = (title, body) => {
-                showToast(body); // 画面上のトーストはそのまま表示
-
-                // ★★★ new Notification() の代わりに、サービスワーカーにメッセージを送信 ★★★
-                if (Notification.permission === "granted" && navigator.serviceWorker.controller) {
-                    navigator.serviceWorker.controller.postMessage({
-                        command: 'showQuestNotification',
-                        title: title,
-                        body: body
-                    });
-                }
-            };
+            const showQuestNotification = (title, body) => {
+                showToast(body);
+                if (Notification.permission === "granted" && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        command: 'showQuestNotification',
+                        title: title,
+                        body: body
+                    });
+                }
+            };
 
             cancelQuestAlarm();
 
@@ -1905,76 +1940,86 @@
                 questBreakView.style.display = 'none';
                 $('#break-settings-btn').classList.add('hidden');
                 questSectionTitle.textContent = currentStep.text;
-                //questProgressEl.textContent = `${quest.currentIndex + 1} / ${quest.plan.length}`;
-                // 1. セクションタイプのアイテムだけをフィルタリング
-                const totalSections = quest.plan.filter(p => p.type === 'section').length;
-                // 2. 現在までのインデックスで、セクションが何番目かをカウント
-                const currentSectionNumber = quest.plan.slice(0, quest.currentIndex + 1).filter(p => p.type === 'section').length;
-                
-                // 3. 修正したロジックでテキストを設定
-                questProgressEl.textContent = `${currentSectionNumber} / ${totalSections}`;
+                
+                const totalSections = quest.plan.filter(p => p.type === 'section').length;
+                const currentSectionNumber = quest.plan.slice(0, quest.currentIndex + 1).filter(p => p.type === 'section').length;
+                questProgressEl.textContent = `${currentSectionNumber} / ${totalSections}`;
 
-                sendQuestAlarm(
-                    currentStep.duration,
-                    'セクション終了', // title for notification
-                    'お疲れ様でした！休憩に入ります。' // body for notification
-                );
+                sendQuestAlarm(currentStep.duration, 'セクション終了', 'お疲れ様でした！確認画面へ進みます。');
                 
                 startQuestTimer(
                     currentStep.duration,
-                    (timeLeft) => { questTimerEl.textContent = formatTime(timeLeft); }, // 既存のformatTimeを流用
+                    (timeLeft) => { questTimerEl.textContent = formatTime(timeLeft); },
                     () => {
+                        // --- タイマー終了時の処理 ---
                         const elapsed = currentStep.duration;
                         if (elapsed > 0) {
-                            logStudyTime('focus', elapsed); // 学習ログに記録
-                            addLP(Math.floor(elapsed / 60), 'クエストセクション'); // LPを付与
-                            state.focus.totalTime += elapsed; // 総集中時間に追加
+                            logStudyTime('focus', elapsed);
+                            addLP(Math.floor(elapsed / 60), 'クエストセクション');
+                            state.focus.totalTime += elapsed;
+                            
+                            // ★修正★ タスクを削除せず、completedフラグを立てる
                             if (currentStep.originalTaskId) {
-                                const taskId = parseInt(currentStep.originalTaskId);
-                                state.tasks = state.tasks.filter(t => t.id !== taskId);
-                                console.log(`タスクID ${taskId} を完了として削除しました。`);
-                            }
-                            saveState(); // 状態を保存
+                                const taskId = parseInt(currentStep.originalTaskId);
+                                const task = state.tasks.find(t => t.id === taskId);
+                                if (task) {
+                                    task.completed = true; // フラグ更新
+                                    console.log(`タスクID ${taskId} を完了にしました。`);
+                                }
+                            }
+                            saveState();
+                            // バックグラウンドでホームのタスクリストも更新しておく
+                            renderHomeTasks(); 
                         }
-                        showQuestNotification('セクション終了', 'お疲れ様でした！休憩に入ります。');
-                        runNextQuestStep();
+                        showQuestNotification('セクション終了', 'お疲れ様でした！');
+                        
+                        // ★変更★ 自動で進まず、確認画面を表示する
+                        // 次のステップが存在するかチェック
+                        if (quest.currentIndex + 1 < quest.plan.length) {
+                            const nextType = quest.plan[quest.currentIndex + 1].type;
+                            const msg = nextType === 'break' ? '次は休憩です。準備ができたらスタートしてください。' : '次は学習セクションです。';
+                            showStepConfirmation('セクション完了！', msg);
+                        } else {
+                            // 次がない（最後のステップ）場合はそのまま完了へ
+                            runNextQuestStep();
+                        }
                     }
                 );
             } else { // break
                 pauseBGM();
-                showQuestNotification('休憩時間', '少し休みましょう！');
-                questSectionView.style.display = 'none';
-                questBreakView.style.display = 'block';
+                showQuestNotification('休憩時間', '少し休みましょう！');
+                questSectionView.style.display = 'none';
+                questBreakView.style.display = 'block';
                 $('#break-settings-btn').classList.remove('hidden');
                 renderBreakIcons();
 
-                sendQuestAlarm(
-                    currentStep.duration,
-                    '休憩終了', // title for notification
-                    '次のセクションを始めましょう！' // body for notification
-                );
-                
-                // (breakContentSelector と breakSnsSelector の行は削除)
-                startQuestTimer(
+                sendQuestAlarm(currentStep.duration, '休憩終了', '準備ができたら次へ進みましょう。');
+                
+                startQuestTimer(
                     currentStep.duration,
                     (timeLeft) => {
                         breakTimerEl.textContent = formatTime(timeLeft);
                         if (timeLeft === 30) {
-                            showQuestNotification('まもなく休憩終了', '30秒後に次のセクションが始まります。');
-                        }
-                    },
-                    
+                            showQuestNotification('まもなく休憩終了', '30秒後に終了します。');
+                        }
+                    },
                     () => {
+                        // --- 休憩終了時の処理 ---
                         showQuestNotification('休憩終了', '次のセクションを始めましょう！');
-                        
                         closeIframe();
-                        runNextQuestStep();
+
+                        // ★変更★ 自動で進まず、確認画面を表示する
+                        if (quest.currentIndex + 1 < quest.plan.length) {
+                            showStepConfirmation('休憩終了！', 'リフレッシュできましたか？次の学習を開始しましょう。');
+                        } else {
+                            runNextQuestStep();
+                        }
                     }
                 );
             }
             lucide.createIcons();
         };
-
+            
         // クエストを開始する関数
         function startQuest() {
             if (quest.plan.length === 0) {
@@ -2003,6 +2048,7 @@
 
             // --- ★追加★ クエスト終了時にSWのアラームをキャンセルする ---
             cancelQuestAlarm();
+            $('#quest-step-confirmation').style.display = 'none';
             if (!completed && quest.currentIndex >= 0 && quest.currentIndex < quest.plan.length) {
                 const currentStep = quest.plan[quest.currentIndex];
                 // 現在のステップが 'section' (学習中) の場合のみ記録
