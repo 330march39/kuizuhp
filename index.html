@@ -168,6 +168,60 @@
         img, svg {
             -webkit-touch-callout: none;
         }
+        /* --- スワイプ機能用CSS --- */
+        .swipe-container {
+            position: relative;
+            overflow: hidden; /* はみ出したボタンを隠す */
+            touch-action: pan-y; /* 縦スクロールは許可しつつ、横操作をJSで制御 */
+        }
+        
+        /* ボタンが配置される背景層 */
+        .swipe-actions {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            display: flex;
+            height: 100%;
+            z-index: 1; /* コンテンツの下 */
+        }
+        
+        .swipe-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+            height: 100%;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+        
+        /* コンテンツ層（指で動かす部分） */
+        .swipe-content {
+            position: relative;
+            z-index: 10;
+            background-color: inherit; /* 親の色を引き継ぐ */
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); /* 離した時のスナップアニメーション */
+            will-change: transform; /* パフォーマンス最適化 */
+        }
+        
+        /* ドラッグ中はアニメーションを切る（追従性を良くするため） */
+        .is-dragging .swipe-content {
+            transition: none;
+        }
+        
+        /* 削除時のアニメーション */
+        .swipe-deleting {
+            transition: height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+            opacity: 0;
+            margin: 0 !important;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -628,6 +682,119 @@
                 breakWindow: null
             };
 
+            // --- スワイプ制御クラス ---
+            class SwipeHandler {
+                constructor(element, options = {}) {
+                    this.container = element;
+                    this.content = element.querySelector('.swipe-content');
+                    this.actionsContainer = element.querySelector('.swipe-actions');
+                    
+                    // オプション: onComplete, onDelete, buttonsWidth
+                    this.onComplete = options.onComplete || null;
+                    this.onDelete = options.onDelete || null;
+                    
+                    // ボタンの総幅を計算
+                    this.actionsWidth = this.actionsContainer ? this.actionsContainer.offsetWidth : 0;
+                    
+                    this.startX = 0;
+                    this.currentX = 0;
+                    this.isDragging = false;
+                    
+                    this.initEvents();
+                }
+            
+                initEvents() {
+                    const start = (x) => {
+                        // 入力フォームやハンドルでの操作時はスワイプさせない
+                        if (event.target.tagName === 'INPUT' || event.target.closest('.task-handle') || event.target.closest('.quest-handle') || event.target.closest('.break-settings-handle')) {
+                            return;
+                        }
+                        this.isDragging = true;
+                        this.startX = x;
+                        this.container.classList.add('is-dragging');
+                        // 現在のtransform値を取得（開いている状態から再開するため）
+                        const style = window.getComputedStyle(this.content);
+                        const matrix = new WebKitCSSMatrix(style.transform);
+                        this.startOffset = matrix.m41; 
+                    };
+            
+                    const move = (x) => {
+                        if (!this.isDragging) return;
+                        const diff = x - this.startX;
+                        let newX = this.startOffset + diff;
+            
+                        // 右への移動（閉じる方向）は0pxまで
+                        if (newX > 0) newX = 0;
+                        // 左への移動制限（少しだけオーバーシュートさせる）
+                        if (newX < -this.actionsWidth - 100) newX = -this.actionsWidth - 100;
+            
+                        this.currentX = newX;
+                        this.content.style.transform = `translateX(${newX}px)`;
+                    };
+            
+                    const end = () => {
+                        if (!this.isDragging) return;
+                        this.isDragging = false;
+                        this.container.classList.remove('is-dragging');
+            
+                        // 閾値判定
+                        if (this.currentX < -200) { // フルスワイプ削除
+                            if (this.onDelete) {
+                                this.content.style.transform = `translateX(-100vw)`; // 画面外へ
+                                this.performDelete();
+                            } else {
+                                this.snapToOpen();
+                            }
+                        } else if (this.currentX < -(this.actionsWidth / 2)) { // 半分以上開いたら
+                            this.snapToOpen();
+                        } else { // 戻す
+                            this.snapToClose();
+                        }
+                    };
+            
+                    // Touch Events
+                    this.content.addEventListener('touchstart', (e) => start(e.touches[0].clientX), { passive: true });
+                    this.content.addEventListener('touchmove', (e) => move(e.touches[0].clientX), { passive: true });
+                    this.content.addEventListener('touchend', end);
+            
+                    // Mouse Events
+                    this.content.addEventListener('mousedown', (e) => start(e.clientX));
+                    window.addEventListener('mousemove', (e) => { if(this.isDragging) move(e.clientX); });
+                    window.addEventListener('mouseup', () => { if(this.isDragging) end(); });
+                    
+                    // ボタンクリックイベント
+                    const completeBtn = this.actionsContainer.querySelector('.btn-complete');
+                    if (completeBtn) completeBtn.addEventListener('click', () => {
+                        this.snapToClose();
+                        if (this.onComplete) setTimeout(() => this.onComplete(), 300);
+                    });
+            
+                    const deleteBtn = this.actionsContainer.querySelector('.btn-delete');
+                    if (deleteBtn) deleteBtn.addEventListener('click', () => this.performDelete());
+                }
+            
+                snapToOpen() {
+                    this.content.style.transform = `translateX(-${this.actionsWidth}px)`;
+                }
+            
+                snapToClose() {
+                    this.content.style.transform = `translateX(0px)`;
+                }
+            
+                performDelete() {
+                    // 高さのアニメーションを入れてから削除コールバックを呼ぶ
+                    this.container.style.height = this.container.offsetHeight + 'px';
+                    this.container.classList.add('swipe-deleting');
+                    
+                    requestAnimationFrame(() => {
+                        this.container.style.height = '0px';
+                        setTimeout(() => {
+                            if (this.onDelete) this.onDelete();
+                        }, 300);
+                    });
+                }
+            }
+
             // クエスト用 DOM要素
             const questView = $('#quest-view');
             const questPlanListEl = $('#quest-plan-list');
@@ -690,8 +857,8 @@
                         { id: 'x', name: 'X (Twitter)', icon: 'message-circle', url: 'https://x.com', openMode: 'external', visible: true },
                         { id: 'instagram', name: 'Instagram', icon: 'instagram', url: 'https://www.instagram.com/', openMode: 'external', visible: true },
                         { id: 'youtube', name: 'YouTube', icon: 'youtube', url: 'https://www.youtube.com/', openMode: 'external', visible: true },
-                        { id: 'scratch1', name: 'ﾎﾞﾗﾝﾃｨｱ', icon: 'gamepad-2', url: 'https://scratch.mit.edu/projects/543610448/fullscreen/', openMode: 'external', visible: true },
-                        { id: 'scratch2', name: 'ﾌﾞﾘｻﾞｰｽﾞ', icon: 'gamepad-2', url: 'https://scratch.mit.edu/projects/415836558/fullscreen/', openMode: 'external', visible: true }
+                        //{ id: 'scratch1', name: 'ﾎﾞﾗﾝﾃｨｱ', icon: 'gamepad-2', url: 'https://scratch.mit.edu/projects/543610448/fullscreen/', openMode: 'external', visible: true },
+                        //{ id: 'scratch2', name: 'ﾌﾞﾘｻﾞｰｽﾞ', icon: 'gamepad-2', url: 'https://scratch.mit.edu/projects/415836558/fullscreen/', openMode: 'external', visible: true }
                     ],
                     
                 };
@@ -896,10 +1063,37 @@
                         if (state.settings.playlist.length === 0) {
                             playlistContainer.innerHTML = '<p class="text-sm text-gray-400">プレイリストが空です。下のリストから追加してください。</p>';
                         } else {
-                            playlistContainer.innerHTML = state.settings.playlist.map((id, index) => {
+                            // 一度HTMLをクリア
+                            playlistContainer.innerHTML = '';
+                            
+                            state.settings.playlist.forEach((id, index) => {
                                 const track = initialData.music[id];
-                                return `<div class="flex justify-between items-center bg-gray-100 dark:bg-gray-600 p-2 rounded"><span class="text-sm truncate"><i data-lucide="music" class="w-3 h-3 inline mr-1"></i>${track.name}</span><button class="remove-from-playlist text-red-400 hover:text-red-600" data-index="${index}"><i data-lucide="minus-circle" class="w-5 h-5"></i></button></div>`;
-                            }).join('');
+                                const itemEl = document.createElement('div');
+                                itemEl.className = 'swipe-container relative overflow-hidden rounded mb-2';
+
+                                itemEl.innerHTML = `
+                                    <div class="swipe-actions">
+                                        <div style="width:100%; flex:1;"></div>
+                                        <button class="btn-delete swipe-btn bg-red-500 w-[70px]">
+                                            <i data-lucide="trash-2" class="w-6 h-6"></i>
+                                            <span>削除</span>
+                                        </button>
+                                    </div>
+                                    <div class="swipe-content flex justify-between items-center bg-gray-100 dark:bg-gray-600 p-2 relative z-10 w-full">
+                                        <span class="text-sm truncate"><i data-lucide="music" class="w-3 h-3 inline mr-1"></i>${track.name}</span>
+                                        <i data-lucide="chevron-left" class="w-4 h-4 text-gray-400"></i>
+                                    </div>
+                                `;
+                                playlistContainer.appendChild(itemEl);
+
+                                new SwipeHandler(itemEl, {
+                                    onDelete: () => {
+                                        state.settings.playlist.splice(index, 1);
+                                        saveState();
+                                        setTimeout(() => renderEngine.pages['settings-page'](), 300);
+                                    }
+                                });
+                            });
                         }
 
                         // 所持している曲リスト（プレイリスト追加用）
@@ -1086,38 +1280,65 @@
                     homeTaskListEl.innerHTML = ''; // 一旦クリア
                     
                     state.tasks.forEach((task, index) => {
-                        // ▼▼▼ 変更: 完了済みタスクのスタイル適用 ▼▼▼
                         const isCompleted = task.completed || false;
                         const textStyle = isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : '';
-                        const bgStyle = isCompleted ? 'bg-gray-100 dark:bg-gray-800' : '';
-
-                        const taskEl = document.createElement('div'); // ここで定義
-                        taskEl.className = `flex items-center space-x-2 group task-item ${bgStyle}`; 
-                        taskEl.dataset.id = task.id;
+                        
+                        // ★スワイプ用構造に変更
+                        const taskEl = document.createElement('div');
+                        taskEl.className = `swipe-container relative overflow-hidden rounded-lg mb-2`; 
                         
                         taskEl.innerHTML = `
-                            <span class="font-bold w-6 text-center text-gray-600 dark:text-gray-400">${index + 1}</span>
-                            <input type="text" value="${task.text}" class="task-text-input flex-grow bg-transparent p-1 focus:outline-none rounded ${textStyle}" ${isCompleted ? 'disabled' : ''}>
-                            <button class="task-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-opacity ${isCompleted ? 'invisible' : ''}">
-                                <i data-lucide="grip-vertical" class="w-5 h-5"></i>
-                            </button>
-                            <button class="delete-task-btn text-gray-400 hover:text-red-500 transition-opacity">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
+                            <div class="swipe-actions">
+                                <button class="btn-complete swipe-btn bg-gray-400 w-[70px]">
+                                    <i data-lucide="check" class="w-6 h-6"></i>
+                                    <span>完了</span>
+                                </button>
+                                <button class="btn-delete swipe-btn bg-red-500 w-[70px]">
+                                    <i data-lucide="trash-2" class="w-6 h-6"></i>
+                                    <span>削除</span>
+                                </button>
+                            </div>
+
+                            <div class="swipe-content flex items-center p-2 bg-white dark:bg-gray-800 shadow-sm relative z-10 ${isCompleted ? 'bg-gray-100 dark:bg-gray-900' : ''}">
+                                <span class="font-bold w-6 text-center text-gray-600 dark:text-gray-400 shrink-0">${index + 1}</span>
+                                <input type="text" value="${task.text}" class="task-text-input flex-grow bg-transparent p-1 focus:outline-none rounded ${textStyle}" ${isCompleted ? 'disabled' : ''}>
+                                <button class="task-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-opacity p-2 shrink-0 ${isCompleted ? 'invisible' : ''}">
+                                    <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                                </button>
+                            </div>
                         `;
                         
-                        // taskEl はこのスコープ内で利用可能
                         homeTaskListEl.appendChild(taskEl);
                         
-                        // テキスト変更イベント
+                        // ★スワイプ機能の適用
+                        new SwipeHandler(taskEl, {
+                            onComplete: () => {
+                                const taskToUpdate = state.tasks.find(t => t.id === task.id);
+                                if (taskToUpdate) {
+                                    taskToUpdate.completed = !taskToUpdate.completed; // トグル
+                                    saveState();
+                                    renderHomeTasks(); // 再描画
+                                }
+                            },
+                            onDelete: () => {
+                                state.tasks = state.tasks.filter(t => t.id !== task.id);
+                                saveState();
+                                // renderHomeTasksは自動では呼ばないので、ここでデータ削除後に再描画したいが
+                                // アニメーション終了後に呼ばれるため、ここでは何もしなくて良い
+                                // または、アニメーション完了後にUI上の整合性を取るために呼ぶ
+                                setTimeout(renderHomeTasks, 100); 
+                                showToast('タスクを削除しました');
+                            }
+                        });
+                        
+                        // テキスト変更イベント (変更なし)
                         taskEl.querySelector('.task-text-input').addEventListener('change', (e) => {
-                            const taskToUpdate = state.tasks.find(t => t.id == taskEl.dataset.id);
+                            const taskToUpdate = state.tasks.find(t => t.id === task.id);
                             if (taskToUpdate) {
                                 taskToUpdate.text = e.target.value;
                                 saveState();
                             }
                         });
-                        // ▲▲▲ 変更ここまで ▲▲▲
                     });
                 }
                 newTaskNumberEl.textContent = state.tasks.length + 1;
@@ -1798,42 +2019,59 @@
             if (quest.plan.length === 0) {
                 questPlanListEl.innerHTML = `<p class="text-center text-sm text-gray-500">「今日の予定」を読み込むか、<br>「セクション追加」を押してください。</p>`;
             }
-            let sectionCounter = 1; // 1. セクションカウンターを初期化
+            let sectionCounter = 1; 
+            
             quest.plan.forEach((item, index) => {
                 const itemEl = document.createElement('div');
-                itemEl.className = 'flex items-center space-x-2 group bg-gray-100 dark:bg-gray-800 p-2 rounded-lg';
-                itemEl.dataset.id = item.id;
-                            
-                let content = '';
+                // ★スワイプ用クラス追加
+                itemEl.className = 'swipe-container relative overflow-hidden rounded-lg mb-2';
+                
+                let contentHTML = '';
                 if (item.type === 'section') {
-                    content = `
-                        <span class="font-bold w-6 text-center">${sectionCounter}</span>
+                    contentHTML = `
+                        <span class="font-bold w-6 text-center shrink-0">${sectionCounter}</span>
                         <input type="text" value="${item.text}" data-original-id="${item.originalTaskId || ''}" class="quest-item-text flex-grow bg-transparent p-1 rounded border border-transparent focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none min-w-0 truncate">
-                        <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
-                        <span class="text-sm">分</span>
+                        <input type="number" value="${item.duration / 60}" class="quest-item-duration w-12 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500 shrink-0">
+                        <span class="text-sm shrink-0">分</span>
                     `;
-                    sectionCounter++; // 3. セクションの場合のみインクリメント
+                    sectionCounter++;
                 } else { // break
-                    content = `
-                        <span class="font-bold w-6 text-center">☕</span>
+                    contentHTML = `
+                        <span class="font-bold w-6 text-center shrink-0">☕</span>
                         <span class="flex-grow p-1 text-gray-500 dark:text-gray-400 font-semibold">ブレイクタイム</span>
-                        <input type="number" value="${item.duration / 60}" class="quest-item-duration w-16 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500">
-                        <span class="text-sm">分</span>
+                        <input type="number" value="${item.duration / 60}" class="quest-item-duration w-12 p-1 border rounded text-center dark:bg-gray-600 dark:border-gray-500 shrink-0">
+                        <span class="text-sm shrink-0">分</span>
                     `;
                 }
 
                 itemEl.innerHTML = `
-                    ${content}
-                    <button class="quest-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-opacity">
-                        <i data-lucide="grip-vertical" class="w-5 h-5"></i>
-                    </button>
-                    <button class="delete-item-btn text-gray-400 hover:text-red-500 transition-opacity">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                    </button>
+                    <div class="swipe-actions">
+                         <div style="width:100%; flex:1;"></div> <button class="btn-delete swipe-btn bg-red-500 w-[70px]">
+                            <i data-lucide="trash-2" class="w-6 h-6"></i>
+                            <span>削除</span>
+                        </button>
+                    </div>
+
+                    <div class="swipe-content flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 p-2 relative z-10 w-full">
+                        ${contentHTML}
+                        <button class="quest-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-opacity shrink-0 p-1">
+                            <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                        </button>
+                    </div>
                 `;
+                
                 questPlanListEl.appendChild(itemEl);
 
-                // イベントリスナー
+                // ★スワイプ適用
+                new SwipeHandler(itemEl, {
+                    onDelete: () => {
+                        quest.plan = quest.plan.filter(p => p.id !== item.id);
+                        // 配列操作後に少し待ってから再描画（アニメーション待ち）
+                        setTimeout(renderQuestPlan, 300);
+                    }
+                });
+
+                // イベントリスナー（変更なし）
                 itemEl.querySelector('.quest-item-text')?.addEventListener('change', (e) => {
                     item.text = e.target.value;
                     item.originalTaskId = e.target.dataset.originalId || null;
@@ -1841,14 +2079,10 @@
                 itemEl.querySelector('.quest-item-duration').addEventListener('change', (e) => {
                     item.duration = parseInt(e.target.value) * 60;
                 });
-                itemEl.querySelector('.delete-item-btn').addEventListener('click', () => {
-                    quest.plan = quest.plan.filter(p => p.id !== item.id);
-                    renderQuestPlan();
-                });
             });
             lucide.createIcons();
         };
-
+            
         // クエスト用のタイマーを開始する関数 (バックグラウンド耐性強化版)
         function startQuestTimer(duration, onTick, onEnd) {
             // 1. 既存のインターバルをクリア
