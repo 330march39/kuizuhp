@@ -704,8 +704,7 @@
                 breakWindow: null
             };
 
-            // --- スワイプ制御クラス ---
-            // --- スワイプ制御クラス（修正版） ---
+            // --- スワイプ制御クラス（修正版: デッドゾーン＆ボタン修正） ---
             class SwipeHandler {
                 constructor(element, options = {}) {
                     this.container = element;
@@ -715,14 +714,15 @@
                     this.onComplete = options.onComplete || null;
                     this.onDelete = options.onDelete || null;
                     
-                    // ボタンの幅（クエスト/BGM設定はボタン1つなので幅を調整）
                     this.actionsWidth = this.actionsContainer ? this.actionsContainer.offsetWidth : 0;
                     
                     this.startX = 0;
                     this.startY = 0;
                     this.currentX = 0;
-                    this.isDragging = false;
-                    this.startOffset = 0; // ドラッグ開始時の位置
+                    this.startOffset = 0;
+                    
+                    this.isDragging = false; // 指が画面に触れているか
+                    this.isSwiping = false;  // 実際にスワイプ動作（横移動）が確定したか
                     
                     this.initEvents();
                 }
@@ -732,18 +732,17 @@
                         // 入力フォームは除外
                         if (target.tagName === 'INPUT') return;
                         
-                        // 既に開いている状態（swiped-open）で、コンテンツ部分をタップしたら閉じる動作を優先
+                        // 既に開いている状態で、コンテンツ部分をタップしたら閉じる動作を優先
                         if (this.container.classList.contains('swiped-open') && target.closest('.swipe-content')) {
                              this.snapToClose();
-                             // ここで return することで、閉じる動作だけを行い、新たなドラッグは開始しない
                              return;
                         }
 
                         this.isDragging = true;
+                        this.isSwiping = false; // リセット
                         this.startX = x;
                         this.startY = y;
                         
-                        // 現在のCSSのtransform値を取得して、そこから開始する
                         const style = window.getComputedStyle(this.content);
                         const matrix = new WebKitCSSMatrix(style.transform);
                         this.startOffset = matrix.m41; 
@@ -758,24 +757,35 @@
                         const diffX = x - this.startX;
                         const diffY = y - this.startY;
             
-                        // 縦スクロール判定: 横移動より縦移動が大きい場合はスワイプをキャンセル
-                        if (Math.abs(diffY) > Math.abs(diffX)) {
-                            this.isDragging = false;
-                            this.container.classList.remove('is-dragging');
-                            return; // 縦スクロールを優先
-                        }
-            
-                        // 横移動が少しでもあれば、スワイプ中クラスを付与（→ CSSでハンドルが無効化される）
-                        if (Math.abs(diffX) > 5) {
-                            e.preventDefault(); // 画面スクロールを止める
+                        // --- ★修正ポイント: 不感帯（デッドゾーン）の設定 ---
+                        // まだスワイプが確定していない場合
+                        if (!this.isSwiping) {
+                            // 縦移動の方が大きい場合はスワイプキャンセル（スクロール優先）
+                            if (Math.abs(diffY) > Math.abs(diffX)) {
+                                this.isDragging = false;
+                                this.container.classList.remove('is-dragging');
+                                return;
+                            }
+                            
+                            // ★ここが重要: 横移動が15pxを超えるまでは画面を動かさない
+                            // これにより、並び替えの長押し中の微細な揺れで削除ボタンが出るのを防ぐ
+                            if (Math.abs(diffX) < 15) {
+                                return; 
+                            }
+                            
+                            // 15px以上動いたらスワイプ確定
+                            this.isSwiping = true;
                             this.container.classList.add('is-swiping');
                         }
+
+                        // ここから下はスワイプ確定後の処理
+                        e.preventDefault(); // 画面スクロールを止める
             
                         let newX = this.startOffset + diffX;
             
-                        // 右端（0）より右には行かない
+                        // 右端制限
                         if (newX > 0) newX = 0;
-                        // 左端（ボタン幅 + 余裕）より左には行かない
+                        // 左端制限
                         if (newX < -this.actionsWidth - 150) newX = -this.actionsWidth - 150;
             
                         this.currentX = newX;
@@ -785,25 +795,21 @@
                     const end = () => {
                         if (!this.isDragging) return;
                         this.isDragging = false;
+                        this.isSwiping = false;
                         this.container.classList.remove('is-dragging');
-                        this.container.classList.remove('is-swiping'); // ドラッグ終了時はスワイプ中クラスを消す
+                        this.container.classList.remove('is-swiping');
             
-                        // フルスワイプ削除の判定閾値（-200px以上左に行ったら）
-                        const deleteThreshold = -200;
-            
-                        if (this.currentX < deleteThreshold) {
-                            // フルスワイプ削除
+                        // 閾値判定
+                        if (this.currentX < -200) { // フルスワイプ削除
                             if (this.onDelete) {
-                                this.content.style.transform = `translateX(-120vw)`; // 画面外へ飛ばす
+                                this.content.style.transform = `translateX(-120vw)`;
                                 this.performDelete();
                             } else {
                                 this.snapToOpen();
                             }
                         } else if (this.currentX < -(this.actionsWidth / 2)) {
-                            // 半分以上開いていたら完全に開く
                             this.snapToOpen();
                         } else {
-                            // それ以外は閉じる
                             this.snapToClose();
                         }
                     };
@@ -818,25 +824,36 @@
                     window.addEventListener('mousemove', (e) => { if(this.isDragging) move(e, e.clientX, e.clientY); });
                     window.addEventListener('mouseup', () => { if(this.isDragging) end(); });
                     
-                    // ボタンアクション
+                    // --- ★修正ポイント: ボタンイベントの確実な発火 ---
                     const completeBtn = this.actionsContainer ? this.actionsContainer.querySelector('.btn-complete') : null;
-                    if (completeBtn) completeBtn.addEventListener('click', () => {
-                        this.snapToClose();
-                        if (this.onComplete) setTimeout(() => this.onComplete(), 300);
-                    });
+                    if (completeBtn) {
+                        // touchstartでも反応するようにし、バブリングを止める
+                        completeBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+                        completeBtn.addEventListener('click', (e) => {
+                            e.stopPropagation(); // 親要素への伝播を止める
+                            this.snapToClose();
+                            if (this.onComplete) setTimeout(() => this.onComplete(), 300);
+                        });
+                    }
             
                     const deleteBtn = this.actionsContainer ? this.actionsContainer.querySelector('.btn-delete') : null;
-                    if (deleteBtn) deleteBtn.addEventListener('click', () => this.performDelete());
+                    if (deleteBtn) {
+                        deleteBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+                        deleteBtn.addEventListener('click', (e) => {
+                            e.stopPropagation(); // 親要素への伝播を止める
+                            this.performDelete();
+                        });
+                    }
                 }
             
                 snapToOpen() {
                     this.content.style.transform = `translateX(-${this.actionsWidth}px)`;
-                    this.container.classList.add('swiped-open'); // ★開いた状態クラスを付与
+                    this.container.classList.add('swiped-open');
                 }
             
                 snapToClose() {
                     this.content.style.transform = `translateX(0px)`;
-                    this.container.classList.remove('swiped-open'); // ★開いた状態クラスを削除
+                    this.container.classList.remove('swiped-open');
                 }
             
                 performDelete() {
@@ -2570,7 +2587,24 @@
                         .then(registration => console.log('Service Worker登録成功:', registration))
                         .catch(error => console.log('Service Worker登録失敗:', error));
                 }
-                
+                // ★追加: 画面の他の場所をタップしたら開いているスワイプメニューを閉じる処理
+                document.addEventListener('touchstart', (e) => {
+                    // タップされた要素が「開いているスワイプコンテナ」の内部でなければ閉じる
+                    const openContainers = document.querySelectorAll('.swipe-container.swiped-open');
+                    
+                    openContainers.forEach(container => {
+                        // コンテナ自身やその子要素をクリックした場合は何もしない（ボタン操作などのため）
+                        if (container.contains(e.target)) return;
+
+                        // それ以外（外側）をタップした場合は閉じる
+                        const content = container.querySelector('.swipe-content');
+                        if (content) {
+                            content.style.transform = 'translateX(0px)';
+                            container.classList.remove('swiped-open');
+                        }
+                    });
+                }, { passive: true });
+                
                 loadState();
 
                 syncGamesToBreakIcons();
