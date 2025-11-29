@@ -234,6 +234,16 @@
         input[type="text"], input[type="number"] {
             touch-action: manipulation; /* スワイプやズーム以外の標準動作 */
         }
+        /* スワイプ中や、削除ボタンが出ている時は、ハンドルを操作不能にする（これで並び替え暴発を防ぐ） */
+        .swipe-container.is-swiping .task-handle,
+        .swipe-container.is-swiping .quest-handle,
+        .swipe-container.is-swiping .break-settings-handle,
+        .swipe-container.swiped-open .task-handle,
+        .swipe-container.swiped-open .quest-handle,
+        .swipe-container.swiped-open .break-settings-handle {
+            pointer-events: none; /* タップ不可にする */
+            opacity: 0.2; /* 視覚的にも無効であることを示す */
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -695,130 +705,141 @@
             };
 
             // --- スワイプ制御クラス ---
+            // --- スワイプ制御クラス（修正版） ---
             class SwipeHandler {
                 constructor(element, options = {}) {
                     this.container = element;
                     this.content = element.querySelector('.swipe-content');
                     this.actionsContainer = element.querySelector('.swipe-actions');
                     
-                    // オプション: onComplete, onDelete, buttonsWidth
                     this.onComplete = options.onComplete || null;
                     this.onDelete = options.onDelete || null;
                     
-                    // ボタンの総幅を計算
+                    // ボタンの幅（クエスト/BGM設定はボタン1つなので幅を調整）
                     this.actionsWidth = this.actionsContainer ? this.actionsContainer.offsetWidth : 0;
                     
                     this.startX = 0;
+                    this.startY = 0;
                     this.currentX = 0;
                     this.isDragging = false;
+                    this.startOffset = 0; // ドラッグ開始時の位置
                     
                     this.initEvents();
                 }
             
-                // --- SwipeHandlerクラス内の initEvents メソッドを修正 ---
-
                 initEvents() {
-                    const start = (x, y, target) => { // y座標とtarget引数を追加
-                        // ★修正点1: INPUTタグへのタップは、文字入力の妨げになるためスワイプ開始しない
-                        // ただし、INPUTタグの上でも「明らかに横に大きく動かした」場合はスワイプとみなす判定を move で行うため、
-                        // ここでは一旦記録だけしておく形でも良いが、誤操作防止のためINPUTは除外するのが一般的。
-                        // 今回のご要望「どこからでも」に合わせて、INPUTの除外条件を緩和するか検討しますが、
-                        // テキスト選択ができなくなる副作用があるため、INPUTだけは除外を推奨します。
-                        // もしINPUT上でもスワイプしたい場合は、下行のコメントアウトを外してください。
-                        if (target.tagName === 'INPUT') return; 
-                
-                        // ★修正点2: ハンドルなどの除外条件を削除
-                        // if (target.closest('.task-handle') || ...) { return; } を削除しました。
-                
+                    const start = (x, y, target) => {
+                        // 入力フォームは除外
+                        if (target.tagName === 'INPUT') return;
+                        
+                        // 既に開いている状態（swiped-open）で、コンテンツ部分をタップしたら閉じる動作を優先
+                        if (this.container.classList.contains('swiped-open') && target.closest('.swipe-content')) {
+                             this.snapToClose();
+                             // ここで return することで、閉じる動作だけを行い、新たなドラッグは開始しない
+                             return;
+                        }
+
                         this.isDragging = true;
                         this.startX = x;
-                        this.startY = y; // 縦スクロール判定用
-                        this.container.classList.add('is-dragging');
+                        this.startY = y;
                         
+                        // 現在のCSSのtransform値を取得して、そこから開始する
                         const style = window.getComputedStyle(this.content);
                         const matrix = new WebKitCSSMatrix(style.transform);
                         this.startOffset = matrix.m41; 
+                        
+                        // アニメーション一時停止
+                        this.container.classList.add('is-dragging');
                     };
-                
-                    const move = (e, x, y) => { // イベントオブジェクトeとy座標を追加
+            
+                    const move = (e, x, y) => {
                         if (!this.isDragging) return;
-                
+            
                         const diffX = x - this.startX;
                         const diffY = y - this.startY;
-                
-                        // ★修正点3: 縦スクロールの判定
-                        // 横移動より縦移動が大きい場合は、スワイプではなくスクロールとみなしてキャンセル
+            
+                        // 縦スクロール判定: 横移動より縦移動が大きい場合はスワイプをキャンセル
                         if (Math.abs(diffY) > Math.abs(diffX)) {
                             this.isDragging = false;
                             this.container.classList.remove('is-dragging');
-                            return;
+                            return; // 縦スクロールを優先
                         }
-                
-                        // 横移動が一定量を超えたらイベントをキャンセルしてスワイプに専念させる
-                        if (e.cancelable && Math.abs(diffX) > 5) {
-                            e.preventDefault(); 
+            
+                        // 横移動が少しでもあれば、スワイプ中クラスを付与（→ CSSでハンドルが無効化される）
+                        if (Math.abs(diffX) > 5) {
+                            e.preventDefault(); // 画面スクロールを止める
+                            this.container.classList.add('is-swiping');
                         }
-                
+            
                         let newX = this.startOffset + diffX;
-                
+            
+                        // 右端（0）より右には行かない
                         if (newX > 0) newX = 0;
-                        if (newX < -this.actionsWidth - 100) newX = -this.actionsWidth - 100;
-                
+                        // 左端（ボタン幅 + 余裕）より左には行かない
+                        if (newX < -this.actionsWidth - 150) newX = -this.actionsWidth - 150;
+            
                         this.currentX = newX;
                         this.content.style.transform = `translateX(${newX}px)`;
                     };
-                
-                    // ... end関数は変更なし ...
-                    const end = () => { /* 以前と同じコード */ 
+            
+                    const end = () => {
                         if (!this.isDragging) return;
                         this.isDragging = false;
                         this.container.classList.remove('is-dragging');
-                
-                        if (this.currentX < -200) {
+                        this.container.classList.remove('is-swiping'); // ドラッグ終了時はスワイプ中クラスを消す
+            
+                        // フルスワイプ削除の判定閾値（-200px以上左に行ったら）
+                        const deleteThreshold = -200;
+            
+                        if (this.currentX < deleteThreshold) {
+                            // フルスワイプ削除
                             if (this.onDelete) {
-                                this.content.style.transform = `translateX(-100vw)`;
+                                this.content.style.transform = `translateX(-120vw)`; // 画面外へ飛ばす
                                 this.performDelete();
                             } else {
                                 this.snapToOpen();
                             }
                         } else if (this.currentX < -(this.actionsWidth / 2)) {
+                            // 半分以上開いていたら完全に開く
                             this.snapToOpen();
                         } else {
+                            // それ以外は閉じる
                             this.snapToClose();
                         }
                     };
-                
-                    // Touch Events (引数を増やす)
-                    this.content.addEventListener('touchstart', (e) => start(e.touches[0].clientX, e.touches[0].clientY, e.target), { passive: true }); // passive: trueはスクロール性能のため維持
-                    this.content.addEventListener('touchmove', (e) => move(e, e.touches[0].clientX, e.touches[0].clientY), { passive: false }); // preventDefault呼ぶためfalse推奨だが警告が出る場合あり
+            
+                    // Touch Events
+                    this.content.addEventListener('touchstart', (e) => start(e.touches[0].clientX, e.touches[0].clientY, e.target), { passive: true });
+                    this.content.addEventListener('touchmove', (e) => move(e, e.touches[0].clientX, e.touches[0].clientY), { passive: false });
                     this.content.addEventListener('touchend', end);
-                
-                    // Mouse Events (マウス対応も一応残す)
+            
+                    // Mouse Events
                     this.content.addEventListener('mousedown', (e) => start(e.clientX, e.clientY, e.target));
                     window.addEventListener('mousemove', (e) => { if(this.isDragging) move(e, e.clientX, e.clientY); });
                     window.addEventListener('mouseup', () => { if(this.isDragging) end(); });
-                
-                    // ... ボタンクリック処理は変更なし ...
+                    
+                    // ボタンアクション
                     const completeBtn = this.actionsContainer ? this.actionsContainer.querySelector('.btn-complete') : null;
                     if (completeBtn) completeBtn.addEventListener('click', () => {
                         this.snapToClose();
                         if (this.onComplete) setTimeout(() => this.onComplete(), 300);
                     });
-                
+            
                     const deleteBtn = this.actionsContainer ? this.actionsContainer.querySelector('.btn-delete') : null;
                     if (deleteBtn) deleteBtn.addEventListener('click', () => this.performDelete());
                 }
             
                 snapToOpen() {
                     this.content.style.transform = `translateX(-${this.actionsWidth}px)`;
+                    this.container.classList.add('swiped-open'); // ★開いた状態クラスを付与
                 }
             
                 snapToClose() {
                     this.content.style.transform = `translateX(0px)`;
+                    this.container.classList.remove('swiped-open'); // ★開いた状態クラスを削除
                 }
             
                 performDelete() {
-                    // 高さのアニメーションを入れてから削除コールバックを呼ぶ
                     this.container.style.height = this.container.offsetHeight + 'px';
                     this.container.classList.add('swipe-deleting');
                     
@@ -2574,6 +2595,7 @@
                         delay: 300, // ★重要: 300ms長押ししないとドラッグ開始しない
                         delayOnTouchOnly: true, // タッチ操作の時だけ遅延させる（マウスは即時）
                         touchStartThreshold: 5, // 5px以上動いたらタップではなくドラッグ判定（誤動作防止）
+                        filter: '.swiped-open, .is-swiping, .swipe-deleting', // ★追加: これらが付いている要素は並び替え不可
                         onEnd: (evt) => { /* 中身は変更なし */
                             const item = state.tasks.splice(evt.oldIndex, 1)[0];
                             state.tasks.splice(evt.newIndex, 0, item);
@@ -2616,6 +2638,7 @@
                             delay: 300, // ★追加
                             delayOnTouchOnly: true, // ★追加
                             touchStartThreshold: 5, // ★追加
+                            filter: '.swiped-open, .is-swiping, .swipe-deleting', // ★追加
                             onEnd: (evt) => {
                                 // quest.plan 配列を並び替え
                                 // (quest.plan は state に保存されない一時的なもの)
@@ -2634,6 +2657,7 @@
                         delay: 300, // ★追加
                         delayOnTouchOnly: true, // ★追加
                         touchStartThreshold: 5, // ★追加
+                        filter: '.swiped-open, .is-swiping, .swipe-deleting', // ★追加
                         onEnd: (evt) => {
                             // 並び替え後のDOMの順番を元にIDの配列を作成
                             const idOrder = Array.from(breakSettingsListEl.children).map(child => child.dataset.id);
