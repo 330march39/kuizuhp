@@ -222,6 +222,18 @@
             margin: 0 !important;
             overflow: hidden;
         }
+        /* 並び替えハンドル周辺のタッチ操作を確実にする */
+        .task-handle, .quest-handle, .break-settings-handle {
+            cursor: grab;
+            touch-action: none; /* ブラウザ標準のスクロールなどを無効化し、JSで制御しやすくする */
+            padding: 10px; /* タップ判定を大きくする */
+            margin: -5px; /* レイアウト崩れ防止 */
+        }
+        
+        /* INPUTタグはスワイプ対象外として、文字選択やカーソル移動を優先させる */
+        input[type="text"], input[type="number"] {
+            touch-action: manipulation; /* スワイプやズーム以外の標準動作 */
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -703,73 +715,97 @@
                     this.initEvents();
                 }
             
+                // --- SwipeHandlerクラス内の initEvents メソッドを修正 ---
+
                 initEvents() {
-                    const start = (x) => {
-                        // 入力フォームやハンドルでの操作時はスワイプさせない
-                        if (event.target.tagName === 'INPUT' || event.target.closest('.task-handle') || event.target.closest('.quest-handle') || event.target.closest('.break-settings-handle')) {
-                            return;
-                        }
+                    const start = (x, y, target) => { // y座標とtarget引数を追加
+                        // ★修正点1: INPUTタグへのタップは、文字入力の妨げになるためスワイプ開始しない
+                        // ただし、INPUTタグの上でも「明らかに横に大きく動かした」場合はスワイプとみなす判定を move で行うため、
+                        // ここでは一旦記録だけしておく形でも良いが、誤操作防止のためINPUTは除外するのが一般的。
+                        // 今回のご要望「どこからでも」に合わせて、INPUTの除外条件を緩和するか検討しますが、
+                        // テキスト選択ができなくなる副作用があるため、INPUTだけは除外を推奨します。
+                        // もしINPUT上でもスワイプしたい場合は、下行のコメントアウトを外してください。
+                        if (target.tagName === 'INPUT') return; 
+                
+                        // ★修正点2: ハンドルなどの除外条件を削除
+                        // if (target.closest('.task-handle') || ...) { return; } を削除しました。
+                
                         this.isDragging = true;
                         this.startX = x;
+                        this.startY = y; // 縦スクロール判定用
                         this.container.classList.add('is-dragging');
-                        // 現在のtransform値を取得（開いている状態から再開するため）
+                        
                         const style = window.getComputedStyle(this.content);
                         const matrix = new WebKitCSSMatrix(style.transform);
                         this.startOffset = matrix.m41; 
                     };
-            
-                    const move = (x) => {
+                
+                    const move = (e, x, y) => { // イベントオブジェクトeとy座標を追加
                         if (!this.isDragging) return;
-                        const diff = x - this.startX;
-                        let newX = this.startOffset + diff;
-            
-                        // 右への移動（閉じる方向）は0pxまで
+                
+                        const diffX = x - this.startX;
+                        const diffY = y - this.startY;
+                
+                        // ★修正点3: 縦スクロールの判定
+                        // 横移動より縦移動が大きい場合は、スワイプではなくスクロールとみなしてキャンセル
+                        if (Math.abs(diffY) > Math.abs(diffX)) {
+                            this.isDragging = false;
+                            this.container.classList.remove('is-dragging');
+                            return;
+                        }
+                
+                        // 横移動が一定量を超えたらイベントをキャンセルしてスワイプに専念させる
+                        if (e.cancelable && Math.abs(diffX) > 5) {
+                            e.preventDefault(); 
+                        }
+                
+                        let newX = this.startOffset + diffX;
+                
                         if (newX > 0) newX = 0;
-                        // 左への移動制限（少しだけオーバーシュートさせる）
                         if (newX < -this.actionsWidth - 100) newX = -this.actionsWidth - 100;
-            
+                
                         this.currentX = newX;
                         this.content.style.transform = `translateX(${newX}px)`;
                     };
-            
-                    const end = () => {
+                
+                    // ... end関数は変更なし ...
+                    const end = () => { /* 以前と同じコード */ 
                         if (!this.isDragging) return;
                         this.isDragging = false;
                         this.container.classList.remove('is-dragging');
-            
-                        // 閾値判定
-                        if (this.currentX < -200) { // フルスワイプ削除
+                
+                        if (this.currentX < -200) {
                             if (this.onDelete) {
-                                this.content.style.transform = `translateX(-100vw)`; // 画面外へ
+                                this.content.style.transform = `translateX(-100vw)`;
                                 this.performDelete();
                             } else {
                                 this.snapToOpen();
                             }
-                        } else if (this.currentX < -(this.actionsWidth / 2)) { // 半分以上開いたら
+                        } else if (this.currentX < -(this.actionsWidth / 2)) {
                             this.snapToOpen();
-                        } else { // 戻す
+                        } else {
                             this.snapToClose();
                         }
                     };
-            
-                    // Touch Events
-                    this.content.addEventListener('touchstart', (e) => start(e.touches[0].clientX), { passive: true });
-                    this.content.addEventListener('touchmove', (e) => move(e.touches[0].clientX), { passive: true });
+                
+                    // Touch Events (引数を増やす)
+                    this.content.addEventListener('touchstart', (e) => start(e.touches[0].clientX, e.touches[0].clientY, e.target), { passive: true }); // passive: trueはスクロール性能のため維持
+                    this.content.addEventListener('touchmove', (e) => move(e, e.touches[0].clientX, e.touches[0].clientY), { passive: false }); // preventDefault呼ぶためfalse推奨だが警告が出る場合あり
                     this.content.addEventListener('touchend', end);
-            
-                    // Mouse Events
-                    this.content.addEventListener('mousedown', (e) => start(e.clientX));
-                    window.addEventListener('mousemove', (e) => { if(this.isDragging) move(e.clientX); });
+                
+                    // Mouse Events (マウス対応も一応残す)
+                    this.content.addEventListener('mousedown', (e) => start(e.clientX, e.clientY, e.target));
+                    window.addEventListener('mousemove', (e) => { if(this.isDragging) move(e, e.clientX, e.clientY); });
                     window.addEventListener('mouseup', () => { if(this.isDragging) end(); });
-                    
-                    // ボタンクリックイベント
-                    const completeBtn = this.actionsContainer.querySelector('.btn-complete');
+                
+                    // ... ボタンクリック処理は変更なし ...
+                    const completeBtn = this.actionsContainer ? this.actionsContainer.querySelector('.btn-complete') : null;
                     if (completeBtn) completeBtn.addEventListener('click', () => {
                         this.snapToClose();
                         if (this.onComplete) setTimeout(() => this.onComplete(), 300);
                     });
-            
-                    const deleteBtn = this.actionsContainer.querySelector('.btn-delete');
+                
+                    const deleteBtn = this.actionsContainer ? this.actionsContainer.querySelector('.btn-delete') : null;
                     if (deleteBtn) deleteBtn.addEventListener('click', () => this.performDelete());
                 }
             
@@ -2532,15 +2568,17 @@
                 // 2. Sortable.js の初期化 (今日の予定)
                 if (homeTaskListEl) {
                     Sortable.create(homeTaskListEl, {
-                        handle: '.task-handle', // 三本線アイコンでドラッグ
+                        handle: '.task-handle', 
                         animation: 150,
                         ghostClass: 'sortable-ghost',
-                        onEnd: (evt) => {
-                            // state.tasks 配列を並び替え
+                        delay: 300, // ★重要: 300ms長押ししないとドラッグ開始しない
+                        delayOnTouchOnly: true, // タッチ操作の時だけ遅延させる（マウスは即時）
+                        touchStartThreshold: 5, // 5px以上動いたらタップではなくドラッグ判定（誤動作防止）
+                        onEnd: (evt) => { /* 中身は変更なし */
                             const item = state.tasks.splice(evt.oldIndex, 1)[0];
                             state.tasks.splice(evt.newIndex, 0, item);
                             saveState();
-                            renderHomeTasks(); // 番号を振り直すために再描画
+                            renderHomeTasks(); 
                         }
                     });
 
@@ -2575,6 +2613,9 @@
                             handle: '.quest-handle', // クエストのハンドル
                             animation: 150,
                             ghostClass: 'sortable-ghost',
+                            delay: 300, // ★追加
+                            delayOnTouchOnly: true, // ★追加
+                            touchStartThreshold: 5, // ★追加
                             onEnd: (evt) => {
                                 // quest.plan 配列を並び替え
                                 // (quest.plan は state に保存されない一時的なもの)
@@ -2590,9 +2631,9 @@
                         handle: '.break-settings-handle',
                         animation: 150,
                         ghostClass: 'sortable-ghost',
-                        delay: 100,
-                        delayOnTouchOnly: true,
-                        forceFallback: true,
+                        delay: 300, // ★追加
+                        delayOnTouchOnly: true, // ★追加
+                        touchStartThreshold: 5, // ★追加
                         onEnd: (evt) => {
                             // 並び替え後のDOMの順番を元にIDの配列を作成
                             const idOrder = Array.from(breakSettingsListEl.children).map(child => child.dataset.id);
