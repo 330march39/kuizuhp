@@ -36,11 +36,30 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
     <style>
+        /* ▼▼▼ 追加: LINE Seed JP フォントの読み込み ▼▼▼ */
+        @font-face {
+            font-family: 'LINE Seed JP';
+            src: url('LINESeedJP_OTF_Rg.otf') format('opentype'); /* ファイル名を合わせる */
+            font-weight: 400; /* 通常 */
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'LINE Seed JP';
+            src: url('LINESeedJP_OTF_Bd.otf') format('opentype'); /* ファイル名を合わせる */
+            font-weight: 700; /* 太字 */
+            font-style: normal;
+        }
+        /* ▲▲▲ 追加ここまで ▲▲▲ */
+
         :root {
             --primary-color: #4f46e5;
             --primary-color-hover: #4338ca;
         }
-        body { font-family: 'Inter', 'Noto Sans JP', sans-serif; -webkit-tap-highlight-color: transparent; }
+        /* ▼▼▼ 修正: font-family の先頭に 'LINE Seed JP' を追加 ▼▼▼ */
+        body { 
+            font-family: 'LINE Seed JP', 'Inter', 'Noto Sans JP', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
         .page { display: none; }
         .page.active { display: block; }
         #focus-page.page.active { display: flex; }
