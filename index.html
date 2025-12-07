@@ -1874,10 +1874,6 @@
                     saveState();
                     resetTimerUI();
             
-                    // 【追加】Service Workerにタイマー停止を通知（完了時）
-                    if (navigator.serviceWorker.controller) {
-                        navigator.serviceWorker.controller.postMessage({ command: 'focusTimer_stop' });
-                    }
                 }
             };
             
