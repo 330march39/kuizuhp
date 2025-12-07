@@ -244,6 +244,63 @@
             pointer-events: none; /* タップ不可にする */
             opacity: 0.2; /* 視覚的にも無効であることを示す */
         }
+        /* 既存の #iframe-overlay を修正（flexで中央揃えできるように） */
+        #iframe-overlay {
+            /* 既存のスタイルは維持しつつ、loaderの配置用にrelative等を調整 */
+            z-index: 70; /* モーダルより上に来るように調整 */
+        }
+        
+        /* iframe内のローダー（中央配置） */
+        #iframe-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1; /* iframeが読み込まれたら隠れるように後ろへ、あるいはJSで制御 */
+        }
+        
+        /* ゲームプレビュー用の横スクロールコンテナ（スワイプ対応） */
+        .preview-carousel {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory; /* スナップスクロール */
+            -webkit-overflow-scrolling: touch;
+            gap: 1rem;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+            width: 100%;
+            aspect-ratio: 16/9; /* アスペクト比を固定 */
+        }
+        
+        .preview-item {
+            flex: 0 0 100%; /* 1つで幅100%を使う */
+            scroll-snap-align: center;
+            width: 100%;
+            height: 100%;
+            border-radius: 0.5rem;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .preview-item img,
+        .preview-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* アスペクト比を維持して収める */
+        }
+        
+        /* 試聴ボタンのアニメーション */
+        .playing-icon {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -508,14 +565,15 @@
 
 <div id="game-purchase-modal" class="fixed inset-0 bg-black/70 z-[60] items-center justify-center hidden p-4">
     <div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
-        <h2 id="game-purchase-title" class="text-xl font-bold mb-2"></h2>
-        <div class="mx-auto my-4 text-primary">
-             <i data-lucide="gamepad-2" class="w-16 h-16 mx-auto"></i>
-        </div>
-        <p id="game-purchase-cost" class="mb-6"></p>
+        <h2 id="game-purchase-title" class="text-xl font-bold mb-4"></h2>
+        
+        <div id="game-preview-container" class="preview-carousel bg-gray-100 dark:bg-gray-800 rounded-lg">
+            </div>
+        <div class="text-xs text-gray-400 mb-4">左右にスワイプして画像を確認</div>
+        <p id="game-purchase-cost" class="mb-6 font-bold text-lg primary-text"></p>
         <div class="flex justify-center space-x-4">
             <button id="game-purchase-cancel" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">やめる</button>
-            <button id="game-purchase-confirm" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg transition-colors">交換する</button>
+            <button id="game-purchase-confirm" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg transition-colors shadow-lg">交換する</button>
         </div>
     </div>
 </div>
@@ -523,13 +581,22 @@
 <div id="music-purchase-modal" class="fixed inset-0 bg-black/70 z-[60] items-center justify-center hidden p-4">
     <div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
         <h2 id="music-purchase-title" class="text-xl font-bold mb-2"></h2>
-        <div class="mx-auto my-4 text-primary">
-             <i data-lucide="music" class="w-16 h-16 mx-auto"></i>
+        
+        <div class="mx-auto my-6 text-primary relative inline-block">
+             <div class="w-24 h-24 bg-gray-100 dark:bg-gray-600 rounded-full flex items-center justify-center mx-auto">
+                 <i data-lucide="music" class="w-10 h-10 text-gray-400"></i>
+             </div>
+             <button id="music-preview-btn" class="absolute -bottom-2 -right-2 bg-pink-500 hover:bg-pink-600 text-white p-3 rounded-full shadow-lg transition-transform hover:scale-110">
+                <i data-lucide="play" class="w-6 h-6 fill-current"></i>
+             </button>
         </div>
-        <p id="music-purchase-cost" class="mb-6"></p>
+
+        <p class="text-sm text-gray-500 mb-4">ボタンを押すと30秒間試聴できます</p>
+        <p id="music-purchase-cost" class="mb-6 font-bold text-lg primary-text"></p>
+
         <div class="flex justify-center space-x-4">
             <button id="music-purchase-cancel" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">やめる</button>
-            <button id="music-purchase-confirm" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg transition-colors">交換する</button>
+            <button id="music-purchase-confirm" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg transition-colors shadow-lg">交換する</button>
         </div>
     </div>
 </div>
@@ -596,13 +663,20 @@
         </div>
     </div>
     
-    <div id="iframe-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[60] flex flex-col">
-        <div class="bg-gray-800 p-2 flex justify-end">
-            <button id="close-iframe-btn" class="text-gray-300 p-1 rounded-full hover:bg-gray-700">
+    <div id="iframe-overlay" class="hidden fixed inset-0 bg-gray-900 z-[80] flex flex-col">
+        <div class="bg-gray-800 p-2 flex justify-between items-center z-10 shadow-md">
+            <span class="text-white font-bold ml-2">Game</span>
+            <button id="close-iframe-btn" class="text-gray-300 p-2 rounded-full hover:bg-gray-700">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
         </div>
-        <iframe id="break-iframe" class="w-full h-full" src="about:blank"></iframe>
+        
+        <div class="relative flex-grow w-full h-full bg-white">
+            <div id="iframe-loader" class="flex flex-col items-center justify-center">
+                <div id="loader"></div> <p class="mt-4 text-gray-500 font-bold">Loading...</p>
+            </div>
+            <iframe id="break-iframe" class="w-full h-full absolute inset-0 opacity-0 transition-opacity duration-300" src="about:blank"></iframe>
+        </div>
     </div>
     
     <div id="confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[70] flex items-center justify-center p-4">
@@ -658,14 +732,43 @@
                     jyanguru: { name: 'ジャングル', url: 'https://sozaino.site/wp-content/uploads/2025/07/okumono_jungle1.png', cost: 700, tone: 'dark' },
                     wapop: { name: '和ポップ（ピンク）', url: 'okumono_wapop3.png', cost: 700, tone: 'dark' },
                 },
+                
                 games: {
                     // ID: { name: 'ゲーム名', url: 'URL', cost: 必要LP, icon: 'アイコン名' }
-                    just100: { name: 'Just 1.00s', url: 'https://330march39.github.io/games/just1m_37928/', cost: 100, icon: 'gamepad-2' },
-                    ColorHunter: { name: 'Color Hunter', url: 'https://330march39.github.io/games/color_hunter_24197/', cost: 300, icon: 'gamepad-2' },
-                    MAKE10: { name: 'MAKE 10', url: 'https://330march39.github.io/games/make10_26518/', cost: 300, icon: 'gamepad-2' },
-                    
-                    // 例: 新しいゲームを手動で追加する場合
-                    // myGame2: { name: 'My Game', url: 'https://example.com/game', cost: 200, icon: 'gamepad-2' },
+                    // previews: ['画像のURL', '動画のURL', ...] の形式で追加します
+                    just100: { 
+                        name: 'Just 1.00s', 
+                        url: 'https://330march39.github.io/games/just1m_37928/', 
+                        cost: 100, 
+                        icon: 'gamepad-2',
+                        // ▼▼▼ ここに追加 ▼▼▼
+                        previews: [
+                            'https://placehold.co/600x400/png?text=Game+Screen+1', // 画像1
+                            'https://placehold.co/600x400/16a34a/fff?text=Game+Screen+2', // 画像2
+                            // 動画がある場合はここにmp4のURLを入れる
+                            // 'https://www.w3schools.com/html/mov_bbb.mp4' 
+                        ]
+                    },
+                    ColorHunter: { 
+                        name: 'Color Hunter', 
+                        url: 'https://330march39.github.io/games/color_hunter_24197/', 
+                        cost: 300, 
+                        icon: 'gamepad-2',
+                        previews: [
+                            'https://placehold.co/600x400/f97316/fff?text=Color+Hunter+1',
+                            'https://placehold.co/600x400/0d9488/fff?text=Color+Hunter+2'
+                        ]
+                    },
+                    MAKE10: { 
+                        name: 'MAKE 10', 
+                        url: 'hthttps://330march39.github.io/games/make10_26518/', 
+                        cost: 300, 
+                        icon: 'gamepad-2',
+                        previews: [
+                            'https://placehold.co/600x400/f97316/fff?text=Color+Hunter+1',
+                            'https://placehold.co/600x400/0d9488/fff?text=Color+Hunter+2'
+                        ]
+                    },
                 },
 
                 // ▼▼▼ 【追加】ここに音楽を追加していきます ▼▼▼
@@ -687,6 +790,9 @@
             let stopwatch = { interval: null, startTime: 0, elapsedTime: 0, isRunning: false, isPaused: false };
             let miniTimerTemporarilyHidden = false;
             let quizTimer = { startTime: null };
+
+            let previewAudio = new Audio(); // 試聴用
+            let previewTimeout = null;      // 30秒停止用タイマー
             
             const bgmAudio = new Audio();
             bgmAudio.loop = false; // プレイリスト再生のためループは手動制御
@@ -2434,16 +2540,40 @@
             }
         };
 
-        // 休憩用iframeを開く/閉じる関数
+        // 休憩用iframeを開く関数（ローディング制御付き）
         function openIframe(url) {
-            breakIframe.src = url;
-            iframeOverlay.style.display = 'flex';
-            lucide.createIcons(); // ボタンのアイコンを描画
+            const iframe = $('#break-iframe');
+            const overlay = $('#iframe-overlay');
+            const loader = $('#iframe-loader');
+        
+            // 初期状態：iframeを透明にし、ローダーを表示
+            iframe.classList.remove('opacity-100');
+            iframe.classList.add('opacity-0');
+            loader.style.display = 'flex';
+            
+            overlay.style.display = 'flex'; // オーバーレイ表示
+        
+            // URLセット
+            iframe.src = url;
+        
+            // 読み込み完了時のイベント
+            iframe.onload = () => {
+                loader.style.display = 'none'; // ローダーを隠す
+                iframe.classList.remove('opacity-0');
+                iframe.classList.add('opacity-100'); // フェードイン
+            };
+            
+            lucide.createIcons();
         };
-
+        
         function closeIframe() {
-            breakIframe.src = 'about:blank';
-            iframeOverlay.style.display = 'none';
+            const iframe = $('#break-iframe');
+            const overlay = $('#iframe-overlay');
+            
+            iframe.src = 'about:blank';
+            iframe.classList.remove('opacity-100');
+            iframe.classList.add('opacity-0');
+            overlay.style.display = 'none';
         };
             
         // ★修正後★ 休憩アイコンをレンダリングする関数
@@ -2808,12 +2938,19 @@
                     btn.addEventListener('click', () => {
                         const id = btn.dataset.id;
                         const item = initialData.games[id];
-                        $('#game-purchase-title').textContent = `「${item.name}」を交換しますか？`;
-                        $('#game-purchase-cost').textContent = `必要: ${item.cost} LP`;
+                        
+                        $('#game-purchase-title').textContent = item.name; // 「〜を交換しますか？」は削除してシンプルに
+                        $('#game-purchase-cost').textContent = `必要ポイント: ${item.cost} LP`;
+                        
+                        // ★プレビュー生成
+                        renderGamePreviews(item);
+                        
                         const confirmBtn = $('#game-purchase-confirm');
                         confirmBtn.dataset.itemId = id;
                         confirmBtn.dataset.itemType = 'game';
                         confirmBtn.disabled = state.profile.lp < item.cost;
+                        
+                        lucide.createIcons(); // プレビュー内のアイコン描画
                         $('#game-purchase-modal').style.display = 'flex';
                     });
                 });
@@ -2822,18 +2959,104 @@
                     btn.addEventListener('click', () => {
                         const id = btn.dataset.id;
                         const item = initialData.music[id];
-                        $('#music-purchase-title').textContent = `「${item.name}」を交換しますか？`;
-                        $('#music-purchase-cost').textContent = `必要: ${item.cost} LP`;
+                        
+                        $('#music-purchase-title').textContent = item.name;
+                        $('#music-purchase-cost').textContent = `必要ポイント: ${item.cost} LP`;
+                        
+                        // ★試聴ボタンの設定
+                        const previewBtn = $('#music-preview-btn');
+                        // 古いイベントリスナーを削除するためにクローンして置換（簡易的な方法）
+                        const newPreviewBtn = previewBtn.cloneNode(true);
+                        previewBtn.parentNode.replaceChild(newPreviewBtn, previewBtn);
+                        
+                        newPreviewBtn.addEventListener('click', (e) => {
+                            const icon = newPreviewBtn.querySelector('i');
+                            toggleMusicPreview(item.url, icon);
+                        });
+                
                         const confirmBtn = $('#music-purchase-confirm');
                         confirmBtn.dataset.itemId = id;
                         confirmBtn.dataset.itemType = 'music';
                         confirmBtn.disabled = state.profile.lp < item.cost;
+                        
                         $('#music-purchase-modal').style.display = 'flex';
+                        lucide.createIcons();
                     });
                 });
             };
 
+        /* ▼▼▼ 追加機能用関数 ▼▼▼ */
+        
+        // ゲームプレビュー（画像・動画）を生成する関数
+        const renderGamePreviews = (game) => {
+            const container = $('#game-preview-container');
+            container.innerHTML = ''; // クリア
+        
+            if (!game.previews || game.previews.length === 0) {
+                // プレビューがない場合のダミー
+                container.innerHTML = `
+                    <div class="preview-item">
+                        <div class="flex flex-col items-center text-gray-400">
+                            <i data-lucide="image-off" class="w-12 h-12 mb-2"></i>
+                            <span>No Preview</span>
+                        </div>
+                    </div>`;
+                return;
+            }
+        
+            game.previews.forEach(url => {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                
+                // 拡張子で画像か動画か簡易判定
+                const isVideo = url.endsWith('.mp4') || url.endsWith('.webm');
+                
+                if (isVideo) {
+                    item.innerHTML = `<video src="${url}" controls playsinline muted class="pointer-events-auto"></video>`;
+                } else {
+                    item.innerHTML = `<img src="${url}" alt="preview">`;
+                }
+                container.appendChild(item);
+            });
+        };
+        
+        // BGM試聴の再生・停止制御
+        const toggleMusicPreview = (url, btnIcon) => {
+            if (!previewAudio.paused && previewAudio.src === url) {
+                // 再生中なら止める
+                stopMusicPreview();
+            } else {
+                // 新しく再生
+                stopMusicPreview(); // 前の曲を止める
+                previewAudio.src = url;
+                previewAudio.volume = 0.5;
+                previewAudio.play().then(() => {
+                    // アイコンを停止マークに変更
+                    if(btnIcon) {
+                        btnIcon.setAttribute('data-lucide', 'square'); 
+                        btnIcon.parentElement.classList.add('playing-icon'); // アニメーション
+                        lucide.createIcons();
+                    }
+                    
+                    // 30秒後に自動停止
+                    previewTimeout = setTimeout(() => {
+                        stopMusicPreview();
+                    }, 30000); // 30000ms = 30秒
+                }).catch(e => console.error("試聴エラー", e));
+            }
+        };
+        
+        const stopMusicPreview = () => {
+            previewAudio.pause();
+            previewAudio.currentTime = 0;
+            if (previewTimeout) clearTimeout(previewTimeout);
             
+            // アイコンを再生マークに戻す（全ボタンリセット）
+            const btns = document.querySelectorAll('#music-preview-btn i');
+            btns.forEach(i => i.setAttribute('data-lucide', 'play'));
+            document.querySelectorAll('#music-preview-btn').forEach(b => b.classList.remove('playing-icon'));
+            lucide.createIcons();
+        };    
         
             
         // --- 購入モーダル関連のボタン ---
@@ -2865,6 +3088,10 @@
         $('#game-purchase-cancel').addEventListener('click', () => { $('#game-purchase-modal').style.display = 'none'; });
         $('#music-purchase-confirm').addEventListener('click', handlePurchase);
         $('#music-purchase-cancel').addEventListener('click', () => { $('#music-purchase-modal').style.display = 'none'; });
+        $('#music-purchase-cancel').addEventListener('click', () => { 
+            stopMusicPreview(); // ★追加: 閉じたら停止
+            $('#music-purchase-modal').style.display = 'none'; 
+        });
             
             init();
         });
