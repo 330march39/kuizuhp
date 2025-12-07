@@ -312,6 +312,14 @@
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
 
+    <div id="splash-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 transition-opacity duration-500">
+        <img src="SQ_logo.png" alt="StudyQuest Logo" class="w-32 h-32 mb-4 block dark:hidden animate-pulse">
+        
+        <img src="SQ_logo.png" alt="StudyQuest Logo Dark" class="w-32 h-32 mb-4 hidden dark:block animate-pulse">
+        
+        <h1 class="text-2xl font-bold primary-text">StudyQuest</h1>
+    </div>
+
     <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto shadow-2xl">
         
         <header class="bg-white dark:bg-gray-800/80 backdrop-blur-sm z-30 p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 sticky top-0">
@@ -2873,6 +2881,17 @@
                 updateAppearance();
                 // ▼▼▼ 変更（initの最後にlucideを1回実行） ▼▼▼
                 lucide.createIcons();
+                    setTimeout(() => {
+                        const splash = document.getElementById('splash-screen');
+                        if (splash) {
+                            // 透明度を0にする（CSSのtransitionでフェードアウト）
+                            splash.classList.add('opacity-0');
+                            // アニメーションが終わった頃(0.5秒後)に要素自体を非表示にする
+                            setTimeout(() => {
+                                splash.style.display = 'none';
+                            }, 500);
+                        }
+                    }, 1500); // ★ここの数字(ミリ秒)で表示時間を調整（今は1.5秒）
             };
             const renderPointModalContent = () => {
                 // 1. テーマ
