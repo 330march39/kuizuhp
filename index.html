@@ -2455,6 +2455,7 @@
                     const currentSectionNumber = quest.plan.slice(0, quest.currentIndex + 1).filter(p => p.type === 'section').length;
                     questProgressEl.textContent = `${currentSectionNumber} / ${totalSections}`;
 
+                    // ★ここでSWに「予約」を入れているので、時間になれば自動で通知が来ます
                     sendQuestAlarm(
                         currentStep.duration,
                         'セクション終了',
@@ -2465,27 +2466,28 @@
                         currentStep.duration,
                         (timeLeft) => { questTimerEl.textContent = formatTime(timeLeft); },
                         () => {
+                            // --- ▼▼▼ 修正箇所 1 ▼▼▼ ---
+                            // ここで showQuestNotification を呼ぶと「今すぐ通知」が送られて重複します。
+                            // 代わりに showToast だけ呼んで、画面内のメッセージだけ表示します。
                             const elapsed = currentStep.duration;
                             if (elapsed > 0) {
                                 logStudyTime('focus', elapsed);
                                 addLP(Math.floor(elapsed / 60), 'クエストセクション');
                                 state.focus.totalTime += elapsed;
                                 
-                                // ▼▼▼ 変更: タスクを削除せず、完了済みにする ▼▼▼
                                 if (currentStep.originalTaskId) {
                                     const taskId = parseInt(currentStep.originalTaskId);
                                     const taskIndex = state.tasks.findIndex(t => t.id === taskId);
                                     if (taskIndex !== -1) {
                                         state.tasks[taskIndex].completed = true;
-                                        // タスク更新日を更新しておくと良いかもしれません
-                                        console.log(`タスクID ${taskId} を完了状態にしました。`);
                                     }
                                 }
-                                // ▲▲▲ 変更ここまで ▲▲▲
-
                                 saveState();
                             }
-                            showQuestNotification('セクション終了', 'お疲れ様でした！');
+                            // ★通知はSWの予約に任せ、ここではトーストのみ表示
+                            showToast('お疲れ様でした！'); 
+                            // --- ▲▲▲ 修正ここまで ▲▲▲ ---
+
                             runNextQuestStep(); // 次（トランジション画面）へ
                         }
                     );
@@ -2496,6 +2498,7 @@
                     $('#break-settings-btn').classList.remove('hidden');
                     renderBreakIcons();
 
+                    // ★ここでSWに「予約」を入れています
                     sendQuestAlarm(
                         currentStep.duration,
                         '休憩終了',
@@ -2506,12 +2509,18 @@
                         currentStep.duration,
                         (timeLeft) => {
                             breakTimerEl.textContent = formatTime(timeLeft);
+                            // 残り30秒の通知は「予約」していないので、ここから送ってもOK（重複しない）
                             if (timeLeft === 30) {
                                 showQuestNotification('まもなく休憩終了', '30秒後に終了します。');
                             }
                         },
                         () => {
-                            showQuestNotification('休憩終了', '休憩が終わりました。');
+                            // --- ▼▼▼ 修正箇所 2 ▼▼▼ ---
+                            // ここも同様に修正
+                            // showQuestNotification('休憩終了', '休憩が終わりました。'); 
+                            showToast('休憩が終わりました。');
+                            // --- ▲▲▲ 修正ここまで ▲▲▲ ---
+
                             closeIframe();
                             runNextQuestStep(); // 次（トランジション画面）へ
                         }
