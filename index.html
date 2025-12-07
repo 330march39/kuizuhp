@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>クイズHP</title>
+    <title>StudyQuest</title>
 
     <!-- PWA関連 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="クイズHP">
+    <meta name="apple-mobile-web-app-title" content="StudyQuest">
     <meta name="theme-color" content="#4f46e5">
     <link rel="apple-touch-icon" href="https://placehold.co/180x180/4f46e5/ffffff?text=Q">
 
@@ -2086,7 +2086,7 @@
             $('#notification-permission-btn').addEventListener('click', async () => {
                 if (!('Notification' in window)) { showToast('お使いのブラウザは通知に対応していません。'); return; }
                 const permission = await Notification.requestPermission();
-                if (permission === 'granted') { showToast('通知が許可されました！'); new Notification('クイズHPへようこそ！', { body: '通知設定がオンになりました。' }); $('#notification-settings-card').style.display = 'none';} 
+                if (permission === 'granted') { showToast('通知が許可されました！'); new Notification('StudyQuestへようこそ！', { body: '通知設定がオンになりました。' }); $('#notification-settings-card').style.display = 'none';} 
                 else { showToast('通知が拒否されました。端末の設定アプリから変更できます。'); }
             });
 
