@@ -2710,7 +2710,7 @@
             const restoreFocusState = () => {
             // 保存された実行中のタイマー/SWがなければ何もしない
             if (!state.focus.isRunning || !state.focus.startTime) {
-                setTimer(1500); // デフォルトの25分をセット
+                setTimer(1800);
                 return;
             }
         
@@ -2732,7 +2732,7 @@
                     state.focus.isRunning = false;
                     state.focus.startTime = null;
                     saveState();
-                    setTimer(1500); // 次のためにリセット
+                    setTimer(1800); // 次のためにリセット
                 } else {
                     // タイマーを復元
                     focusTimer.timeLeft = timeLeft;
