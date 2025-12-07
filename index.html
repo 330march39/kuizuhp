@@ -1487,7 +1487,7 @@
             };
 
             const renderHomeTasks = () => {
-                if (!homeTaskListEl) return; 
+                if (!homeTaskListEl) return;
 
                 if (!state.tasks || state.tasks.length === 0) {
                     homeTaskListEl.innerHTML = `<p class="text-center text-sm text-gray-500">今日の予定はありません。</p>`;
@@ -1498,9 +1498,11 @@
                         const isCompleted = task.completed || false;
                         const textStyle = isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : '';
                         
-                        // ★スワイプ用構造に変更
+                        // ★スワイプ用構造
                         const taskEl = document.createElement('div');
-                        taskEl.className = `swipe-container relative overflow-hidden rounded-lg mb-2`; 
+                        // 並び替え時のID識別用に data-id を追加
+                        taskEl.setAttribute('data-id', task.id); 
+                        taskEl.className = `task-item swipe-container relative overflow-hidden rounded-lg mb-2`; 
                         
                         taskEl.innerHTML = `
                             <div class="swipe-actions">
@@ -1516,8 +1518,10 @@
 
                             <div class="swipe-content flex items-center p-2 bg-white dark:bg-gray-800 shadow-sm relative z-10 ${isCompleted ? 'bg-gray-100 dark:bg-gray-900' : ''}">
                                 <span class="font-bold w-6 text-center text-gray-600 dark:text-gray-400 shrink-0">${index + 1}</span>
-                                <input type="text" value="${task.text}" class="task-text-input flex-grow bg-transparent p-1 focus:outline-none rounded ${textStyle}" ${isCompleted ? 'disabled' : ''}>
-                                <button class="task-handle cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-opacity p-2 shrink-0 ${isCompleted ? 'invisible' : ''}">
+                                
+                                <input type="text" value="${task.text}" class="task-text-input flex-grow min-w-0 bg-transparent p-1 focus:outline-none rounded ${textStyle}" ${isCompleted ? 'disabled' : ''}>
+                                
+                                <button type="button" class="task-handle cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-opacity p-2 shrink-0 ${isCompleted ? 'invisible' : ''}">
                                     <i data-lucide="grip-vertical" class="w-5 h-5"></i>
                                 </button>
                             </div>
@@ -1538,15 +1542,12 @@
                             onDelete: () => {
                                 state.tasks = state.tasks.filter(t => t.id !== task.id);
                                 saveState();
-                                // renderHomeTasksは自動では呼ばないので、ここでデータ削除後に再描画したいが
-                                // アニメーション終了後に呼ばれるため、ここでは何もしなくて良い
-                                // または、アニメーション完了後にUI上の整合性を取るために呼ぶ
                                 setTimeout(renderHomeTasks, 100); 
                                 showToast('タスクを削除しました');
                             }
                         });
                         
-                        // テキスト変更イベント (変更なし)
+                        // テキスト変更イベント
                         taskEl.querySelector('.task-text-input').addEventListener('change', (e) => {
                             const taskToUpdate = state.tasks.find(t => t.id === task.id);
                             if (taskToUpdate) {
@@ -1556,8 +1557,17 @@
                         });
                     });
                 }
-                newTaskNumberEl.textContent = state.tasks.length + 1;
-                lucide.createIcons();
+                
+                if(newTaskNumberEl) newTaskNumberEl.textContent = state.tasks.length + 1;
+
+                // ★重要: 生成したリストの中に対してアイコン生成を実行
+                lucide.createIcons({
+                    root: homeTaskListEl,
+                    nameAttr: 'data-lucide',
+                    attrs: {
+                        class: "w-5 h-5" // デフォルトサイズ指定
+                    }
+                });
             };
 
             document.body.addEventListener('click', e => {
