@@ -1014,6 +1014,24 @@
             </div>
         </div>
     </div>
+
+    <div id="resume-quest-modal" class="hidden fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-sm text-center">
+            <div class="mb-4">
+                <i data-lucide="alert-circle" class="w-12 h-12 text-yellow-500 mx-auto mb-2"></i>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">クエストを再開しますか？</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">前回、クエストの途中でアプリが終了しました。</p>
+            </div>
+            <div class="flex flex-col space-y-3">
+                <button id="resume-quest-yes-btn" class="w-full py-3 rounded-lg primary-bg primary-bg-hover text-white font-bold shadow-lg">
+                    再開する
+                </button>
+                <button id="resume-quest-no-btn" class="w-full py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold">
+                    終了してホームへ
+                </button>
+            </div>
+        </div>
+    </div>
     
     <div id="break-settings-modal" class="hidden fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
         <div class="bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-sm flex flex-col max-h-[80vh]">
@@ -1363,6 +1381,7 @@
                     },
                     studyLog: {}, 
                     sessionLog: [],
+                    savedQuest: null, // ★追加: クエストの中断データを保存する場所
                     settings: { backgroundScopeGlobal: true , 
                                 manualDarkMode: false,
                                 bgmEnabled: false,      // BGM機能のON/OFF
@@ -3092,6 +3111,15 @@
 
                 const nextStep = quest.plan[quest.currentIndex];
 
+                // ★追加: クエストの状態を保存 (現在地と開始時刻を記録)
+                state.savedQuest = {
+                    plan: quest.plan,
+                    currentIndex: quest.currentIndex,
+                    startTime: Date.now(), // このステップの開始時刻（仮）
+                    active: true
+                };
+                saveState();
+
                 // 最初のステップは即開始し、それ以降は確認画面を出す
                 if (quest.currentIndex === 0) {
                     executeQuestStep(nextStep);
@@ -3139,6 +3167,14 @@
             // 実際のタイマー画面を表示して開始
             function executeQuestStep(currentStep) {
                 cancelQuestAlarm();
+
+                // ★追加: 実際にタイマーが動くタイミングで正確な開始時刻を保存
+                if(state.savedQuest) {
+                    state.savedQuest.startTime = Date.now();
+                    // currentStepが休憩かセクションか区別して保存しても良いが、
+                    // 復元時に計算するので最低限 Date.now() があればOK
+                    saveState();
+                }
 
                 // アプリ2のトースト関数とNotification APIを使用
                 const showQuestNotification = (title, body) => {
@@ -3260,6 +3296,8 @@
 
         // クエストを終了する関数
         function endQuest(completed = false) {
+            state.savedQuest = null;
+            saveState();
             stopBGM();
             $('#break-settings-btn').classList.add('hidden');
             clearInterval(quest.timerInterval);
@@ -3433,7 +3471,8 @@
         
                 if (timeLeft <= 0) {
                     // 復元時にはタイマーが既に終了している場合
-                    showToast('タイマーは終了しました');
+                    showToast('アプリを閉じている間にタイマーが終了しました');
+                    new Notification('StudyQuest', { body: '集中タイマーが終了していました。' }); // 通知も出す
                     logStudyTime('focus', state.focus.duration);
                     addLP(Math.floor(state.focus.duration / 60), 'タイマー完了');
                     resetTimerUI();
@@ -3761,6 +3800,126 @@
             // ▲▲▲ 新規追加ロジック終了 ▲▲▲
             // ==========================================
 
+            // ★新規追加: クエストの復元チェック関数
+            const checkQuestResume = () => {
+                if (state.savedQuest && state.savedQuest.active) {
+                    // モーダルを表示
+                    const modal = $('#resume-quest-modal');
+                    modal.classList.remove('hidden');
+                    
+                    // 「再開する」ボタン
+                    $('#resume-quest-yes-btn').onclick = () => {
+                        modal.classList.add('hidden');
+                        resumeQuestProcess();
+                    };
+
+                    // 「終了してホームへ」ボタン
+                    $('#resume-quest-no-btn').onclick = () => {
+                        modal.classList.add('hidden');
+                        state.savedQuest = null;
+                        saveState();
+                        showToast('クエストを破棄しました');
+                    };
+                }
+            };
+
+            // ★新規追加: クエスト復元実行プロセス
+            const resumeQuestProcess = () => {
+                const saved = state.savedQuest;
+                quest.plan = saved.plan;
+                quest.currentIndex = saved.currentIndex;
+                quest.active = true;
+
+                // UI切り替え
+                $('header').style.display = 'none';
+                $('nav').style.display = 'none';
+                $('#mini-timer-container').classList.remove('visible');
+                $('#quest-active-screen').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+
+                const currentStep = quest.plan[quest.currentIndex];
+                
+                // 経過時間を計算
+                const now = Date.now();
+                const elapsedSinceStart = Math.floor((now - saved.startTime) / 1000);
+                const remaining = currentStep.duration - elapsedSinceStart;
+
+                if (remaining <= 0) {
+                    // 裏で終わっていた場合
+                    showToast('閉じている間にこのステップは終了しました。');
+                    // ログ記録などは省略して、強制的に次へ進めるか、完了扱いにする
+                    // ここではシンプルに「完了」として次へ
+                    if (currentStep.type === 'section') {
+                        // ログだけ記録しておく
+                        recordSession(currentStep.text + '(不在中完了)', currentStep.duration);
+                        state.focus.totalTime += currentStep.duration;
+                        saveState();
+                    }
+                    // 次へ
+                    runNextQuestStep();
+                } else {
+                    // まだ続いている場合 -> そのステップを途中から再開
+                    // executeQuestStepを呼ぶとタイマーがリセットされるので、
+                    // 手動でUIセットアップして startQuestTimer を呼ぶ
+                    setupResumedStep(currentStep, remaining);
+                }
+            };
+
+            // ★新規追加: 途中からステップを開始するヘルパー
+            const setupResumedStep = (step, timeLeft) => {
+                cancelQuestAlarm(); // 念のため
+
+                if (step.type === 'section') {
+                    playBGM();
+                    questSectionView.style.display = 'flex';
+                    questBreakView.style.display = 'none';
+                    $('#break-settings-btn').classList.add('hidden');
+                    questSectionTitle.textContent = step.text;
+                    const totalSections = quest.plan.filter(p => p.type === 'section').length;
+                    const currentSectionNumber = quest.plan.slice(0, quest.currentIndex + 1).filter(p => p.type === 'section').length;
+                    questProgressEl.textContent = `${currentSectionNumber} / ${totalSections}`;
+                    
+                    // タイマー再開
+                    startQuestTimer(
+                        timeLeft, // 残り時間で開始
+                        (t) => { questTimerEl.textContent = formatTime(t); },
+                        () => {
+                            // 終了時の処理（executeQuestStepの中身と同じロジックが必要）
+                            // 簡略化のため共通部分を関数化するか、ここにコピー
+                            const elapsed = step.duration; // 満了扱い
+                            recordSession(step.text, elapsed);
+                            addLP(Math.floor(elapsed / 60), 'クエストセクション');
+                            state.focus.totalTime += elapsed;
+                            if (step.originalTaskId) {
+                                const tIndex = state.tasks.findIndex(t => t.id === parseInt(step.originalTaskId));
+                                if (tIndex !== -1) state.tasks[tIndex].completed = true;
+                            }
+                            saveState();
+                            showToast('お疲れ様でした！');
+                            runNextQuestStep();
+                        }
+                    );
+                } else {
+                    // 休憩の場合
+                    pauseBGM();
+                    questSectionView.style.display = 'none';
+                    questBreakView.style.display = 'flex';
+                    $('#break-settings-btn').classList.remove('hidden');
+                    renderBreakIcons();
+                    
+                    startQuestTimer(
+                        timeLeft,
+                        (t) => { breakTimerEl.textContent = formatTime(t); },
+                        () => {
+                            showToast('休憩が終わりました。');
+                            closeIframe();
+                            runNextQuestStep();
+                        }
+                    );
+                }
+                lucide.createIcons();
+            };
+
             const init = () => {
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.register('sw.js')
@@ -3796,6 +3955,7 @@
                 
                 // ページ描画の前にタイマーの状態を復元・設定する
                 restoreFocusState();
+                checkQuestResume();  // ★追加: クエストの復元チェック
                 
                 // 全てのページを描画
                 renderEngine.renderAll();
