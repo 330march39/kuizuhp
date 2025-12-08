@@ -120,17 +120,7 @@
             font-family: 'LINE Seed JP', 'Inter', 'Noto Sans JP', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
         }
-        .page { 
-            display: none; 
-            width: 100%; /* 幅を確保 */
-            min-height: 100%; /* 高さを確保 */
-            background-color: #f3f4f6; /* ライトモード背景 */
-        }
-        /* ダークモード時の背景 */
-        html.dark .page {
-            background-color: #111827; 
-        }
-
+        .page { display: none; }
         .page.active { display: block; }
         #focus-page.page.active { display: flex; }
         #focus-page { display: none; }
@@ -414,9 +404,7 @@
         /* ページコンテナ */
         main {
             position: relative;
-            overflow-x: hidden;
-            /* scrollにすることで、常にスクロールバー領域を確保し、画面切り替え時のガタつきを防ぐ */
-            overflow-y: scroll !important; 
+            overflow-x: hidden; /* 横揺れ防止 */
         }
 
         /* アニメーション定義 (変化量を小さくして上品に) */
@@ -2965,7 +2953,6 @@
                 $('#header-title').textContent = e.currentTarget.dataset.title;
 
                 isAnimating = true;
-                $('main').scrollTop = 0;
 
                 // 2. 現在のページがあれば「退出」開始
                 if (activePage) {
