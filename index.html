@@ -3473,7 +3473,7 @@
                     // 復元時にはタイマーが既に終了している場合
                     showToast('アプリを閉じている間にタイマーが終了しました');
                     new Notification('StudyQuest', { body: '集中タイマーが終了していました。' }); // 通知も出す
-                    logStudyTime('focus', state.focus.duration);
+                    recordSession('タイマー', state.focus.duration);
                     addLP(Math.floor(state.focus.duration / 60), 'タイマー完了');
                     resetTimerUI();
                     // 状態をクリア
@@ -3816,6 +3816,29 @@
                     // 「終了してホームへ」ボタン
                     $('#resume-quest-no-btn').onclick = () => {
                         modal.classList.add('hidden');
+
+                        // ★追加: 中断としてログに記録する処理
+                        const saved = state.savedQuest;
+                        const currentStep = saved.plan[saved.currentIndex];
+                        
+                        // 実際に経過した時間（開始〜現在）を計算
+                        const now = Date.now();
+                        const elapsedSeconds = Math.floor((now - saved.startTime) / 1000);
+                        
+                        // もしステップの予定時間を超えていたら、予定時間分だけ記録（完了扱い）
+                        // 超えていなければ、経過時間分だけ記録（中断扱い）
+                        const actualDuration = Math.min(elapsedSeconds, currentStep.duration);
+
+                        if (currentStep.type === 'section' && actualDuration > 0) {
+                            const statusText = (elapsedSeconds >= currentStep.duration) ? '(不在中完了)' : '(中断)';
+                            recordSession(currentStep.text + statusText, actualDuration);
+                            
+                            // 少しだけLPをあげる（任意）
+                            if (actualDuration > 60) {
+                                addLP(Math.floor(actualDuration / 60), 'クエスト終了');
+                            }
+                        }
+                        
                         state.savedQuest = null;
                         saveState();
                         showToast('クエストを破棄しました');
@@ -3851,8 +3874,9 @@
                     // ここではシンプルに「完了」として次へ
                     if (currentStep.type === 'section') {
                         // ログだけ記録しておく
-                        recordSession(currentStep.text + '(不在中完了)', currentStep.duration);
+                        recordSession(currentStep.text + '(中断)', currentStep.duration);
                         state.focus.totalTime += currentStep.duration;
+                        addLP(Math.floor(currentStep.duration / 60), 'クエストセクション');
                         saveState();
                     }
                     // 次へ
