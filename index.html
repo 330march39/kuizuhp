@@ -3451,7 +3451,7 @@
             // 1. stateの全アイコンリストからHTMLを生成
             breakSettingsListEl.innerHTML = state.breakIcons.map(icon => `
                 <div class="break-settings-item" data-id="${icon.id}">
-                    <i data-lucide="grip-vertical" class="break-settings-handle"></i>
+                    <i data-lucide="grip-vertical" class="break-settings-handle w-6 h-6"></i>
                     <span>${icon.name}</span>
                     <input type="checkbox" class="toggle-checkbox break-icon-toggle" ${icon.visible ? 'checked' : ''}>
                 </div>
