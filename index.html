@@ -399,6 +399,47 @@
         }
         .focus-theme-border:focus {
             border-color: var(--primary-color) !important;
+        }     
+        /* ページコンテナ（アニメーション時に位置ずれしないように基準点を設定） */
+        main {
+            position: relative;
+        }
+
+        /* アニメーションの定義 (イン: 95% -> 100%, アウト: 100% -> 105%) */
+        @keyframes appZoomIn {
+            0% { opacity: 0; transform: scale(0.92); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes appZoomOut {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1.05); }
+        }
+
+        /* 新しく入ってくるページ用クラス */
+        .page-enter {
+            display: block !important; /* 強制表示 */
+            animation: appZoomIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            z-index: 20; /* 前面に */
+        }
+        /* Flexboxが必要なページ（集中モードなど）の例外対応 */
+        #focus-page.page-enter {
+            display: flex !important;
+        }
+
+        /* 消えていくページ用クラス */
+        .page-exit {
+            display: block !important;
+            position: absolute; /* フローから外して上に重ねる */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            animation: appZoomOut 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            z-index: 10;
+            pointer-events: none; /* アニメーション中はクリック不可に */
+        }
+        #focus-page.page-exit {
+            display: flex !important;
         }
     </style>
 </head>
@@ -2890,22 +2931,65 @@
                 if (permission === 'granted') { showToast('通知が許可されました！'); new Notification('StudyQuestへようこそ！', { body: '通知設定がオンになりました。' }); $('#notification-settings-card').style.display = 'none';} 
                 else { showToast('通知が拒否されました。端末の設定アプリから変更できます。'); }
             });
+            
+            let isAnimating = false; // 連打防止フラグ
 
             $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
-                const pageId = e.currentTarget.dataset.page;
+                const nextPageId = e.currentTarget.dataset.page;
+                const activePage = document.querySelector('.page.active');
                 
-                $$('.page').forEach(p => p.classList.remove('active'));
-                $(`#${pageId}`).classList.add('active');
-                
+                // 同じページ、またはアニメーション中は無視
+                if ((activePage && activePage.id === nextPageId) || isAnimating) return;
+
+                // ターゲットページ（次に出るページ）を取得
+                const nextPage = $(`#${nextPageId}`);
+                if (!nextPage) return;
+
+                // ボタンの見た目を即時更新
                 $$('.tab-btn').forEach(b => b.classList.replace('primary-text', 'text-gray-500'));
                 e.currentTarget.classList.replace('text-gray-500', 'primary-text');
                 $('#header-title').textContent = e.currentTarget.dataset.title;
-                if(renderEngine.pages[pageId]) { renderEngine.pages[pageId](); }
-                if (pageId === 'focus-page') {
+
+                // アニメーション開始
+                isAnimating = true;
+
+                // 1. 現在のページがあれば「退出アニメーション」を開始
+                if (activePage) {
+                    activePage.classList.add('page-exit');
+                    activePage.classList.remove('active');
+                    
+                    // アニメーション終了後にクラスを掃除
+                    activePage.addEventListener('animationend', () => {
+                        activePage.classList.remove('page-exit');
+                        // activeは既に消しているので display: none に戻る
+                    }, { once: true });
+                }
+
+                // 2. 次のページに「進入アニメーション」を開始
+                nextPage.classList.add('page-enter');
+                // ※ .active は display:block を持っているが、.page-enter も display:block !important を持っているので
+                // アニメーション中は .page-enter が優先される。
+                // アニメーションが終わったら .active にバトンタッチする。
+
+                // ページ固有のレンダリング処理を実行（グラフ描画など）
+                if (renderEngine.pages[nextPageId]) { 
+                    renderEngine.pages[nextPageId](); 
+                }
+
+                // 集中モード等のUI更新
+                if (nextPageId === 'focus-page') {
                     miniTimerTemporarilyHidden = false;
                 }
                 updateMiniTimer();
                 lucide.createIcons();
+
+                // 3. アニメーション終了時の処理
+                nextPage.addEventListener('animationend', () => {
+                    nextPage.classList.remove('page-enter');
+                    nextPage.classList.add('active'); // 正式にアクティブ化
+                    isAnimating = false; // ロック解除
+                }, { once: true });
+
             }));
 
             $('#mini-timer-bar').addEventListener('click', (e) => {
