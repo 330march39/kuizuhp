@@ -1634,10 +1634,21 @@
                 if(assessmentBtn) {
                     const level = parseInt(assessmentBtn.dataset.level);
                     const quizId = $('#assessment-modal').dataset.quizId;
+                    
+                    // 1. 進捗データを保存
                     state.progress[quizId] = { level, date: new Date().toISOString() };
                     addLP(level * 5, 'クイズ評価');
                     saveState();
+                    
+                    // 2. ★重要★ 現在のアクティブなページを強制的に再描画する
+                    // renderEngine.renderAll() は 'active' クラスがついているページだけを描画するため、これでOKです
                     renderEngine.renderAll();
+                    
+                    // 3. アイコン（Lucide）を再生成する
+                    // HTMLが書き換わった直後はアイコンが <i> タグのままなので、これを <svg> に変換します
+                    lucide.createIcons();
+
+                    // 4. モーダルを閉じる
                     $('#assessment-modal').style.display = 'none';
                 }
 
