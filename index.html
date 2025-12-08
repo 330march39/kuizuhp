@@ -1772,7 +1772,7 @@
                                 container.innerHTML = '';
                                 state.settings.playlist.forEach((id, index) => {
                                     const track = initialData.music[id];
-                                    if(!track) return; // データがない場合はスキップ
+                                    if(!track) return; 
 
                                     const itemEl = document.createElement('div');
                                     itemEl.className = 'bg-white dark:bg-gray-600 rounded-lg p-2 flex items-center shadow-sm border border-gray-100 dark:border-gray-500';
@@ -1807,7 +1807,6 @@
                                         stopMusicPreview(); // 削除時は停止
                                         state.settings.playlist.splice(index, 1);
                                         saveState();
-                                        // 再描画 (リストと追加可能リストの両方を更新するためページごと更新が楽だが、ここでは関数呼び出し)
                                         renderPlaylist();
                                         renderUnlockedList();
                                     });
@@ -1815,11 +1814,14 @@
                                     container.appendChild(itemEl);
                                 });
 
-                                // Sortable.js 適用
+                                // Sortable.js 適用 (★ここを修正)
                                 Sortable.create(container, {
                                     handle: '.playlist-handle',
                                     animation: 150,
                                     ghostClass: 'sortable-ghost',
+                                    delay: 200, // ★長押し200msでドラッグ開始
+                                    delayOnTouchOnly: true, // ★タッチ操作のみ遅延有効
+                                    touchStartThreshold: 5, // ★5px以上の移動はスクロール判定
                                     onEnd: (evt) => {
                                         const item = state.settings.playlist.splice(evt.oldIndex, 1)[0];
                                         state.settings.playlist.splice(evt.newIndex, 0, item);
@@ -4088,32 +4090,36 @@
         
         // BGM試聴の再生・停止制御
         const toggleMusicPreview = (url, btnElement) => {
+            // すでに再生中で、かつ同じURLなら「停止」とみなす
             if (!previewAudio.paused && previewAudio.src === url) {
-                // 再生中なら止める
                 stopMusicPreview();
-            } else {
-                // 新しく再生
-                stopMusicPreview(); // 前の曲を止める
-                previewAudio.src = url;
-                previewAudio.volume = 0.5;
-                previewAudio.play().then(() => {
-                    // ▼修正: ボタンの中身を「停止アイコン(square)」に書き換え
-                    if(btnElement) {
-                        // <i>タグを再注入
-                        btnElement.innerHTML = '<i data-lucide="square" class="w-6 h-6 fill-current"></i>';
-                        btnElement.classList.add('playing-icon'); // アニメーション追加
-                        // このボタンの中だけアイコンを再生成
-                        lucide.createIcons({
-                            root: btnElement
-                        });
-                    }
-                    
-                    // 30秒後に自動停止
-                    previewTimeout = setTimeout(() => {
-                        stopMusicPreview();
-                    }, 30000); // 30000ms = 30秒
-                }).catch(e => console.error("試聴エラー", e));
+                return;
             }
+
+            // 別の曲を再生する場合、または新規再生の場合
+            // まず現在再生中のものを完全に停止・リセットする
+            stopMusicPreview();
+
+            // 新しく再生
+            previewAudio.src = url;
+            previewAudio.volume = 0.5;
+            
+            previewAudio.play().then(() => {
+                // ボタンのアイコンを「停止(square)」に変更
+                if (btnElement) {
+                    btnElement.innerHTML = '<i data-lucide="square" class="w-5 h-5 fill-current"></i>';
+                    btnElement.classList.add('playing-icon'); // アニメーション用クラス付与
+                    
+                    // アイコン再生成
+                    lucide.createIcons({ root: btnElement });
+                }
+                
+                // 30秒後に自動停止
+                previewTimeout = setTimeout(() => {
+                    stopMusicPreview();
+                }, 30000); 
+
+            }).catch(e => console.error("試聴エラー", e));
         };
         
         const stopMusicPreview = () => {
@@ -4121,16 +4127,22 @@
             previewAudio.currentTime = 0;
             if (previewTimeout) clearTimeout(previewTimeout);
             
-            // ▼修正: ボタンの中身を「再生アイコン(play)」に戻す
-            const btn = document.getElementById('music-preview-btn');
-            if (btn) {
-                btn.innerHTML = '<i data-lucide="play" class="w-6 h-6 fill-current"></i>';
-                btn.classList.remove('playing-icon');
-                // このボタンの中だけアイコンを再生成
-                lucide.createIcons({
-                    root: btn
-                });
+            // ★重要: ページ内のすべての「再生中」になっているボタンを元に戻す
+
+            // 1. プレイリスト内のボタン(.preview-bgm-btn)のリセット
+            document.querySelectorAll('.preview-bgm-btn').forEach(btn => {
+                 btn.innerHTML = '<i data-lucide="play-circle" class="w-5 h-5"></i>';
+                 btn.classList.remove('playing-icon');
+            });
+            
+            // 2. モーダル内のボタン(#music-preview-btn)のリセット
+            const modalBtn = document.getElementById('music-preview-btn');
+            if (modalBtn) {
+                modalBtn.innerHTML = '<i data-lucide="play" class="w-6 h-6 fill-current"></i>';
+                modalBtn.classList.remove('playing-icon');
             }
+            
+            lucide.createIcons();
         };    
         
             
