@@ -1037,12 +1037,17 @@
     
     <div id="break-settings-modal" class="hidden fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
         <div class="bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-sm flex flex-col items-center max-h-[80vh]">
-            <h3 class="text-lg font-bold text-white mb-2 text-center flex-shrink-0">コンテンツの編集</h3>
+            <h3 class="text-lg font-bold text-white mb-4 text-center flex-shrink-0">コンテンツの編集</h3>
             
-            <div id="break-settings-list" class="w-full space-y-2 overflow-y-auto py-2 mb-auto">
+            <div class="w-full flex-grow overflow-y-auto mb-4">
+                <h4 class="text-xs font-bold text-gray-400 mb-2 px-1">表示中 (ドラッグで並び替え)</h4>
+                <div id="break-active-list" class="w-full space-y-2"></div>
+    
+                <h4 class="text-xs font-bold text-gray-400 mt-6 mb-2 px-1">追加可能</h4>
+                <div id="break-inactive-list" class="w-full flex flex-wrap gap-2"></div>
             </div>
     
-            <button id="break-settings-close-btn" class="mt-4 px-6 py-2 rounded-lg primary-bg primary-bg-hover text-white font-semibold transition flex-shrink-0">
+            <button id="break-settings-close-btn" class="mt-2 px-6 py-2 rounded-lg primary-bg primary-bg-hover text-white font-semibold transition flex-shrink-0">
                 閉じる
             </button>
         </div>
@@ -3444,34 +3449,98 @@
             saveState();
         }
 
-        // ★新規追加★ 休憩設定モーダルの中身を描画する関数
+        // ★修正後★ 休憩設定モーダルの中身を描画する関数
         function renderBreakSettingsModal() {
-            if (!breakSettingsListEl) return;
+            const activeContainer = $('#break-active-list');
+            const inactiveContainer = $('#break-inactive-list');
             
-            // 1. stateの全アイコンリストからHTMLを生成
-            breakSettingsListEl.innerHTML = state.breakIcons.map(icon => `
-                <div class="break-settings-item" data-id="${icon.id}">
-                    <i data-lucide="grip-vertical" class="break-settings-handle w-6 h-6 flex-shrink-0"></i>
-                    <span>${icon.name}</span>
-                    <input type="checkbox" class="toggle-checkbox break-icon-toggle" ${icon.visible ? 'checked' : ''}>
-                </div>
-            `).join('');
-            
+            if (!activeContainer || !inactiveContainer) return;
+        
+            activeContainer.innerHTML = '';
+            inactiveContainer.innerHTML = '';
+        
+            // 1. アイコンを表示中と非表示に分ける
+            const activeIcons = state.breakIcons.filter(i => i.visible);
+            const inactiveIcons = state.breakIcons.filter(i => !i.visible);
+        
+            // 2. 表示中リストの描画 (削除ボタン付き)
+            if (activeIcons.length === 0) {
+                activeContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">表示するコンテンツがありません</p>';
+            } else {
+                activeContainer.innerHTML = activeIcons.map(icon => `
+                    <div class="break-settings-item flex items-center bg-white/5 p-3 rounded-lg border border-white/10" data-id="${icon.id}">
+                        <i data-lucide="grip-vertical" class="break-settings-handle w-6 h-6 flex-shrink-0 text-gray-400 cursor-grab mr-3"></i>
+                        <i data-lucide="${icon.icon}" class="w-5 h-5 mr-3 text-gray-200"></i>
+                        <span class="text-gray-200 flex-grow text-sm font-bold truncate">${icon.name}</span>
+                        <button class="remove-break-btn p-2 rounded-full text-red-400 hover:bg-red-500/20 transition flex-shrink-0">
+                            <i data-lucide="minus-circle" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+        
+            // 3. 追加可能リストの描画 (追加ボタン付き)
+            if (inactiveIcons.length === 0) {
+                inactiveContainer.innerHTML = '<p class="text-xs text-gray-500 w-full text-center">すべて追加済みです</p>';
+            } else {
+                inactiveContainer.innerHTML = inactiveIcons.map(icon => `
+                    <button class="add-break-btn flex items-center space-x-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 rounded-full transition" data-id="${icon.id}">
+                        <i data-lucide="plus" class="w-4 h-4 text-green-400"></i>
+                        <span class="text-sm text-gray-300">${icon.name}</span>
+                    </button>
+                `).join('');
+            }
+        
             lucide.createIcons();
-            
-            // 2. トグルスイッチにイベントリスナーを設定
-            breakSettingsListEl.querySelectorAll('.break-icon-toggle').forEach(toggle => {
-                toggle.addEventListener('change', (e) => {
+        
+            // 4. イベントリスナー設定：削除ボタン
+            activeContainer.querySelectorAll('.remove-break-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
                     const itemId = e.target.closest('.break-settings-item').dataset.id;
                     const icon = state.breakIcons.find(i => i.id === itemId);
                     if (icon) {
-                        icon.visible = e.target.checked;
-                        saveState(); // 変更を保存
+                        icon.visible = false;
+                        saveState();
+                        renderBreakSettingsModal(); // 再描画
+                        renderBreakIcons(); // 親画面も更新
                     }
                 });
             });
-            
-            
+        
+            // 5. イベントリスナー設定：追加ボタン
+            inactiveContainer.querySelectorAll('.add-break-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const itemId = btn.dataset.id;
+                    const icon = state.breakIcons.find(i => i.id === itemId);
+                    if (icon) {
+                        icon.visible = true;
+                        saveState();
+                        renderBreakSettingsModal(); // 再描画
+                        renderBreakIcons(); // 親画面も更新
+                    }
+                });
+            });
+        
+            // 6. Sortable.js の適用 (activeContainerのみ)
+            // 以前のインスタンスが残っていると挙動がおかしくなることがあるため、簡易的に再生成
+            Sortable.create(activeContainer, {
+                handle: '.break-settings-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: (evt) => {
+                    // 並び替え後のID順序を取得
+                    const idOrder = Array.from(activeContainer.children).map(child => child.dataset.id);
+                    
+                    // state.breakIcons を並び替える
+                    // (表示中のものは idOrder の順に、非表示のものはその後ろに維持する)
+                    const sortedActive = idOrder.map(id => state.breakIcons.find(i => i.id === id));
+                    const inactive = state.breakIcons.filter(i => !i.visible);
+                    
+                    state.breakIcons = [...sortedActive, ...inactive];
+                    saveState();
+                    renderBreakIcons(); // 親画面の並び順も更新
+                }
+            });
         }
 
         // ★新規追加★ 休憩設定モーダルを開く関数
@@ -4076,27 +4145,6 @@
                             }
                         });
                     }
-                // Sortable.js の初期化 (休憩設定リスト)
-                if (breakSettingsListEl) {
-                    Sortable.create(breakSettingsListEl, {
-                        handle: '.break-settings-handle',
-                        animation: 150,
-                        ghostClass: 'sortable-ghost',
-                        delay: 200, // ★追加
-                        delayOnTouchOnly: true, // ★追加
-                        touchStartThreshold: 5, // ★追加
-                        filter: '.swiped-open, .is-swiping, .swipe-deleting', // ★追加
-                        onEnd: (evt) => {
-                            // 並び替え後のDOMの順番を元にIDの配列を作成
-                            const idOrder = Array.from(breakSettingsListEl.children).map(child => child.dataset.id);
-                            // state.breakIcons を idOrder に基づいて並び替える
-                            state.breakIcons.sort((a, b) => {
-                                return idOrder.indexOf(a.id) - idOrder.indexOf(b.id);
-                            });
-                            saveState(); // 新しい順序を保存
-                        }
-                    });
-                }
                 
                 // 5. 「今日の予定」読み込みボタン
                 const loadTasksBtn = $('#load-tasks-btn');
