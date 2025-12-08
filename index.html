@@ -1949,21 +1949,23 @@
                     const isToday = todayStr === dateStr;
     
                     let cellClass = "h-8 w-8 mx-auto flex flex-col items-center justify-center rounded-full cursor-pointer transition text-sm relative ";
+                    let styleStr = ""; // ★追加: 動的なスタイルを格納する変数
                     
                     if (isSelected) {
                         cellClass += "primary-bg text-white font-bold shadow-md";
                     } else if (isToday) {
-                        cellClass += "border-2 border-indigo-500 text-indigo-600 font-bold";
+                        cellClass += "border-2 font-bold";
+                        styleStr = "border-color: var(--primary-color); color: var(--primary-color);";
                     } else {
                         cellClass += "hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300";
                     }
     
                     // マーカー（ログがある日）
-                    const marker = hasLog && !isSelected ? `<span class="absolute bottom-1 w-1 h-1 rounded-full bg-indigo-400"></span>` : '';
+                    const marker = hasLog && !isSelected ? `<span class="absolute bottom-1 w-1 h-1 rounded-full" style="background-color: var(--primary-color);"></span>` : '';
     
                     const cell = document.createElement('div');
                     cell.className = "text-center";
-                    cell.innerHTML = `<div class="${cellClass}">${d}${marker}</div>`;
+                    cell.innerHTML = `<div class="${cellClass}" style="${styleStr}">${d}${marker}</div>`;
                     
                     cell.addEventListener('click', () => {
                         selectedReportDate = new Date(year, month, d);
@@ -2007,7 +2009,7 @@
                                 </div>
                                 <div class="text-right flex-shrink-0">
                                     <p class="text-lg font-mono font-bold primary-text leading-none">${durationText}</p>
-                                    <p class="text-xs text-gray-400 mt-1">${s.endTime || '--:--'} 終了</p>
+                                    <p class="text-xs text-gray-400 mt-1">${s.endTime || '--:--'}</p>
                                 </div>
                             </div>
                         `;
