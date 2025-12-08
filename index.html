@@ -343,7 +343,7 @@
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
 
-    <div id="splash-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 transition-opacity duration-500">
+    <div id="splash-screen" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 transition-opacity duration-500">
         <img src="SQ_logo2.png" alt="StudyQuest Logo" class="w-64 h-64 mb-4 block dark:hidden">
         
         <img src="SQ_logo3.png" alt="StudyQuest Logo Dark" class="w-64 h-64 mb-4 hidden dark:block">
@@ -3143,13 +3143,8 @@
                 const splash = document.getElementById('splash-screen');
                 
                 if (!state.user.isRegistered) {
-                    // 未登録なら、スプラッシュを消さずに（あるいは消した後に）Welcome画面を出す
-                    // 既存のsplash処理を上書きしないよう、ここではアプリコンテナを隠す
                     $('#app-container').classList.add('hidden');
-                    $('#welcome-screen').classList.remove('hidden');
                     
-                    // スプラッシュがもし残っていたら消す
-                    if(splash) splash.style.display = 'none';
                 } else {
                     // 登録済みなら通常通り
                     $('#app-container').classList.remove('hidden');
@@ -3587,16 +3582,22 @@
                 // ▼▼▼ 変更（initの最後にlucideを1回実行） ▼▼▼
                 lucide.createIcons();
                     setTimeout(() => {
+                        // もし未登録なら、スプラッシュが消える直前に「ようこそ画面」を裏で表示状態にする
+                        if (!state.user.isRegistered) {
+                            $('#welcome-screen').classList.remove('hidden');
+                        }
+                    
                         const splash = document.getElementById('splash-screen');
                         if (splash) {
-                            // 透明度を0にする（CSSのtransitionでフェードアウト）
+                            // フェードアウト開始
                             splash.classList.add('opacity-0');
-                            // アニメーションが終わった頃(0.5秒後)に要素自体を非表示にする
+                            
+                            // アニメーション完了後に非表示
                             setTimeout(() => {
                                 splash.style.display = 'none';
                             }, 500);
                         }
-                    }, 1500); // ★ここの数字(ミリ秒)で表示時間を調整（今は1.5秒）
+                    }, 1500); // 1.5秒待ってからフェードアウト開始
             };
             const renderPointModalContent = () => {
                 // 1. テーマ
