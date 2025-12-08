@@ -3052,8 +3052,7 @@
             });
             
             $('#btn-transfer-start').addEventListener('click', () => {
-                // いきなり移行モーダルを開く
-                openMigrationModal();
+                openMigrationModal(true);
             });
 
             // 登録画面
@@ -3163,7 +3162,7 @@
             
             $('#open-migration-menu-btn').addEventListener('click', () => {
                  $('#profile-modal').style.display = 'none';
-                 openMigrationModal();
+                 openMigrationModal(false);
             });
 
 
@@ -3174,13 +3173,25 @@
             let peer = null;
             let conn = null;
 
-            function openMigrationModal() {
+            // 【修正】引数 autoReceive を追加
+            function openMigrationModal(autoReceive = false) {
                 $('#migration-modal').classList.remove('hidden');
                 $('#migration-modal').style.display = 'flex';
-                // 初期状態リセット
-                $('#migration-step-1').classList.remove('hidden');
+                
+                // 一度全てのビューを隠す
+                $('#migration-step-1').classList.add('hidden');
                 $('#migration-sender-view').classList.add('hidden');
                 $('#migration-receiver-view').classList.add('hidden');
+            
+                if (autoReceive) {
+                    // ようこそ画面からの場合：いきなり「受け取る」モードにする
+                    $('#migration-receiver-view').classList.remove('hidden');
+                    initPeerReceiver(); // 受信待機を開始
+                } else {
+                    // 設定画面からの場合：選択肢を表示
+                    $('#migration-step-1').classList.remove('hidden');
+                }
+                
                 lucide.createIcons();
             }
 
@@ -3231,18 +3242,26 @@
                 conn = peer.connect(targetId);
                 
                 conn.on('open', () => {
-                    $('#migration-status-send').textContent = "接続成功！データを送信しています...";
-                    
-                    // ★全データを送信
-                    const dataToSend = JSON.stringify(state);
-                    conn.send(dataToSend);
-                    
-                    setTimeout(() => {
-                         alert('データの送信が完了しました。\nこの端末のデータはリセットされます。');
-                         // ログアウト処理 (ローカルデータ消去)
-                         localStorage.removeItem('quizAppUltimateV8');
-                         location.reload();
-                    }, 1000);
+                    const isConfirmed = confirm("【重要】\nデータを移行しますか？\n\n「OK」を押すとデータが送信され、この端末のデータは削除（ログアウト）されます。");
+            
+                    if (isConfirmed) {
+                        $('#migration-status-send').textContent = "接続成功！データを送信しています...";
+                        
+                        // 全データを送信
+                        const dataToSend = JSON.stringify(state);
+                        conn.send(dataToSend);
+                        
+                        setTimeout(() => {
+                            alert('データの送信が完了しました。\nこの端末のデータはリセットされます。');
+                            // ログアウト処理 (ローカルデータ消去)
+                            localStorage.removeItem('quizAppUltimateV8');
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        // キャンセルした場合
+                        $('#migration-status-send').textContent = "キャンセルされました。";
+                        conn.close(); // 接続を切る
+                    }
                 });
                 
                 conn.on('error', (err) => {
