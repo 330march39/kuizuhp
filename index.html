@@ -397,6 +397,9 @@
             50% { transform: scale(1.2); opacity: 0.7; }
             100% { transform: scale(1); opacity: 1; }
         }
+        .focus-theme-border:focus {
+            border-color: var(--primary-color) !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -433,7 +436,7 @@
                         </div>
                         <div class="flex items-center space-x-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
                             <span id="new-task-number" class="font-bold w-6 text-center text-gray-500 dark:text-gray-400">1</span>
-                            <input type="text" id="new-task-input" placeholder="新しいタスクを追加 (Enterで確定)" class="flex-grow bg-transparent p-1 border-b-2 border-gray-300 dark:border-gray-600 focus:border-indigo-500 focus:outline-none transition-colors">
+                            <input type="text" id="new-task-input" placeholder="新しいタスクを追加 (Enterで確定)" class="flex-grow bg-transparent p-1 border-b-2 border-gray-300 dark:border-gray-600 focus-theme-border focus:outline-none transition-colors">
                         </div>
                     </div>
                 </div>
@@ -1656,7 +1659,7 @@
                         profileCard.id = 'settings-profile-card';
                         profileCard.className = 'bg-white dark:bg-gray-700 p-4 rounded-lg shadow mb-4 flex items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition';
                         profileCard.innerHTML = `
-                            <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-3xl mr-4 border-2 border-indigo-500">
+                            <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-3xl mr-4 border-2" style="border-color: var(--primary-color);">
                                 ${state.user.icon}
                             </div>
                             <div class="flex-grow">
@@ -1838,7 +1841,7 @@
                             } else {
                                 container.innerHTML = availableMusic.map(id => {
                                     const track = initialData.music[id];
-                                    return `<button class="add-to-playlist-btn bg-indigo-50 dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-gray-600 px-3 py-2 rounded-full text-xs font-bold transition flex items-center hover:bg-indigo-100 dark:hover:bg-gray-600" data-id="${id}">
+                                    return `<button class="add-to-playlist-btn bg-gray-50 dark:bg-gray-800 border dark:border-gray-600 px-3 py-2 rounded-full text-xs font-bold transition flex items-center hover:bg-gray-100 dark:hover:bg-gray-700" data-id="${id}" style="color: var(--primary-color); border-color: var(--primary-color);">
                                         <i data-lucide="plus" class="w-3 h-3 mr-1"></i>${track.name}
                                     </button>`;
                                 }).join('');
