@@ -1036,16 +1036,16 @@
     </div>
     
     <div id="break-settings-modal" class="hidden fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
-        <div class="bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-sm flex flex-col max-h-[80vh]">
-            <h3 class="text-lg font-bold text-white mb-2 text-center flex-shrink-0">コンテンツの編集</h3>
-            
-                        <div id="break-settings-list" class="space-y-2 overflow-y-auto py-2 mb-auto">
-            </div>
-            
-                        <button id="break-settings-close-btn" class="mt-4 px-6 py-2 rounded-lg primary-bg primary-bg-hover text-white font-semibold transition flex-shrink-0">
-                閉じる
-            </button>
-        </div>
+        <div class="bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-sm flex flex-col items-center max-h-[80vh]">
+            <h3 class="text-lg font-bold text-white mb-2 text-center flex-shrink-0">コンテンツの編集</h3>
+            
+            <div id="break-settings-list" class="w-full space-y-2 overflow-y-auto py-2 mb-auto">
+            </div>
+    
+            <button id="break-settings-close-btn" class="mt-4 px-6 py-2 rounded-lg primary-bg primary-bg-hover text-white font-semibold transition flex-shrink-0">
+                閉じる
+            </button>
+        </div>
     </div>
     
     <script>
@@ -3451,7 +3451,7 @@
             // 1. stateの全アイコンリストからHTMLを生成
             breakSettingsListEl.innerHTML = state.breakIcons.map(icon => `
                 <div class="break-settings-item" data-id="${icon.id}">
-                    <i data-lucide="grip-vertical" class="break-settings-handle w-6 h-6"></i>
+                    <i data-lucide="grip-vertical" class="break-settings-handle w-6 h-6 flex-shrink-0"></i>
                     <span>${icon.name}</span>
                     <input type="checkbox" class="toggle-checkbox break-icon-toggle" ${icon.visible ? 'checked' : ''}>
                 </div>
