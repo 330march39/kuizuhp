@@ -581,7 +581,7 @@
                     </div>
                 </div>
             
-                <div class="flex flex-col h-[500px]"> <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center mb-3">
+                <div class="flex flex-col h-[75vh]"> <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center mb-3">
                         <i data-lucide="calendar" class="w-5 h-5 mr-2 primary-text"></i> 学習ログ
                     </h2>
                     
@@ -1882,15 +1882,29 @@
                 
                 // 日付セル
                 for(let d=1; d<=daysInMonth; d++) {
-                    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                    // ★修正: toISOStringを使わず、手動でローカル日付文字列(YYYY-MM-DD)を作る
+                    const cellMonth = String(month + 1).padStart(2, '0');
+                    const cellDay = String(d).padStart(2, '0');
+                    const dateStr = `${year}-${cellMonth}-${cellDay}`;
                     
                     // ログがあるかチェック
                     const hasLog = state.sessionLog.some(l => l.date === dateStr);
                     
-                    // 選択中かどうか
-                    const isSelected = selectedReportDate.toISOString().split('T')[0] === dateStr;
-                    const isToday = new Date().toISOString().split('T')[0] === dateStr;
-            
+                    // ★修正: 選択中の日付比較もローカル時間で行う
+                    const selY = selectedReportDate.getFullYear();
+                    const selM = String(selectedReportDate.getMonth() + 1).padStart(2, '0');
+                    const selD = String(selectedReportDate.getDate()).padStart(2, '0');
+                    const selectedDateStr = `${selY}-${selM}-${selD}`;
+                    const isSelected = selectedDateStr === dateStr;
+    
+                    // ★修正: 今日の日付比較もローカル時間で行う
+                    const now = new Date();
+                    const nowY = now.getFullYear();
+                    const nowM = String(now.getMonth() + 1).padStart(2, '0');
+                    const nowD = String(now.getDate()).padStart(2, '0');
+                    const todayStr = `${nowY}-${nowM}-${nowD}`;
+                    const isToday = todayStr === dateStr;
+    
                     let cellClass = "h-8 w-8 mx-auto flex flex-col items-center justify-center rounded-full cursor-pointer transition text-sm relative ";
                     
                     if (isSelected) {
@@ -1900,10 +1914,10 @@
                     } else {
                         cellClass += "hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300";
                     }
-            
+    
                     // マーカー（ログがある日）
                     const marker = hasLog && !isSelected ? `<span class="absolute bottom-1 w-1 h-1 rounded-full bg-indigo-400"></span>` : '';
-            
+    
                     const cell = document.createElement('div');
                     cell.className = "text-center";
                     cell.innerHTML = `<div class="${cellClass}">${d}${marker}</div>`;
@@ -1917,10 +1931,15 @@
                     grid.appendChild(cell);
                 }
             };
-            
+    
             // 指定した日の詳細リストを表示する関数
             const renderDailyDetails = (targetDate) => {
-                const dateStr = targetDate.toISOString().split('T')[0];
+                // ★修正: ここもtoISOStringを使わず、ローカル時間で検索キーを作る
+                const y = targetDate.getFullYear();
+                const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+                const d = String(targetDate.getDate()).padStart(2, '0');
+                const dateStr = `${y}-${m}-${d}`;
+    
                 const displayDate = `${targetDate.getMonth()+1}月${targetDate.getDate()}日`;
                 
                 $('#detail-date-title').textContent = `${displayDate} の詳細`;
