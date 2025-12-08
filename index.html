@@ -5,6 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>StudyQuest</title>
 
+    <style>
+        /* Tailwindを待たずにスタイルを適用するための記述 */
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 9999; /* 最前面 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f3f4f6; /* gray-100 */
+            transition: opacity 0.5s ease;
+        }
+        /* 画像サイズ調整 */
+        #splash-screen img {
+            width: 16rem; /* w-64 */
+            height: 16rem; /* h-64 */
+            object-fit: contain;
+            margin-bottom: 1rem;
+        }
+
+        /* ダークモード制御 */
+        #splash-logo-dark { display: none; }
+        #splash-logo-light { display: block; }
+
+        /* OSの設定がダークモードの場合 */
+        @media (prefers-color-scheme: dark) {
+            #splash-screen { background-color: #111827; /* gray-900 */ }
+            #splash-logo-light { display: none; }
+            #splash-logo-dark { display: block; }
+        }
+
+        /* HTMLクラスにdarkがついている場合 (JS制御) */
+        html.dark #splash-screen { background-color: #111827; }
+        html.dark #splash-logo-light { display: none; }
+        html.dark #splash-logo-dark { display: block; }
+    </style>
+
+    <script>
+        // 画面描画前にOSの設定を確認して dark クラスを付与
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
     <!-- PWA関連 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -344,10 +389,9 @@
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
 
     <div id="splash-screen" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 transition-opacity duration-500">
-        <img src="SQ_logo2.png" alt="StudyQuest Logo" class="w-64 h-64 mb-4 block dark:hidden">
+        <img id="splash-logo-light" src="SQ_logo2.png" alt="StudyQuest Logo" class="w-64 h-64 mb-4 block dark:hidden">
         
-        <img src="SQ_logo3.png" alt="StudyQuest Logo Dark" class="w-64 h-64 mb-4 hidden dark:block">
-
+        <img id="splash-logo-dark" src="SQ_logo3.png" alt="StudyQuest Logo Dark" class="w-64 h-64 mb-4 hidden dark:block">
     </div>
 
     <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto shadow-2xl">
