@@ -399,44 +399,47 @@
         }
         .focus-theme-border:focus {
             border-color: var(--primary-color) !important;
-        }     
-        /* ページコンテナ（アニメーション時に位置ずれしないように基準点を設定） */
+        }  
+        
+        /* ページコンテナ */
         main {
             position: relative;
+            overflow-x: hidden; /* 横揺れ防止 */
         }
 
-        /* アニメーションの定義 (イン: 95% -> 100%, アウト: 100% -> 105%) */
+        /* アニメーション定義 (変化量を小さくして上品に) */
         @keyframes appZoomIn {
-            0% { opacity: 0; transform: scale(0.92); }
+            0% { opacity: 0; transform: scale(0.98); } /* 0.92 -> 0.98 に変更 */
             100% { opacity: 1; transform: scale(1); }
         }
         @keyframes appZoomOut {
             0% { opacity: 1; transform: scale(1); }
-            100% { opacity: 0; transform: scale(1.05); }
+            100% { opacity: 0; transform: scale(1.02); } /* 1.05 -> 1.02 に変更 */
         }
 
-        /* 新しく入ってくるページ用クラス */
+        /* 新しく入ってくるページ */
         .page-enter {
-            display: block !important; /* 強制表示 */
-            animation: appZoomIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-            z-index: 20; /* 前面に */
+            display: block !important;
+            animation: appZoomIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; /* 時間を少し短縮 */
+            z-index: 20;
+            will-change: transform, opacity; /* 【重要】描画最適化のヒント */
         }
-        /* Flexboxが必要なページ（集中モードなど）の例外対応 */
         #focus-page.page-enter {
             display: flex !important;
         }
 
-        /* 消えていくページ用クラス */
+        /* 消えていくページ */
         .page-exit {
             display: block !important;
-            position: absolute; /* フローから外して上に重ねる */
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            animation: appZoomOut 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation: appZoomOut 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
             z-index: 10;
-            pointer-events: none; /* アニメーション中はクリック不可に */
+            pointer-events: none;
+            will-change: transform, opacity; /* 【重要】描画最適化のヒント */
         }
         #focus-page.page-exit {
             display: flex !important;
@@ -2932,65 +2935,67 @@
                 else { showToast('通知が拒否されました。端末の設定アプリから変更できます。'); }
             });
             
-            let isAnimating = false; // 連打防止フラグ
+            // ▼▼▼ 修正版: アニメーション付きタブ切り替え処理（描画遅延対応） ▼▼▼
+            let isAnimating = false;
 
             $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
                 const nextPageId = e.currentTarget.dataset.page;
                 const activePage = document.querySelector('.page.active');
                 
-                // 同じページ、またはアニメーション中は無視
                 if ((activePage && activePage.id === nextPageId) || isAnimating) return;
 
-                // ターゲットページ（次に出るページ）を取得
                 const nextPage = $(`#${nextPageId}`);
                 if (!nextPage) return;
 
-                // ボタンの見た目を即時更新
+                // 1. まずUI（ボタン）を即座に更新
                 $$('.tab-btn').forEach(b => b.classList.replace('primary-text', 'text-gray-500'));
                 e.currentTarget.classList.replace('text-gray-500', 'primary-text');
                 $('#header-title').textContent = e.currentTarget.dataset.title;
 
-                // アニメーション開始
                 isAnimating = true;
 
-                // 1. 現在のページがあれば「退出アニメーション」を開始
+                // 2. 現在のページがあれば「退出」開始
                 if (activePage) {
                     activePage.classList.add('page-exit');
                     activePage.classList.remove('active');
                     
-                    // アニメーション終了後にクラスを掃除
                     activePage.addEventListener('animationend', () => {
                         activePage.classList.remove('page-exit');
-                        // activeは既に消しているので display: none に戻る
                     }, { once: true });
                 }
 
-                // 2. 次のページに「進入アニメーション」を開始
+                // 3. 次のページに「進入」クラスを付与（アニメーション開始）
                 nextPage.classList.add('page-enter');
-                // ※ .active は display:block を持っているが、.page-enter も display:block !important を持っているので
-                // アニメーション中は .page-enter が優先される。
-                // アニメーションが終わったら .active にバトンタッチする。
 
-                // ページ固有のレンダリング処理を実行（グラフ描画など）
-                if (renderEngine.pages[nextPageId]) { 
-                    renderEngine.pages[nextPageId](); 
-                }
+                // 4. 【重要】描画処理を少しだけ遅らせる
+                // これにより、ブラウザが「アニメーションの開始フレーム」を描画しきってから
+                // 重い処理（グラフ描画など）が走るため、ガタつきが軽減される。
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        // ページ固有のレンダリング（グラフ描画など）
+                        if (renderEngine.pages[nextPageId]) { 
+                            renderEngine.pages[nextPageId](); 
+                        }
 
-                // 集中モード等のUI更新
-                if (nextPageId === 'focus-page') {
-                    miniTimerTemporarilyHidden = false;
-                }
-                updateMiniTimer();
-                lucide.createIcons();
+                        // 集中モード等のUI更新
+                        if (nextPageId === 'focus-page') {
+                            miniTimerTemporarilyHidden = false;
+                        }
+                        updateMiniTimer();
+                        lucide.createIcons();
 
-                // 3. アニメーション終了時の処理
+                    }, 10); // 10ms程度の遅延で十分効果あり
+                });
+
+                // 5. アニメーション終了時の処理
                 nextPage.addEventListener('animationend', () => {
                     nextPage.classList.remove('page-enter');
-                    nextPage.classList.add('active'); // 正式にアクティブ化
-                    isAnimating = false; // ロック解除
+                    nextPage.classList.add('active');
+                    isAnimating = false;
                 }, { once: true });
 
             }));
+            // ▲▲▲ 修正ここまで ▲▲▲
 
             $('#mini-timer-bar').addEventListener('click', (e) => {
                 if (e.target.closest('#close-mini-timer-btn')) return;
