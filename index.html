@@ -5,40 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>StudyQuest</title>
 
+    <meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
+
     <style>
-        /* Tailwindを待たずにスタイルを適用するための記述 */
+        /* 1. htmlとbodyに最初から背景色をつける (これが白飛び防止の鍵) */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f3f4f6; /* gray-100 (ライトモードの背景) */
+        }
+
+        /* 2. スプラッシュスクリーンの設定 */
         #splash-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 9999; /* 最前面 */
+            z-index: 9999;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background-color: #f3f4f6; /* gray-100 */
+            background-color: #f3f4f6; /* 本体と同じ色 */
             transition: opacity 0.5s ease;
         }
-        /* 画像サイズ調整 */
+        
         #splash-screen img {
-            width: 16rem; /* w-64 */
-            height: 16rem; /* h-64 */
+            width: 16rem;
+            height: 16rem;
             object-fit: contain;
             margin-bottom: 1rem;
         }
 
-        /* ダークモード制御 */
+        /* ロゴの出し分け */
         #splash-logo-dark { display: none; }
         #splash-logo-light { display: block; }
 
-        /* OSの設定がダークモードの場合 */
+        /* 3. ダークモード時の背景色をOS設定から即座に反映 */
         @media (prefers-color-scheme: dark) {
-            #splash-screen { background-color: #111827; /* gray-900 */ }
+            html, body, #splash-screen {
+                background-color: #111827; /* gray-900 (ダークモードの背景) */
+            }
             #splash-logo-light { display: none; }
             #splash-logo-dark { display: block; }
         }
 
-        /* HTMLクラスにdarkがついている場合 (JS制御) */
-        html.dark #splash-screen { background-color: #111827; }
+        /* クラスによる制御 (JSロード後) */
+        html.dark, html.dark body, html.dark #splash-screen { background-color: #111827; }
         html.dark #splash-logo-light { display: none; }
         html.dark #splash-logo-dark { display: block; }
     </style>
@@ -54,7 +68,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="StudyQuest">
-    <meta name="theme-color" content="#4f46e5">
 
     <link rel="icon" type="image/png" href="SQ_logo.png">
 
