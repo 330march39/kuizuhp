@@ -932,8 +932,11 @@
     <div id="point-details-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 flex flex-col max-h-[90vh]"><div class="flex justify-between items-center mb-4 flex-shrink-0"><h2 class="text-xl font-bold">マイステータス</h2><button id="close-point-modal-btn" class="p-1"><i data-lucide="x"></i></button></div><div class="space-y-6 overflow-y-auto"><div class="text-center"><p class="text-sm text-gray-500">現在の学習ポイント</p><p class="text-4xl font-bold primary-text" id="modal-lp-display"></p></div><div><h3 class="font-semibold mb-2">テーマカラー</h3><div id="modal-theme-selector" class="grid grid-cols-4 gap-4"></div></div><div><h3 class="font-semibold mb-2">壁紙</h3><div id="modal-background-selector" class="grid grid-cols-3 gap-2"></div></div></div></div></div>
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300 z-50 transform -translate-y-10"></div>
         
-    <div id="quest-active-screen" class="hidden fixed inset-0 bg-gray-900 dark:bg-black text-gray-100 z-50 flex flex-col items-center justify-center p-4">
-        
+    <div id="quest-active-screen" class="focus-view-bg hidden fixed inset-0 bg-gray-900 text-gray-100 z-50 flex flex-col items-center justify-center p-4 transition-all duration-500 bg-cover bg-center">
+
+        <div class="absolute inset-0 bg-black/60 z-0"></div>
+        <div class="relative z-10 w-full h-full flex flex-col items-center justify-center">
+        
         <div class="absolute top-6 right-6 flex items-center space-x-2 z-10">
             <button id="break-settings-btn" class="text-gray-400 p-2 rounded-full hover:bg-gray-700 transition-colors hidden">
                 <i data-lucide="settings" class="w-7 h-7"></i>
@@ -987,7 +990,6 @@
         
             </div>
         </div>
-    </div>
     
     <div id="iframe-overlay" class="hidden fixed inset-0 bg-gray-900 z-[80] flex flex-col">
         <div class="bg-gray-800 p-2 flex justify-between items-center z-10 shadow-md">
@@ -1538,6 +1540,7 @@
                     // 変更後
                   'focus-page': () => {
                       updateFocusModeUI();
+                      updateBackgrounds();
                         const activeBg = initialData.backgrounds[state.profile.activeBackground] || initialData.backgrounds['default'];
                         const hasImage = activeBg && activeBg.url;
                         const isGlobal = state.settings.backgroundScopeGlobal;
@@ -2499,6 +2502,7 @@
                 state.settings.backgroundScopeGlobal = e.target.checked;
                 saveState();
                 updateAppearance();
+                updateBackgrounds();
                 // 集中タブが表示されている場合に備えて再描画
                 if ($('#focus-page').classList.contains('active')) {
                     renderEngine.pages['focus-page']();
@@ -2663,6 +2667,31 @@
                     stopwatchBtn.classList.add('primary-bg', 'text-white');
                 }
             };
+
+            // ▼▼▼ 新規追加: 背景画像を focus-view-bg クラスを持つ要素（クエスト含む）に適用する関数 ▼▼▼
+            const updateBackgrounds = () => {
+                const activeBgId = state.profile.activeBackground;
+                const activeBg = initialData.backgrounds[activeBgId] || initialData.backgrounds['default'];
+                const isGlobal = state.settings.backgroundScopeGlobal;
+                const hasImage = activeBg && activeBg.url;
+            
+                // .focus-view-bg クラスを持つすべての要素（タイマー画面、クエスト画面など）を取得
+                $$('.focus-view-bg').forEach(el => {
+                    // 「全体適用」がオフで、かつ画像がある場合のみ、個別に背景を設定
+                    // ※クエスト画面は全画面オーバーレイなので、GlobalがONでもOFFでも背景画像を表示したい場合は条件を調整
+                    // ここでは「タイマー画面と同じ挙動（Global OFFなら個別に表示）」に加え、
+                    // 「クエスト画面(#quest-active-screen)なら常に表示」というロジックにします。
+                    
+                    const isQuestScreen = el.id === 'quest-active-screen';
+            
+                    if ((!isGlobal && hasImage) || (isQuestScreen && hasImage)) {
+                        el.style.backgroundImage = `url(${activeBg.url})`;
+                    } else {
+                        // 全体適用がONの場合は親(body)の背景が見えるので透明にする、または画像なし
+                        el.style.backgroundImage = 'none';
+                    }
+                });
+            };
 
             const resetTimerUI = () => {
                 clearInterval(focusTimer.interval);
@@ -3283,6 +3312,7 @@
             }
             quest.active = true;
             quest.currentIndex = -1;
+            updateBackgrounds();
             questActiveScreen.style.display = 'flex';
             
             // アプリ2のヘッダーとタブバーを隠す
@@ -3852,6 +3882,7 @@
                 quest.plan = saved.plan;
                 quest.currentIndex = saved.currentIndex;
                 quest.active = true;
+                updateBackgrounds();
 
                 // UI切り替え
                 $('header').style.display = 'none';
