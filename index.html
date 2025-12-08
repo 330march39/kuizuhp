@@ -1587,8 +1587,51 @@
                         }
                         renderChart('study-time-chart', 'bar', { 
                             labels, 
-                            datasets: [{ label: '学習時間 (分)', data, backgroundColor: chartBarColor, borderColor: chartBorderColor, borderWidth: 1 }] 
-                        }, { scales: { y: { beginAtZero: true } } });
+                            datasets: [{ 
+                                label: '学習時間', // (単位は軸に出るのでラベルはシンプルに)
+                                data, 
+                                backgroundColor: chartBarColor, 
+                                borderColor: chartBorderColor, 
+                                borderWidth: 1 
+                            }] 
+                        }, { 
+                            responsive: true,
+                            maintainAspectRatio: false, // 枠に合わせてリサイズ
+                            scales: { 
+                                y: { 
+                                    beginAtZero: true,
+                                    ticks: {
+                                        // ★ここがポイント：最小単位を1(分)にする。これで0.xのような表示を防ぐ
+                                        stepSize: 1, 
+                                        autoSkip: true,
+                                        // ★メモリの表示フォーマット関数
+                                        callback: function(value) {
+                                            if (value === 0) return '0';
+                                            // 60で割り切れる（1時間, 2時間...）場合は「時間」表示
+                                            if (value >= 60 && value % 60 === 0) {
+                                                return (value / 60) + '時間';
+                                            }
+                                            // それ以外は「分」表示
+                                            return value + '分';
+                                        }
+                                    }
+                                } 
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        // ツールチップ（タップした時）の表示も「◯時間◯分」形式にする
+                                        label: function(context) {
+                                            const val = context.raw; // 分
+                                            const h = Math.floor(val / 60);
+                                            const m = Math.round(val % 60); // 念のため四捨五入
+                                            if (h > 0) return ` ${h}時間 ${m}分`;
+                                            return ` ${m}分`;
+                                        }
+                                    }
+                                }
+                            }
+                        });
                     
                         // --- 3. カレンダーと詳細リストの描画 ---
                         renderCalendar();
@@ -1958,7 +2001,7 @@
                         const durationText = min > 0 ? `${min}分` : `${sec}秒`;
                         
                         return `
-                            <div class="flex items-center justify-between bg-white dark:bg-gray-700 p-3 rounded-lg shadow-sm border-l-4 border-indigo-500">
+                            <div class="flex items-center justify-between bg-white dark:bg-gray-700 p-3 rounded-lg shadow-sm border-l-4" style="border-left-color: var(--primary-color);">
                                 <div class="flex-grow min-w-0 mr-4">
                                     <h4 class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">${s.title}</h4>
                                 </div>
