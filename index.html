@@ -441,9 +441,13 @@
             z-index: 10;
             pointer-events: none;
             will-change: transform, opacity; /* 【重要】描画最適化のヒント */
+            height: 0 !important;
+            overflow: hidden !important;
         }
         #focus-page.page-exit {
             display: flex !important;
+            height: 0 !important;  /* ← これを追加 */
+            overflow: hidden !important;  /* ← これを追加 */
         }
     </style>
 </head>
