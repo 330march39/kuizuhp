@@ -3223,7 +3223,7 @@
             }
             
             $('#migration-connect-btn').addEventListener('click', () => {
-                const targetId = $('#migration-target-id').value.trim(); // 大文字小文字はPeerJSでは区別される
+                const targetId = $('#migration-target-id').value.trim().toUpperCase();
                 if(!targetId) return;
                 
                 $('#migration-status-send').textContent = "接続中...";
