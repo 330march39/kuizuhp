@@ -423,6 +423,7 @@
             animation: appZoomIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; /* 時間を少し短縮 */
             z-index: 20;
             will-change: transform, opacity; /* 【重要】描画最適化のヒント */
+            transform-origin: top center;
         }
         #focus-page.page-enter {
             display: flex !important;
