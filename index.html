@@ -2947,6 +2947,8 @@
                 const nextPage = $(`#${nextPageId}`);
                 if (!nextPage) return;
 
+                $('main').scrollTop = 0;
+
                 // 1. まずUI（ボタン）を即座に更新
                 $$('.tab-btn').forEach(b => b.classList.replace('primary-text', 'text-gray-500'));
                 e.currentTarget.classList.replace('text-gray-500', 'primary-text');
