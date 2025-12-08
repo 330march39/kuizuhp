@@ -289,6 +289,8 @@
         .preview-carousel {
             display: flex;
             overflow-x: auto;
+            overflow-y: hidden; 
+            touch-action: pan-x;
             scroll-snap-type: x mandatory; /* スナップスクロール */
             -webkit-overflow-scrolling: touch;
             gap: 1rem;
@@ -3031,8 +3033,8 @@
                         previewBtn.parentNode.replaceChild(newPreviewBtn, previewBtn);
                         
                         newPreviewBtn.addEventListener('click', (e) => {
-                            const icon = newPreviewBtn.querySelector('i');
-                            toggleMusicPreview(item.url, icon);
+                            // ▼修正: アイコンではなくボタン要素そのものを渡す
+                            toggleMusicPreview(item.url, newPreviewBtn);
                         });
                 
                         const confirmBtn = $('#music-purchase-confirm');
@@ -3082,7 +3084,7 @@
         };
         
         // BGM試聴の再生・停止制御
-        const toggleMusicPreview = (url, btnIcon) => {
+        const toggleMusicPreview = (url, btnElement) => {
             if (!previewAudio.paused && previewAudio.src === url) {
                 // 再生中なら止める
                 stopMusicPreview();
@@ -3092,11 +3094,15 @@
                 previewAudio.src = url;
                 previewAudio.volume = 0.5;
                 previewAudio.play().then(() => {
-                    // アイコンを停止マークに変更
-                    if(btnIcon) {
-                        btnIcon.setAttribute('data-lucide', 'square'); 
-                        btnIcon.parentElement.classList.add('playing-icon'); // アニメーション
-                        lucide.createIcons();
+                    // ▼修正: ボタンの中身を「停止アイコン(square)」に書き換え
+                    if(btnElement) {
+                        // <i>タグを再注入
+                        btnElement.innerHTML = '<i data-lucide="square" class="w-6 h-6 fill-current"></i>';
+                        btnElement.classList.add('playing-icon'); // アニメーション追加
+                        // このボタンの中だけアイコンを再生成
+                        lucide.createIcons({
+                            root: btnElement
+                        });
                     }
                     
                     // 30秒後に自動停止
@@ -3112,11 +3118,16 @@
             previewAudio.currentTime = 0;
             if (previewTimeout) clearTimeout(previewTimeout);
             
-            // アイコンを再生マークに戻す（全ボタンリセット）
-            const btns = document.querySelectorAll('#music-preview-btn i');
-            btns.forEach(i => i.setAttribute('data-lucide', 'play'));
-            document.querySelectorAll('#music-preview-btn').forEach(b => b.classList.remove('playing-icon'));
-            lucide.createIcons();
+            // ▼修正: ボタンの中身を「再生アイコン(play)」に戻す
+            const btn = document.getElementById('music-preview-btn');
+            if (btn) {
+                btn.innerHTML = '<i data-lucide="play" class="w-6 h-6 fill-current"></i>';
+                btn.classList.remove('playing-icon');
+                // このボタンの中だけアイコンを再生成
+                lucide.createIcons({
+                    root: btn
+                });
+            }
         };    
         
             
