@@ -1137,6 +1137,7 @@
 
             let state;
             let chartInstances = {};
+            let breakSortable = null;
             let focusTimer = { interval: null, defaultTime: 0, timeLeft: 0, isRunning: false, isPaused: false };
             let stopwatch = { interval: null, startTime: 0, elapsedTime: 0, isRunning: false, isPaused: false };
             let miniTimerTemporarilyHidden = false;
@@ -3468,9 +3469,13 @@
                 activeContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">表示するコンテンツがありません</p>';
             } else {
                 activeContainer.innerHTML = activeIcons.map(icon => `
-                    <div class="break-settings-item flex items-center bg-white/5 p-3 rounded-lg border border-white/10" data-id="${icon.id}">
-                        <i data-lucide="grip-vertical" class="break-settings-handle w-6 h-6 flex-shrink-0 text-gray-400 cursor-grab mr-3"></i>
-                        <i data-lucide="${icon.icon}" class="w-5 h-5 mr-3 text-gray-200"></i>
+                    <div class="break-settings-item flex items-center bg-white/5 p-3 rounded-lg border border-white/10 mb-2 touch-none" data-id="${icon.id}">
+                        <div class="break-settings-handle p-2 mr-1 cursor-grab active:cursor-grabbing text-gray-400">
+                             <i data-lucide="grip-vertical" class="w-6 h-6"></i>
+                        </div>
+                        <div class="flex items-center justify-center w-8 h-8 mr-3 text-gray-200">
+                            <i data-lucide="${icon.icon}" class="w-6 h-6"></i>
+                        </div>
                         <span class="text-gray-200 flex-grow text-sm font-bold truncate">${icon.name}</span>
                         <button class="remove-break-btn p-2 rounded-full text-red-400 hover:bg-red-500/20 transition flex-shrink-0">
                             <i data-lucide="minus-circle" class="w-5 h-5"></i>
@@ -3491,7 +3496,9 @@
                 `).join('');
             }
         
-            lucide.createIcons();
+            // ★アイコンを確実に生成（対象コンテナを指定）
+            lucide.createIcons({ root: activeContainer });
+            lucide.createIcons({ root: inactiveContainer });
         
             // 4. イベントリスナー設定：削除ボタン
             activeContainer.querySelectorAll('.remove-break-btn').forEach(btn => {
@@ -3521,19 +3528,26 @@
                 });
             });
         
-            // 6. Sortable.js の適用 (activeContainerのみ)
-            // 以前のインスタンスが残っていると挙動がおかしくなることがあるため、簡易的に再生成
-            Sortable.create(activeContainer, {
+            // 6. Sortable.js の適用 (重複防止ロジック追加)
+            // 以前のインスタンスがあれば破棄する
+            if (breakSortable) {
+                breakSortable.destroy();
+            }
+
+            // 新しく作成する
+            breakSortable = Sortable.create(activeContainer, {
                 handle: '.break-settings-handle',
                 animation: 150,
                 ghostClass: 'sortable-ghost',
+                delay: 100, // 少しだけ長押し判定を入れるとスクロールと干渉しにくい
+                delayOnTouchOnly: true,
+                touchStartThreshold: 5,
                 onEnd: (evt) => {
                     // 並び替え後のID順序を取得
                     const idOrder = Array.from(activeContainer.children).map(child => child.dataset.id);
                     
                     // state.breakIcons を並び替える
-                    // (表示中のものは idOrder の順に、非表示のものはその後ろに維持する)
-                    const sortedActive = idOrder.map(id => state.breakIcons.find(i => i.id === id));
+                    const sortedActive = idOrder.map(id => state.breakIcons.find(i => i.id === id)).filter(Boolean); // filter(Boolean)でundefined排除
                     const inactive = state.breakIcons.filter(i => !i.visible);
                     
                     state.breakIcons = [...sortedActive, ...inactive];
@@ -3542,7 +3556,7 @@
                 }
             });
         }
-
+            
         // ★新規追加★ 休憩設定モーダルを開く関数
         function openBreakSettingsModal() {
             renderBreakSettingsModal(); // 1. 中身を描画
