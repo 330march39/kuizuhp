@@ -1380,11 +1380,34 @@
             };
             
            const createQuizCard = (quiz, isPinned) => {
-                if(!quiz) return '';
-                const progress = state.progress[quiz.id];
-                const levelIcons = { 1: 'book-open-check', 2: 'thumbs-up', 3: 'award'};
-                return `<div class="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-3 flex items-center justify-between quiz-card" data-id="${quiz.id}"><div class="flex items-center min-w-0"><div class="w-5 h-5 mr-3 flex-shrink-0">${progress ? `<i data-lucide="${levelIcons[progress.level]}" class="text-yellow-500"></i>` : ``}</div><div class="truncate"><h3 class="font-semibold text-gray-800 dark:text-gray-200 truncate">${quiz.title}</h3><p class="text-sm text-gray-500 dark:text-gray-400">${quiz.subject} - ${quiz.genre}</p></div></div><button class="pin-btn p-2 -mr-2 flex-shrink-0" data-id="${quiz.id}"><i data-lucide="pin" class="w-5 h-5 ${isPinned ? 'primary-text fill-current' : 'text-gray-400'}"></i></button></div>`;
-            };
+                if(!quiz) return '';
+                const progress = state.progress[quiz.id];
+                
+                // アイコンの形定義
+                const levelIcons = { 1: 'book-open-check', 2: 'thumbs-up', 3: 'award'};
+                
+                // ★色定義を追加 (モーダルに合わせた色系統)
+                // 視認性を良くするため、モーダルの400番より少し濃い500番を使用しています
+                const levelColors = { 1: 'text-blue-500', 2: 'text-green-500', 3: 'text-yellow-500'};
+
+                // 進捗がある場合の色を取得
+                const color = progress ? levelColors[progress.level] : '';
+
+                return `<div class="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-3 flex items-center justify-between quiz-card" data-id="${quiz.id}">
+                            <div class="flex items-center min-w-0">
+                                <div class="w-5 h-5 mr-3 flex-shrink-0">
+                                    ${progress ? `<i data-lucide="${levelIcons[progress.level]}" class="${color}"></i>` : ``}
+                                </div>
+                                <div class="truncate">
+                                    <h3 class="font-semibold text-gray-800 dark:text-gray-200 truncate">${quiz.title}</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">${quiz.subject} - ${quiz.genre}</p>
+                                </div>
+                            </div>
+                            <button class="pin-btn p-2 -mr-2 flex-shrink-0" data-id="${quiz.id}">
+                                <i data-lucide="pin" class="w-5 h-5 ${isPinned ? 'primary-text fill-current' : 'text-gray-400'}"></i>
+                            </button>
+                        </div>`;
+            };
             
             const renderChart = (canvasId, type, data, options) => {
                 const ctx = $(`#${canvasId}`).getContext('2d');
