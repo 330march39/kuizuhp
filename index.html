@@ -1303,7 +1303,7 @@
                 breakWindow: null
             };
 
-            // --- スワイプ制御クラス（マルチタッチ対応版） ---
+            // --- スワイプ制御クラス（完全版：ウィンドウ監視対応） ---
             class SwipeHandler {
                 constructor(element, options = {}) {
                     this.container = element;
@@ -1322,187 +1322,192 @@
                     
                     this.isDragging = false; 
                     this.isSwiping = false;  
-                    
-                    // ★追加: スワイプしている指のIDを記録する変数
                     this.currentTouchId = null;
+
+                    // イベントハンドラをクラスのインスタンスにバインド（removeEventListener用）
+                    this.handleMove = this.handleMove.bind(this);
+                    this.handleEnd = this.handleEnd.bind(this);
 
                     this.initEvents();
                 }
             
                 initEvents() {
-                    const start = (e) => {
-                        // 既ドラッグ中なら、他の指のタッチは無視する
-                        if (this.isDragging) return;
+                    // 開始イベントだけは要素自身に設定
+                    this.content.addEventListener('touchstart', (e) => this.handleStart(e), { passive: false });
+                    this.content.addEventListener('mousedown', (e) => this.handleStart(e));
 
-                        let clientX, clientY, target;
-
-                        // タッチイベントの場合
-                        if (e.type === 'touchstart') {
-                            const touch = e.changedTouches[0];
-                            this.currentTouchId = touch.identifier; // ★指のIDを保存
-                            clientX = touch.clientX;
-                            clientY = touch.clientY;
-                            target = touch.target;
-                        } else {
-                            // マウスの場合
-                            clientX = e.clientX;
-                            clientY = e.clientY;
-                            target = e.target;
-                        }
-
-                        // 入力フォームは除外
-                        if (target.tagName === 'INPUT') return;
+                    // ボタンのクリックイベント（バブリング停止用）
+                    const btns = this.actionsContainer ? this.actionsContainer.querySelectorAll('.swipe-btn') : [];
+                    btns.forEach(btn => {
+                        // タッチ開始時はバブリングを止めるだけ
+                        btn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
                         
-                        // 既に開いている状態で、コンテンツ部分をタップしたら閉じる動作を優先
-                        if (this.container.classList.contains('swiped-open') && target.closest('.swipe-content')) {
-                             this.snapToClose();
-                             return;
-                        }
-
-                        this.isDragging = true;
-                        this.isSwiping = false; // リセット
-                        this.startX = clientX;
-                        this.startY = clientY;
-                        
-                        const style = window.getComputedStyle(this.content);
-                        const matrix = new WebKitCSSMatrix(style.transform);
-                        this.startOffset = matrix.m41; 
-                        
-                        // アニメーション一時停止
-                        this.container.classList.add('is-dragging');
-                    };
-            
-                    const move = (e) => {
-                        if (!this.isDragging) return;
-
-                        let clientX, clientY;
-
-                        // タッチイベントの場合
-                        if (e.type === 'touchmove') {
-                            // ★保存したIDと一致する指を探す
-                            const touch = Array.from(e.changedTouches).find(t => t.identifier === this.currentTouchId);
-                            if (!touch) return; // 違う指なら無視
-                            clientX = touch.clientX;
-                            clientY = touch.clientY;
-                        } else {
-                            clientX = e.clientX;
-                            clientY = e.clientY;
-                        }
-            
-                        const diffX = clientX - this.startX;
-                        const diffY = clientY - this.startY;
-            
-                        // まだスワイプが確定していない場合
-                        if (!this.isSwiping) {
-                            // 縦移動の方が大きい場合はスワイプキャンセル（スクロール優先）
-                            if (Math.abs(diffY) > Math.abs(diffX)) {
-                                this.isDragging = false;
-                                this.currentTouchId = null; // ★IDリセット
-                                this.container.classList.remove('is-dragging');
-                                return;
-                            }
-                            
-                            // 横移動が15pxを超えるまでは画面を動かさない
-                            if (Math.abs(diffX) < 15) {
-                                return; 
-                            }
-                            
-                            // 15px以上動いたらスワイプ確定
-                            this.isSwiping = true;
-                            this.container.classList.add('is-swiping');
-                        }
-
-                        // ここから下はスワイプ確定後の処理
-                        if (e.cancelable) e.preventDefault(); // 画面スクロールを止める
-            
-                        let newX = this.startOffset + diffX;
-            
-                        // 右端制限
-                        if (newX > 0) newX = 0;
-                        // 左端制限
-                        if (newX < -this.actionsWidth - 150) newX = -this.actionsWidth - 150;
-            
-                        this.currentX = newX;
-                        this.content.style.transform = `translateX(${newX}px)`;
-                    };
-            
-                    const end = (e) => {
-                        if (!this.isDragging) return;
-
-                        // タッチイベントの場合
-                        if (e.type === 'touchend' || e.type === 'touchcancel') {
-                            // ★保存したIDと一致する指か確認
-                            const touch = Array.from(e.changedTouches).find(t => t.identifier === this.currentTouchId);
-                            if (!touch) return; // 違う指が離れただけなら無視して続行
-                        }
-
-                        this.isDragging = false;
-                        this.isSwiping = false;
-                        this.currentTouchId = null; // ★IDリセット
-                        this.container.classList.remove('is-dragging');
-                        this.container.classList.remove('is-swiping');
-            
-                        // 閾値判定
-                        if (this.currentX < -200) { // フルスワイプ削除
-                            if (this.onDelete) {
-                                this.content.style.transform = `translateX(-120vw)`;
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            if (btn.classList.contains('btn-complete')) {
+                                this.snapToClose();
+                                if (this.onComplete) setTimeout(() => this.onComplete(), 300);
+                            } else if (btn.classList.contains('btn-delete')) {
                                 this.performDelete();
-                            } else {
-                                this.snapToOpen();
                             }
-                        } else if (this.currentX < -(this.actionsWidth / 2)) {
-                            this.snapToOpen();
-                        } else {
-                            this.snapToClose();
-                        }
-                    };
-            
-                    // Touch Events (イベント引数 e をそのまま渡すように変更)
-                    this.content.addEventListener('touchstart', start, { passive: true });
-                    this.content.addEventListener('touchmove', move, { passive: false });
-                    this.content.addEventListener('touchend', end);
-                    this.content.addEventListener('touchcancel', end); // ★タッチキャンセルも追加
-            
-                    // Mouse Events
-                    this.content.addEventListener('mousedown', start);
-                    window.addEventListener('mousemove', move);
-                    window.addEventListener('mouseup', end);
-                    
-                    // ボタンイベントの確実な発火
-                    const completeBtn = this.actionsContainer ? this.actionsContainer.querySelector('.btn-complete') : null;
-                    if (completeBtn) {
-                        completeBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
-                        completeBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            this.snapToClose();
-                            if (this.onComplete) setTimeout(() => this.onComplete(), 300);
                         });
+                    });
+                }
+
+                handleStart(e) {
+                    // 既にドラッグ中なら無視
+                    if (this.isDragging) return;
+
+                    // 入力フォームなら無視
+                    if (e.target.tagName === 'INPUT') return;
+
+                    // 既に開いている状態で中身を触ったら閉じる
+                    if (this.container.classList.contains('swiped-open') && e.target.closest('.swipe-content')) {
+                        e.preventDefault(); // ここ重要：閉じる動作と認識させる
+                        this.snapToClose();
+                        return;
                     }
-            
-                    const deleteBtn = this.actionsContainer ? this.actionsContainer.querySelector('.btn-delete') : null;
-                    if (deleteBtn) {
-                        deleteBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
-                        deleteBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
+
+                    let clientX, clientY;
+
+                    if (e.type === 'touchstart') {
+                        const touch = e.changedTouches[0];
+                        this.currentTouchId = touch.identifier;
+                        clientX = touch.clientX;
+                        clientY = touch.clientY;
+                    } else {
+                        clientX = e.clientX;
+                        clientY = e.clientY;
+                    }
+
+                    this.isDragging = true;
+                    this.isSwiping = false;
+                    this.startX = clientX;
+                    this.startY = clientY;
+
+                    const style = window.getComputedStyle(this.content);
+                    const matrix = new WebKitCSSMatrix(style.transform);
+                    this.startOffset = matrix.m41; 
+
+                    this.container.classList.add('is-dragging');
+
+                    // ★重要★: 移動と終了の監視を「window」に対して行う
+                    // これにより、指が要素の外に出ても、画面端に行っても追跡できる
+                    window.addEventListener('touchmove', this.handleMove, { passive: false });
+                    window.addEventListener('touchend', this.handleEnd);
+                    window.addEventListener('touchcancel', this.handleEnd); // システムの割り込み対策
+                    
+                    window.addEventListener('mousemove', this.handleMove);
+                    window.addEventListener('mouseup', this.handleEnd);
+                }
+        
+                handleMove(e) {
+                    if (!this.isDragging) return;
+
+                    let clientX, clientY;
+
+                    if (e.type === 'touchmove') {
+                        // 追跡中の指のみを対象にする
+                        const touch = Array.from(e.changedTouches).find(t => t.identifier === this.currentTouchId);
+                        if (!touch) return; 
+                        clientX = touch.clientX;
+                        clientY = touch.clientY;
+                    } else {
+                        clientX = e.clientX;
+                        clientY = e.clientY;
+                    }
+        
+                    const diffX = clientX - this.startX;
+                    const diffY = clientY - this.startY;
+        
+                    if (!this.isSwiping) {
+                        // 縦スクロール判定
+                        if (Math.abs(diffY) > Math.abs(diffX)) {
+                            this.endDrag(); // ドラッグ中止
+                            return;
+                        }
+                        // 遊び（不感帯）
+                        if (Math.abs(diffX) < 10) return; 
+                        
+                        this.isSwiping = true;
+                        this.container.classList.add('is-swiping');
+                    }
+
+                    // スワイプ確定後はスクロールを止める
+                    if (e.cancelable) e.preventDefault();
+        
+                    let newX = this.startOffset + diffX;
+        
+                    // 抵抗と制限
+                    if (newX > 0) newX = newX * 0.2; // 右への引っ張り抵抗
+                    if (newX < -this.actionsWidth - 100) {
+                        // 左への行き過ぎ抵抗
+                        const extra = newX - (-this.actionsWidth - 100);
+                        newX = -this.actionsWidth - 100 + (extra * 0.2);
+                    }
+        
+                    this.currentX = newX;
+                    this.content.style.transform = `translateX(${newX}px)`;
+                }
+        
+                handleEnd(e) {
+                    if (!this.isDragging) return;
+
+                    if (e.type === 'touchend' || e.type === 'touchcancel') {
+                        const touch = Array.from(e.changedTouches).find(t => t.identifier === this.currentTouchId);
+                        if (!touch) return; 
+                    }
+
+                    this.endDrag(); // イベントリスナー解除等の共通処理
+
+                    // 位置判定
+                    if (this.currentX < -150) { // 深くスワイプしたら削除
+                        if (this.onDelete) {
+                            this.content.style.transform = `translateX(-120vw)`; // 画面外へ
                             this.performDelete();
-                        });
+                        } else {
+                            this.snapToOpen();
+                        }
+                    } else if (this.currentX < -(this.actionsWidth / 2)) {
+                        this.snapToOpen();
+                    } else {
+                        this.snapToClose();
                     }
                 }
-            
+
+                // 終了時のクリーンアップ処理
+                endDrag() {
+                    this.isDragging = false;
+                    this.isSwiping = false;
+                    this.currentTouchId = null;
+                    
+                    this.container.classList.remove('is-dragging');
+                    this.container.classList.remove('is-swiping');
+
+                    // ★重要★: windowへの監視を解除する
+                    window.removeEventListener('touchmove', this.handleMove);
+                    window.removeEventListener('touchend', this.handleEnd);
+                    window.removeEventListener('touchcancel', this.handleEnd);
+                    
+                    window.removeEventListener('mousemove', this.handleMove);
+                    window.removeEventListener('mouseup', this.handleEnd);
+                }
+        
                 snapToOpen() {
                     this.content.style.transform = `translateX(-${this.actionsWidth}px)`;
                     this.container.classList.add('swiped-open');
                 }
-            
+        
                 snapToClose() {
                     this.content.style.transform = `translateX(0px)`;
                     this.container.classList.remove('swiped-open');
                 }
-            
+        
                 performDelete() {
                     this.container.style.height = this.container.offsetHeight + 'px';
                     this.container.classList.add('swipe-deleting');
                     
+                    // アニメーション待ち
                     requestAnimationFrame(() => {
                         this.container.style.height = '0px';
                         setTimeout(() => {
