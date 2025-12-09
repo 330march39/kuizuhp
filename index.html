@@ -71,7 +71,7 @@
 
     <!-- PWA関連 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta id="meta-status-bar" name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="StudyQuest">
 
     <link rel="icon" type="image/png" href="SQ_logo.png">
@@ -84,6 +84,29 @@
     
     <!-- 外部ライブラリとフォント -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // OSのダークモード設定に合わせてステータスバーのスタイルを切り替える関数
+        function updateStatusBarStyle() {
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const meta = document.getElementById('meta-status-bar');
+            if (meta) {
+                // ダークモード時: 'black-translucent'
+                // → 背景が透明になり、bodyに設定した色（ヘッダーと同じ色）がそのまま透けて見えます。文字は白になります。
+                // ライトモード時: 'default'
+                // → 標準の白背景・黒文字になります。
+                meta.content = isDark ? 'black-translucent' : 'default';
+            }
+        }
+
+        // 1. 読み込み時に実行
+        updateStatusBarStyle();
+
+        // 2. OSの設定変更を監視して実行（アプリ起動中にモードが変わった場合用）
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateStatusBarStyle);
+        }
+    </script>
+    
     <script>
       tailwind.config = {
         darkMode: 'class' // ここでダークモードの制御方法を'class'に指定します
