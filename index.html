@@ -3920,40 +3920,58 @@
             });
 
             // --- プロフィール画面の制御 (アニメーション & スワイプ対応) ---
-            const profileScreen = $('#profile-screen'); // HTMLでIDを変更したので取得し直し
+            const profileScreen = $('#profile-screen'); 
+            
+            // ★追加: 閉じる処理のタイマーIDを保存する変数
+            let profileCloseTimer = null;
 
             // プロフィール編集画面を開く
             function openProfileModal() {
+                // ★追加: 閉じる処理が待機中ならキャンセルする
+                if (profileCloseTimer) {
+                    clearTimeout(profileCloseTimer);
+                    profileCloseTimer = null;
+                }
+
+                // ★追加: スワイプ等の残留スタイルを確実にリセット
+                profileScreen.style.transform = '';
+                profileScreen.classList.remove('is-swiping');
+
                 // 現在の値を入れる
                 $('#edit-profile-icon').value = state.user.icon;
                 $('#edit-profile-name').value = state.user.name;
                 
-                // 学年のオプションをコピー (初回のみ行うなどの判定を入れても良い)
+                // 学年のオプションをコピー
                 const gradeSelect = $('#edit-profile-grade');
-                if (gradeSelect.children.length <= 1) { // 空ならコピー
+                if (gradeSelect.children.length <= 1) { 
                     gradeSelect.innerHTML = $('#reg-grade').innerHTML;
                 }
                 gradeSelect.value = state.user.grade;
                 
-                // 表示アニメーション (activeクラスをつけるだけ)
-                profileScreen.style.display = 'flex'; // 先にflexにしておく
-                // 少し遅らせてクラスを付与しないとtransitionが効かない
-                requestAnimationFrame(() => {
-                    profileScreen.classList.add('active');
-                });
+                // 表示アニメーション
+                profileScreen.style.display = 'flex'; 
+                
+                // ★追加: ブラウザに描画を確定させてからクラスを追加（アニメーション用）
+                void profileScreen.offsetWidth; 
+
+                profileScreen.classList.add('active');
             }
             
             // プロフィール編集画面を閉じる
             function closeProfileModal() {
                 profileScreen.classList.remove('active');
-                // アニメーションが終わるまで待ってから非表示にする
-                setTimeout(() => {
+                
+                // ★変更: 既存のタイマーがあればクリアしてから新しくセット
+                if (profileCloseTimer) clearTimeout(profileCloseTimer);
+
+                profileCloseTimer = setTimeout(() => {
+                    // activeクラスが付いていない場合のみ非表示にする
                     if(!profileScreen.classList.contains('active')){
                         profileScreen.style.display = 'none';
-                        // スワイプ用のtransformもリセット
                         profileScreen.style.transform = ''; 
                     }
-                }, 300); // CSSのtransition時間(0.3s)に合わせる
+                    profileCloseTimer = null; // タイマー解除
+                }, 300); 
             }
 
             // 戻るボタン
@@ -4016,17 +4034,17 @@
             profileScreen.addEventListener('touchend', (e) => {
                 if (!isEdgeSwipe) return;
                 
-                profileScreen.classList.remove('is-swiping'); // アニメーション再開
+                // 指離れと同時にアニメーションを再開させる
+                profileScreen.classList.remove('is-swiping'); 
+                
                 const diff = touchCurrentX - touchStartX;
-                const threshold = window.innerWidth / 3; // 画面の1/3以上スワイプしたら閉じる
+                const threshold = window.innerWidth / 3; // 画面の1/3以上
 
                 if (diff > threshold) {
-                    // 閉じる (画面外へスライドさせる)
-                    profileScreen.style.transform = `translateX(100%)`;
-                    // トランジション完了後にクラスを外してリセット
-                    setTimeout(() => {
-                        closeProfileModal();
-                    }, 300);
+                    // ★修正: JSで無理に動かさず、スタイルをリセットして closeProfileModal に任せる
+                    // .active を外せば CSS の transition で勝手に右へ戻っていきます
+                    profileScreen.style.transform = ''; 
+                    closeProfileModal();
                 } else {
                     // 元に戻す (0pxへ)
                     profileScreen.style.transform = ''; 
@@ -4725,7 +4743,6 @@
         $('#game-purchase-confirm').addEventListener('click', handlePurchase);
         $('#game-purchase-cancel').addEventListener('click', () => { $('#game-purchase-modal').style.display = 'none'; });
         $('#music-purchase-confirm').addEventListener('click', handlePurchase);
-        $('#music-purchase-cancel').addEventListener('click', () => { $('#music-purchase-modal').style.display = 'none'; });
         $('#music-purchase-cancel').addEventListener('click', () => { 
             stopMusicPreview(); // ★追加: 閉じたら停止
             $('#music-purchase-modal').style.display = 'none'; 
