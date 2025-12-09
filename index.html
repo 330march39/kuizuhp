@@ -14,7 +14,7 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #f3f4f6; /* gray-100 (ライトモードの背景) */
+            background-color: #ffffff; /* gray-100 (ライトモードの背景) */
         }
 
         /* 2. スプラッシュスクリーンの設定 */
@@ -43,15 +43,19 @@
 
         /* 3. ダークモード時の背景色をOS設定から即座に反映 */
         @media (prefers-color-scheme: dark) {
-            html, body, #splash-screen {
-                background-color: #111827; /* gray-900 (ダークモードの背景) */
+            html, body {
+                background-color: #1f2937; /* 👈 bg-gray-800 (ヘッダーと同じ色) に変更 */
+            }
+            #splash-screen {
+                background-color: #111827; /* スプラッシュは元のままでOK */
             }
             #splash-logo-light { display: none; }
             #splash-logo-dark { display: block; }
         }
 
         /* クラスによる制御 (JSロード後) */
-        html.dark, html.dark body, html.dark #splash-screen { background-color: #111827; }
+        html.dark, html.dark body { background-color: #1f2937; } /* 👈 ヘッダー色 */
+        html.dark #splash-screen { background-color: #111827; } /* 👈 コンテンツ色 */
         html.dark #splash-logo-light { display: none; }
         html.dark #splash-logo-dark { display: block; }
     </style>
@@ -527,15 +531,14 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
-
+<body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
     <div id="splash-screen" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 transition-opacity duration-500">
         <img id="splash-logo-light" src="SQ_logo2.png" alt="StudyQuest Logo" class="w-64 h-64 mb-4 block dark:hidden">
         
         <img id="splash-logo-dark" src="SQ_logo3.png" alt="StudyQuest Logo Dark" class="w-64 h-64 mb-4 hidden dark:block">
     </div>
 
-    <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto shadow-2xl">
+    <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto shadow-2xl bg-gray-100 dark:bg-gray-900">
         
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm">
             <h1 id="header-title" class="text-lg font-bold text-gray-900 dark:text-white">ホーム</h1>
