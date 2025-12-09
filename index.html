@@ -1303,7 +1303,7 @@
                 breakWindow: null
             };
 
-            // --- スワイプ制御クラス（修正版: デッドゾーン＆ボタン修正） ---
+            // --- スワイプ制御クラス（マルチタッチ対応版） ---
             class SwipeHandler {
                 constructor(element, options = {}) {
                     this.container = element;
@@ -1320,14 +1320,36 @@
                     this.currentX = 0;
                     this.startOffset = 0;
                     
-                    this.isDragging = false; // 指が画面に触れているか
-                    this.isSwiping = false;  // 実際にスワイプ動作（横移動）が確定したか
+                    this.isDragging = false; 
+                    this.isSwiping = false;  
                     
+                    // ★追加: スワイプしている指のIDを記録する変数
+                    this.currentTouchId = null;
+
                     this.initEvents();
                 }
             
                 initEvents() {
-                    const start = (x, y, target) => {
+                    const start = (e) => {
+                        // 既ドラッグ中なら、他の指のタッチは無視する
+                        if (this.isDragging) return;
+
+                        let clientX, clientY, target;
+
+                        // タッチイベントの場合
+                        if (e.type === 'touchstart') {
+                            const touch = e.changedTouches[0];
+                            this.currentTouchId = touch.identifier; // ★指のIDを保存
+                            clientX = touch.clientX;
+                            clientY = touch.clientY;
+                            target = touch.target;
+                        } else {
+                            // マウスの場合
+                            clientX = e.clientX;
+                            clientY = e.clientY;
+                            target = e.target;
+                        }
+
                         // 入力フォームは除外
                         if (target.tagName === 'INPUT') return;
                         
@@ -1339,8 +1361,8 @@
 
                         this.isDragging = true;
                         this.isSwiping = false; // リセット
-                        this.startX = x;
-                        this.startY = y;
+                        this.startX = clientX;
+                        this.startY = clientY;
                         
                         const style = window.getComputedStyle(this.content);
                         const matrix = new WebKitCSSMatrix(style.transform);
@@ -1350,24 +1372,37 @@
                         this.container.classList.add('is-dragging');
                     };
             
-                    const move = (e, x, y) => {
+                    const move = (e) => {
                         if (!this.isDragging) return;
+
+                        let clientX, clientY;
+
+                        // タッチイベントの場合
+                        if (e.type === 'touchmove') {
+                            // ★保存したIDと一致する指を探す
+                            const touch = Array.from(e.changedTouches).find(t => t.identifier === this.currentTouchId);
+                            if (!touch) return; // 違う指なら無視
+                            clientX = touch.clientX;
+                            clientY = touch.clientY;
+                        } else {
+                            clientX = e.clientX;
+                            clientY = e.clientY;
+                        }
             
-                        const diffX = x - this.startX;
-                        const diffY = y - this.startY;
+                        const diffX = clientX - this.startX;
+                        const diffY = clientY - this.startY;
             
-                        // --- ★修正ポイント: 不感帯（デッドゾーン）の設定 ---
                         // まだスワイプが確定していない場合
                         if (!this.isSwiping) {
                             // 縦移動の方が大きい場合はスワイプキャンセル（スクロール優先）
                             if (Math.abs(diffY) > Math.abs(diffX)) {
                                 this.isDragging = false;
+                                this.currentTouchId = null; // ★IDリセット
                                 this.container.classList.remove('is-dragging');
                                 return;
                             }
                             
-                            // ★ここが重要: 横移動が15pxを超えるまでは画面を動かさない
-                            // これにより、並び替えの長押し中の微細な揺れで削除ボタンが出るのを防ぐ
+                            // 横移動が15pxを超えるまでは画面を動かさない
                             if (Math.abs(diffX) < 15) {
                                 return; 
                             }
@@ -1378,7 +1413,7 @@
                         }
 
                         // ここから下はスワイプ確定後の処理
-                        e.preventDefault(); // 画面スクロールを止める
+                        if (e.cancelable) e.preventDefault(); // 画面スクロールを止める
             
                         let newX = this.startOffset + diffX;
             
@@ -1391,10 +1426,19 @@
                         this.content.style.transform = `translateX(${newX}px)`;
                     };
             
-                    const end = () => {
+                    const end = (e) => {
                         if (!this.isDragging) return;
+
+                        // タッチイベントの場合
+                        if (e.type === 'touchend' || e.type === 'touchcancel') {
+                            // ★保存したIDと一致する指か確認
+                            const touch = Array.from(e.changedTouches).find(t => t.identifier === this.currentTouchId);
+                            if (!touch) return; // 違う指が離れただけなら無視して続行
+                        }
+
                         this.isDragging = false;
                         this.isSwiping = false;
+                        this.currentTouchId = null; // ★IDリセット
                         this.container.classList.remove('is-dragging');
                         this.container.classList.remove('is-swiping');
             
@@ -1413,23 +1457,23 @@
                         }
                     };
             
-                    // Touch Events
-                    this.content.addEventListener('touchstart', (e) => start(e.touches[0].clientX, e.touches[0].clientY, e.target), { passive: true });
-                    this.content.addEventListener('touchmove', (e) => move(e, e.touches[0].clientX, e.touches[0].clientY), { passive: false });
+                    // Touch Events (イベント引数 e をそのまま渡すように変更)
+                    this.content.addEventListener('touchstart', start, { passive: true });
+                    this.content.addEventListener('touchmove', move, { passive: false });
                     this.content.addEventListener('touchend', end);
+                    this.content.addEventListener('touchcancel', end); // ★タッチキャンセルも追加
             
                     // Mouse Events
-                    this.content.addEventListener('mousedown', (e) => start(e.clientX, e.clientY, e.target));
-                    window.addEventListener('mousemove', (e) => { if(this.isDragging) move(e, e.clientX, e.clientY); });
-                    window.addEventListener('mouseup', () => { if(this.isDragging) end(); });
+                    this.content.addEventListener('mousedown', start);
+                    window.addEventListener('mousemove', move);
+                    window.addEventListener('mouseup', end);
                     
-                    // --- ★修正ポイント: ボタンイベントの確実な発火 ---
+                    // ボタンイベントの確実な発火
                     const completeBtn = this.actionsContainer ? this.actionsContainer.querySelector('.btn-complete') : null;
                     if (completeBtn) {
-                        // touchstartでも反応するようにし、バブリングを止める
                         completeBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
                         completeBtn.addEventListener('click', (e) => {
-                            e.stopPropagation(); // 親要素への伝播を止める
+                            e.stopPropagation();
                             this.snapToClose();
                             if (this.onComplete) setTimeout(() => this.onComplete(), 300);
                         });
@@ -1439,7 +1483,7 @@
                     if (deleteBtn) {
                         deleteBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
                         deleteBtn.addEventListener('click', (e) => {
-                            e.stopPropagation(); // 親要素への伝播を止める
+                            e.stopPropagation();
                             this.performDelete();
                         });
                     }
