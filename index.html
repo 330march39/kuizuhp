@@ -1642,7 +1642,6 @@
                         const dt = String(now.getDate()).padStart(2, '0');
                         const todayStr = `${y}-${mt}-${dt}`;
                         
-                        const now = new Date();
                         // 今週の月曜日を計算
                         const dayOfWeek = now.getDay(); // 0(日) - 6(土)
                         const diffToMon = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); 
