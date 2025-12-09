@@ -480,9 +480,14 @@
         }
         .header-safe {
             padding-top: env(safe-area-inset-top, 0px);
-            /* ▼▼▼ 変更: 高さを h-14 (56px) 相当に固定して統一 ▼▼▼ */
-            height: calc(3.5rem + env(safe-area-inset-top, 0px)); 
-            box-sizing: border-box; /* パディングを含めた高さにする */
+            /* 高さを h-14 (3.5rem = 56px) + セーフエリア に固定 */
+            height: calc(3.5rem + env(safe-area-inset-top, 0px));
+            box-sizing: border-box;
+            
+            /* 以下を追加: これで中身が強制的に中央に来ます */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         /* --- 画面遷移アニメーション (iOS風) --- */
         .screen-layer {
@@ -528,10 +533,10 @@
 
     <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto shadow-2xl">
         
-        <header class="header-safe bg-white dark:bg-gray-800 z-30 py-2 px-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 sticky top-0 shadow-sm">
-            <h1 id="header-title" class="text-lg font-bold text-gray-900 dark:text-white mt-1">ホーム</h1>
+        <header class="header-safe bg-white dark:bg-gray-800 z-30 px-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 shadow-sm">
+            <h1 id="header-title" class="text-lg font-bold text-gray-900 dark:text-white">ホーム</h1>
             
-            <button id="lp-button" class="mt-1 flex items-center space-x-2 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full px-3 py-1 hover:bg-yellow-100 dark:hover:bg-yellow-900/50 transition-colors border border-yellow-200 dark:border-yellow-700">
+            <button id="lp-button" class="flex items-center space-x-2 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full px-3 py-1 hover:bg-yellow-100 dark:hover:bg-yellow-900/50 transition-colors border border-yellow-200 dark:border-yellow-700">
                 <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
                 <span id="lp-display" class="font-bold text-xs">0 LP</span>
             </button>
@@ -944,7 +949,7 @@
     </div>
 
     <div id="profile-screen" class="screen-layer">
-        <header class="header-safe bg-white dark:bg-gray-800 z-30 px-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 sticky top-0 shadow-sm">
+        <header class="header-safe bg-white dark:bg-gray-800 z-30 px-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 shadow-sm">
             <div class="flex items-center flex-1">
                 <button id="close-profile-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
                     <div class="flex items-center font-medium primary-text">
@@ -954,7 +959,7 @@
                 </button>
             </div>
             
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white mt-1">プロフィール設定</h2>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">プロフィール設定</h2>
             
             <div class="flex-1"></div>
         </header>
