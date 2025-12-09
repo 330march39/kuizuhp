@@ -160,12 +160,23 @@
             background-position: center;
             transition: background-image 0.5s ease-in-out;
         }
-        
+
         #app-container {
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            /* ▼▼▼ 追加: アニメーション用設定 ▼▼▼ */
+            transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), filter 0.3s;
+            will-change: transform, filter;
+            transform-origin: center left;
         }
+
+        /* ▼▼▼ 追加: プロフィールが開いている時のメイン画面の状態 ▼▼▼ */
+        #app-container.background-pushed {
+            transform: translateX(-30%); /* 左に少しずれる */
+            filter: brightness(0.7);     /* 少し暗くする */
+        }
+        
         .break-icon-grid-container {
             display: grid;
             grid-template-columns: repeat(4, 1fr); 
@@ -470,8 +481,9 @@
         }
         .header-safe {
             padding-top: env(safe-area-inset-top, 0px);
-            /* ↓ これにより「ノッチの高さ + コンテンツの高さ」が確保されます */
-            height: auto; 
+            /* ▼▼▼ 変更: 高さを h-14 (56px) 相当に固定して統一 ▼▼▼ */
+            height: calc(3.5rem + env(safe-area-inset-top, 0px)); 
+            box-sizing: border-box; /* パディングを含めた高さにする */
         }
         /* --- 画面遷移アニメーション (iOS風) --- */
         .screen-layer {
@@ -860,7 +872,7 @@
                         <img src="tutorial_1.png" alt="Tutorial 1" class="w-full h-full object-contain" onerror="this.src='https://placehold.co/300x500/222/fff?text=Tutorial+1'">
                     </div>
                     <h3 class="text-2xl font-bold mb-2">クエストで学習</h3>
-                    <p class="text-gray-400">ポモドーロタイマーを使って<br>集中して学習に取り組もう。</p>
+                    <p class="text-gray-400">タイマーを使って<br>集中して学習に取り組もう。</p>
                 </div>
                 <div class="w-full h-full flex-shrink-0 flex flex-col items-center justify-center p-6 text-center">
                     <div class="w-full max-w-xs aspect-[9/16] bg-gray-800 rounded-lg mb-6 flex items-center justify-center border-2 border-gray-700">
@@ -933,7 +945,7 @@
     </div>
 
     <div id="profile-screen" class="screen-layer">
-        <header class="header-safe bg-white dark:bg-gray-800 z-30 py-2 px-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 sticky top-0 shadow-sm flex-shrink-0">
+        <header class="header-safe bg-white dark:bg-gray-800 z-30 px-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 sticky top-0 shadow-sm">
             <div class="flex items-center flex-1">
                 <button id="close-profile-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
                     <div class="flex items-center font-medium primary-text">
@@ -3924,53 +3936,62 @@
             
             // ★追加: 閉じる処理のタイマーIDを保存する変数
             let profileCloseTimer = null;
-
+            
             // プロフィール編集画面を開く
             function openProfileModal() {
-                // ★追加: 閉じる処理が待機中ならキャンセルする
                 if (profileCloseTimer) {
                     clearTimeout(profileCloseTimer);
                     profileCloseTimer = null;
                 }
 
-                // ★追加: スワイプ等の残留スタイルを確実にリセット
+                // スタイルリセット
                 profileScreen.style.transform = '';
                 profileScreen.classList.remove('is-swiping');
+                
+                // ★追加: メイン画面の変形スタイルをリセット（スワイプ中断などで残っている場合のため）
+                const appContainer = $('#app-container');
+                appContainer.style.transform = '';
+                appContainer.style.filter = '';
 
-                // 現在の値を入れる
+                // 値のセット (既存処理)
                 $('#edit-profile-icon').value = state.user.icon;
                 $('#edit-profile-name').value = state.user.name;
-                
-                // 学年のオプションをコピー
                 const gradeSelect = $('#edit-profile-grade');
                 if (gradeSelect.children.length <= 1) { 
                     gradeSelect.innerHTML = $('#reg-grade').innerHTML;
                 }
                 gradeSelect.value = state.user.grade;
                 
-                // 表示アニメーション
+                // 表示
                 profileScreen.style.display = 'flex'; 
-                
-                // ★追加: ブラウザに描画を確定させてからクラスを追加（アニメーション用）
                 void profileScreen.offsetWidth; 
 
+                // アニメーション開始
                 profileScreen.classList.add('active');
+                
+                // ▼▼▼ 追加: メイン画面を奥へ移動 ▼▼▼
+                appContainer.classList.add('background-pushed');
             }
             
             // プロフィール編集画面を閉じる
             function closeProfileModal() {
                 profileScreen.classList.remove('active');
                 
-                // ★変更: 既存のタイマーがあればクリアしてから新しくセット
+                // ▼▼▼ 追加: メイン画面を元に戻す ▼▼▼
+                const appContainer = $('#app-container');
+                appContainer.classList.remove('background-pushed');
+                // JSで直接スタイル操作していた場合のためにクリーンアップ
+                appContainer.style.transform = '';
+                appContainer.style.filter = '';
+
                 if (profileCloseTimer) clearTimeout(profileCloseTimer);
 
                 profileCloseTimer = setTimeout(() => {
-                    // activeクラスが付いていない場合のみ非表示にする
                     if(!profileScreen.classList.contains('active')){
                         profileScreen.style.display = 'none';
                         profileScreen.style.transform = ''; 
                     }
-                    profileCloseTimer = null; // タイマー解除
+                    profileCloseTimer = null; 
                 }, 300); 
             }
 
@@ -4001,17 +4022,20 @@
             });
 
 
-            // --- ★ここが重要: 左エッジからのスワイプバック機能 ---
+            // --- 左エッジからのスワイプバック機能 (連動アニメーション強化版) ---
             let touchStartX = 0;
             let touchCurrentX = 0;
             let isEdgeSwipe = false;
+            const appContainer = $('#app-container'); // 事前に取得
 
             profileScreen.addEventListener('touchstart', (e) => {
                 touchStartX = e.touches[0].clientX;
-                // 画面の左端(50px以内)から開始した場合のみ「戻るスワイプ」とみなす
+                // 画面左端(50px以内)からの開始のみ有効
                 if (touchStartX < 50) {
                     isEdgeSwipe = true;
-                    profileScreen.classList.add('is-swiping'); // アニメーション一時停止
+                    profileScreen.classList.add('is-swiping'); 
+                    // ★追加: メイン画面のアニメーション一時停止（指に追従させるため）
+                    appContainer.style.transition = 'none';
                 } else {
                     isEdgeSwipe = false;
                 }
@@ -4022,32 +4046,61 @@
                 
                 touchCurrentX = e.touches[0].clientX;
                 const diff = touchCurrentX - touchStartX;
+                const screenWidth = window.innerWidth;
 
-                // 右方向への移動のみ許可
                 if (diff > 0) {
-                    e.preventDefault(); // スクロールなどを阻止
-                    // 指に追従させる
+                    e.preventDefault(); 
+                    
+                    // 1. プロフィール画面を指に追従移動
                     profileScreen.style.transform = `translateX(${diff}px)`;
+
+                    // ▼▼▼ 追加: メイン画面を連動して動かす ▼▼▼
+                    // diff(移動量) が 0 のとき -> mainX は -30% (奥にある)
+                    // diff が screenWidth(全開) のとき -> mainX は 0% (手前に戻る)
+                    
+                    // 進行率 (0.0 ～ 1.0)
+                    const progress = Math.min(diff / screenWidth, 1);
+                    
+                    // -30% から 0% へ近づける計算
+                    const startX = -30; 
+                    const currentMainX = startX + (Math.abs(startX) * progress);
+                    
+                    // 明るさも 0.7 から 1.0 へ
+                    const currentBrightness = 0.7 + (0.3 * progress);
+
+                    appContainer.style.transform = `translateX(${currentMainX}%)`;
+                    appContainer.style.filter = `brightness(${currentBrightness})`;
                 }
             }, { passive: false });
 
             profileScreen.addEventListener('touchend', (e) => {
                 if (!isEdgeSwipe) return;
                 
-                // 指離れと同時にアニメーションを再開させる
                 profileScreen.classList.remove('is-swiping'); 
+                // ★追加: メイン画面のtransitionを復帰
+                appContainer.style.transition = '';
                 
                 const diff = touchCurrentX - touchStartX;
-                const threshold = window.innerWidth / 3; // 画面の1/3以上
+                const threshold = window.innerWidth / 3; 
 
                 if (diff > threshold) {
-                    // ★修正: JSで無理に動かさず、スタイルをリセットして closeProfileModal に任せる
-                    // .active を外せば CSS の transition で勝手に右へ戻っていきます
+                    // --- 閉じる動作 ---
+                    // スタイルをリセットしてクラス操作に任せる
                     profileScreen.style.transform = ''; 
+                    
+                    // メイン画面もリセット（クラス除去で戻るアニメーション発動）
+                    appContainer.style.transform = '';
+                    appContainer.style.filter = '';
+                    
                     closeProfileModal();
                 } else {
-                    // 元に戻す (0pxへ)
+                    // --- キャンセル（元に戻す）動作 ---
                     profileScreen.style.transform = ''; 
+                    
+                    // メイン画面を「奥まった状態」に戻す
+                    appContainer.style.transform = '';
+                    appContainer.style.filter = '';
+                    // クラスはついたままなのでCSSのスタイルに戻る
                 }
                 
                 isEdgeSwipe = false;
