@@ -166,15 +166,14 @@
             background-position: center;
             background-repeat: no-repeat;
             /* ▼▼▼ 追加: アニメーション用設定 ▼▼▼ */
-            transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), filter 0.3s;
-            will-change: transform, filter;
+            transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+            will-change: transform;
             transform-origin: center left;
         }
 
         /* ▼▼▼ 追加: プロフィールが開いている時のメイン画面の状態 ▼▼▼ */
         #app-container.background-pushed {
             transform: translateX(-30%); /* 左に少しずれる */
-            filter: brightness(0.7);     /* 少し暗くする */
         }
         
         .break-icon-grid-container {
@@ -4053,10 +4052,6 @@
                     
                     // 1. プロフィール画面を指に追従移動
                     profileScreen.style.transform = `translateX(${diff}px)`;
-
-                    // ▼▼▼ 追加: メイン画面を連動して動かす ▼▼▼
-                    // diff(移動量) が 0 のとき -> mainX は -30% (奥にある)
-                    // diff が screenWidth(全開) のとき -> mainX は 0% (手前に戻る)
                     
                     // 進行率 (0.0 ～ 1.0)
                     const progress = Math.min(diff / screenWidth, 1);
@@ -4064,12 +4059,8 @@
                     // -30% から 0% へ近づける計算
                     const startX = -30; 
                     const currentMainX = startX + (Math.abs(startX) * progress);
-                    
-                    // 明るさも 0.7 から 1.0 へ
-                    const currentBrightness = 0.7 + (0.3 * progress);
 
                     appContainer.style.transform = `translateX(${currentMainX}%)`;
-                    appContainer.style.filter = `brightness(${currentBrightness})`;
                 }
             }, { passive: false });
 
