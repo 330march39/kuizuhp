@@ -4070,19 +4070,26 @@
             });
 
 
-            // --- 左エッジからのスワイプバック機能 (連動アニメーション強化版) ---
+            // --- 左エッジからのスワイプバック機能 (マルチタッチ対応修正版) ---
             let touchStartX = 0;
             let touchCurrentX = 0;
             let isEdgeSwipe = false;
-            const appContainer = $('#app-container'); // 事前に取得
+            let swipeTouchId = null; // ★追加: スワイプしている指のIDを記憶
+            const appContainer = $('#app-container');
 
             profileScreen.addEventListener('touchstart', (e) => {
-                touchStartX = e.touches[0].clientX;
+                // すでにスワイプ中なら、他の指のタッチは無視する
+                if (isEdgeSwipe) return;
+
+                const touch = e.changedTouches[0];
+                touchStartX = touch.clientX;
+
                 // 画面左端(50px以内)からの開始のみ有効
                 if (touchStartX < 50) {
                     isEdgeSwipe = true;
+                    swipeTouchId = touch.identifier; // ★この指のIDを記録
+                    
                     profileScreen.classList.add('is-swiping'); 
-                    // ★追加: メイン画面のアニメーション一時停止（指に追従させるため）
                     appContainer.style.transition = 'none';
                 } else {
                     isEdgeSwipe = false;
@@ -4092,20 +4099,20 @@
             profileScreen.addEventListener('touchmove', (e) => {
                 if (!isEdgeSwipe) return;
                 
-                touchCurrentX = e.touches[0].clientX;
+                // ★記録したIDを持つ指だけを探す
+                const touch = Array.from(e.changedTouches).find(t => t.identifier === swipeTouchId);
+                if (!touch) return; // 違う指の動きなら無視
+
+                touchCurrentX = touch.clientX;
                 const diff = touchCurrentX - touchStartX;
                 const screenWidth = window.innerWidth;
 
                 if (diff > 0) {
-                    e.preventDefault(); 
+                    if (e.cancelable) e.preventDefault(); 
                     
-                    // 1. プロフィール画面を指に追従移動
                     profileScreen.style.transform = `translateX(${diff}px)`;
                     
-                    // 進行率 (0.0 ～ 1.0)
                     const progress = Math.min(diff / screenWidth, 1);
-                    
-                    // -30% から 0% へ近づける計算
                     const startX = -30; 
                     const currentMainX = startX + (Math.abs(startX) * progress);
 
@@ -4116,8 +4123,11 @@
             profileScreen.addEventListener('touchend', (e) => {
                 if (!isEdgeSwipe) return;
                 
+                // ★記録したIDを持つ指が離れたか確認
+                const touch = Array.from(e.changedTouches).find(t => t.identifier === swipeTouchId);
+                if (!touch) return; // 違う指なら無視してスワイプ継続
+
                 profileScreen.classList.remove('is-swiping'); 
-                // ★追加: メイン画面のtransitionを復帰
                 appContainer.style.transition = '';
                 
                 const diff = touchCurrentX - touchStartX;
@@ -4125,10 +4135,7 @@
 
                 if (diff > threshold) {
                     // --- 閉じる動作 ---
-                    // スタイルをリセットしてクラス操作に任せる
                     profileScreen.style.transform = ''; 
-                    
-                    // メイン画面もリセット（クラス除去で戻るアニメーション発動）
                     appContainer.style.transform = '';
                     appContainer.style.filter = '';
                     
@@ -4136,14 +4143,12 @@
                 } else {
                     // --- キャンセル（元に戻す）動作 ---
                     profileScreen.style.transform = ''; 
-                    
-                    // メイン画面を「奥まった状態」に戻す
                     appContainer.style.transform = '';
                     appContainer.style.filter = '';
-                    // クラスはついたままなのでCSSのスタイルに戻る
                 }
                 
                 isEdgeSwipe = false;
+                swipeTouchId = null; // ★IDリセット
             });
 
 
