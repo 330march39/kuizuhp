@@ -4035,46 +4035,6 @@
                 isEdgeSwipe = false;
             });
 
-            // プロフィール編集・閲覧モーダル
-            function openProfileModal() {
-                const modal = $('#profile-modal');
-                // 現在の値を入れる
-                $('#edit-profile-icon').value = state.user.icon;
-                $('#edit-profile-name').value = state.user.name;
-                
-                // 学年のオプションをコピー
-                const gradeSelect = $('#edit-profile-grade');
-                gradeSelect.innerHTML = $('#reg-grade').innerHTML;
-                gradeSelect.value = state.user.grade;
-                
-                modal.classList.remove('hidden');
-                modal.style.display = 'flex';
-            }
-            
-            $('.close-profile-btn').addEventListener('click', () => {
-                $('#profile-modal').style.display = 'none';
-            });
-            
-            $('#edit-icon-random-btn').addEventListener('click', () => {
-                $('#edit-profile-icon').value = getRandomEmoji();
-            });
-
-            $('#save-profile-btn').addEventListener('click', () => {
-                state.user.icon = $('#edit-profile-icon').value;
-                state.user.name = $('#edit-profile-name').value;
-                state.user.grade = $('#edit-profile-grade').value;
-                saveState();
-                
-                // 設定画面を再描画
-                renderEngine.pages['settings-page']();
-                $('#profile-modal').style.display = 'none';
-                showToast('プロフィールを更新しました');
-            });
-            
-            $('#open-migration-menu-btn').addEventListener('click', () => {
-                 openMigrationModal(false);
-            });
-
 
             // ==========================================
             // ▼▼▼ PeerJS データ移行ロジック ▼▼▼
