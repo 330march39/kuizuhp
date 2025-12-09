@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>StudyQuest</title>
 
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#1f2937" media="(prefers-color-scheme: dark)">
+    <meta id="meta-theme-color" name="theme-color" content="#ffffff">
 
     <style>
         /* 1. htmlとbodyに最初から背景色をつける (これが白飛び防止の鍵) */
@@ -66,7 +65,7 @@
 
     <!-- PWA関連 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="StudyQuest">
 
     <link rel="icon" type="image/png" href="SQ_logo.png">
@@ -1653,43 +1652,52 @@
             
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
             
-           // 既存の updateAppearance 関数を、この新しいコードで完全に置き換えてください。
-            
+           // 既存の updateAppearance 関数をこのコードで上書きしてください
             const updateAppearance = () => {
-                const appContainer = $('#app-container');
-                const activeBgId = state.profile.activeBackground;
-                const activeBg = initialData.backgrounds[activeBgId] || initialData.backgrounds['default'];
-                const isGlobal = state.settings.backgroundScopeGlobal;
-                const hasImage = activeBg && activeBg.url;
-                
-                // --- 1. テーマ決定ロジック ---
-                let effectiveTone = activeBg.tone;
-                
-                if (effectiveTone === 'system') {
-                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                        effectiveTone = 'dark';
-                    } else {
-                        effectiveTone = 'light';
-                    }
-                }
-                
-                // --- 2. 決定したテーマをHTML要素に適用 (修正済みのロジック) ---
-                if (effectiveTone === 'dark') {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    document.documentElement.setAttribute('data-theme', 'light');
-                }
-                
-                // --- 3. 背景画像の適用ロジック ---
-                if (isGlobal && hasImage) {
-                    appContainer.style.backgroundImage = `url(${activeBg.url})`;
-                } else {
-                    appContainer.style.backgroundImage = 'none';
-                }
-            };
+                const appContainer = $('#app-container');
+                const activeBgId = state.profile.activeBackground;
+                const activeBg = initialData.backgrounds[activeBgId] || initialData.backgrounds['default'];
+                const isGlobal = state.settings.backgroundScopeGlobal;
+                const hasImage = activeBg && activeBg.url;
+                
+                // --- 1. テーマ（ライト/ダーク）決定ロジック ---
+                let effectiveTone = activeBg.tone;
+                
+                if (effectiveTone === 'system') {
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        effectiveTone = 'dark';
+                    } else {
+                        effectiveTone = 'light';
+                    }
+                }
+                
+                // --- 2. HTML要素への適用 ---
+                if (effectiveTone === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+                
+                // --- 3. 背景画像の適用ロジック ---
+                if (isGlobal && hasImage) {
+                    appContainer.style.backgroundImage = `url(${activeBg.url})`;
+                } else {
+                    appContainer.style.backgroundImage = 'none';
+                }
 
+                // --- 4. 【追加】ノッチ（ステータスバー）の色をヘッダーと同期させる ---
+                const metaThemeColor = document.getElementById('meta-theme-color');
+                if (metaThemeColor) {
+                    // ヘッダーの色定義と合わせる
+                    // ライトモード: bg-white (#ffffff)
+                    // ダークモード: bg-gray-800 (#1f2937 - Tailwindのデフォルト値)
+                    const headerColor = (effectiveTone === 'dark') ? '#1f2937' : '#ffffff';
+                    metaThemeColor.setAttribute('content', headerColor);
+                }
+            };
+            
             const updateLpDisplay = () => {
                 $('#lp-display').textContent = `${state.profile.lp} LP`;
                 if ($('#point-details-modal').style.display === 'flex') {
