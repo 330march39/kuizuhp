@@ -1632,7 +1632,16 @@
                         // --- 1. 統計データの計算と表示 ---
                         if (!state.sessionLog) state.sessionLog = [];
                         
-                        const todayStr = new Date().toISOString().split('T')[0];
+                        // --- 1. 統計データの計算と表示 ---
+                        if (!state.sessionLog) state.sessionLog = [];
+                        
+                        const now = new Date();
+                        // ローカル時間で「今日」の日付文字列を作成
+                        const y = now.getFullYear();
+                        const mt = String(now.getMonth() + 1).padStart(2, '0');
+                        const dt = String(now.getDate()).padStart(2, '0');
+                        const todayStr = `${y}-${mt}-${dt}`;
+                        
                         const now = new Date();
                         // 今週の月曜日を計算
                         const dayOfWeek = now.getDay(); // 0(日) - 6(土)
@@ -1673,7 +1682,12 @@
                         for (let i = 6; i >= 0; i--) {
                             const d = new Date();
                             d.setDate(d.getDate() - i);
-                            const day = d.toISOString().split('T')[0];
+                            // ローカル時間で日付文字列を作成
+                            const y = d.getFullYear();
+                            const m = String(d.getMonth() + 1).padStart(2, '0');
+                            const da = String(d.getDate()).padStart(2, '0');
+                            const day = `${y}-${m}-${da}`;
+                        
                             labels.push(`${d.getMonth()+1}/${d.getDate()}`);
                             
                             // sessionLogから該当日の合計を計算
@@ -2247,36 +2261,47 @@
             };
 
             const logStudyTime = (type, seconds) => {
-                const today = new Date().toISOString().split('T')[0];
+                // ローカル時間で日付文字列を作成
+                const now = new Date();
+                const y = now.getFullYear();
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const d = String(now.getDate()).padStart(2, '0');
+                const today = `${y}-${m}-${d}`;
+            
                 if (!state.studyLog[today]) state.studyLog[today] = { focus: 0, quiz: 0 };
                 state.studyLog[today][type] += seconds;
             };
             // 詳細なセッションログを記録する関数
             const recordSession = (title, durationSeconds) => {
-                const now = new Date();
-                const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
-                
-                // 時間フォーマット (HH:MM)
-                const hours = now.getHours().toString().padStart(2, '0');
-                const minutes = now.getMinutes().toString().padStart(2, '0');
-                const endTimeStr = `${hours}:${minutes}`;
+            const now = new Date();
             
-                const newSession = {
-                    id: Date.now(),
-                    date: dateStr,
-                    title: title,
-                    duration: durationSeconds,
-                    endTime: endTimeStr
-                };
-            
-                // stateに追加
-                if (!state.sessionLog) state.sessionLog = [];
-                state.sessionLog.push(newSession);
-                
-                // 既存の集計用ログも更新（互換性のため）
-                logStudyTime('focus', durationSeconds); // または 'quiz' など適宜
-                saveState();
+            // ローカル時間で日付文字列を作成
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const dateStr = `${y}-${m}-${d}`;
+        
+            // 時間フォーマット (HH:MM)
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const endTimeStr = `${hours}:${minutes}`;
+        
+            const newSession = {
+                id: Date.now(),
+                date: dateStr,
+                title: title,
+                duration: durationSeconds,
+                endTime: endTimeStr
             };
+        
+            // stateに追加
+            if (!state.sessionLog) state.sessionLog = [];
+            state.sessionLog.push(newSession);
+            
+            // 既存の集計用ログも更新（互換性のため）
+            logStudyTime('focus', durationSeconds); 
+            saveState();
+        };
 
             const renderHomeTasks = () => {
                 if (!homeTaskListEl) return;
