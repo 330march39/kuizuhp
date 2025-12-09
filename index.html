@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>StudyQuest</title>
 
-    <meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1f2937" media="(prefers-color-scheme: dark)">
 
     <style>
         /* 1. htmlとbodyに最初から背景色をつける (これが白飛び防止の鍵) */
@@ -468,6 +468,11 @@
         .bottom-safe-16 {
             bottom: calc(4rem + env(safe-area-inset-bottom, 10px)); /* bottom-16 (4rem) + safe-area */
         }
+        .header-safe {
+            padding-top: env(safe-area-inset-top, 0px);
+            /* ↓ これにより「ノッチの高さ + コンテンツの高さ」が確保されます */
+            height: auto; 
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -480,11 +485,12 @@
 
     <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto shadow-2xl">
         
-        <header class="bg-white dark:bg-gray-800/80 backdrop-blur-sm z-30 p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 sticky top-0">
-            <h1 id="header-title" class="text-xl font-bold text-gray-900 dark:text-white">ホーム</h1>
-            <button id="lp-button" class="flex items-center space-x-2 bg-yellow-400/20 text-yellow-600 dark:text-yellow-400 rounded-full px-3 py-1 hover:bg-yellow-400/30 transition-colors">
-                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
-                <span id="lp-display" class="font-bold text-sm">0 LP</span>
+        <header class="header-safe bg-white dark:bg-gray-800 z-30 py-2 px-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 sticky top-0 shadow-sm">
+            <h1 id="header-title" class="text-lg font-bold text-gray-900 dark:text-white mt-1">ホーム</h1>
+            
+            <button id="lp-button" class="mt-1 flex items-center space-x-2 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full px-3 py-1 hover:bg-yellow-100 dark:hover:bg-yellow-900/50 transition-colors border border-yellow-200 dark:border-yellow-700">
+                <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                <span id="lp-display" class="font-bold text-xs">0 LP</span>
             </button>
         </header>
 
