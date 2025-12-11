@@ -4130,22 +4130,22 @@
 
             // --- 左エッジからのスワイプバック機能 (マルチタッチ対応修正版) ---
             let touchStartX = 0;
+            let touchStartY = 0; // ★追加: Y座標の開始位置
             let touchCurrentX = 0;
             let isEdgeSwipe = false;
-            let swipeTouchId = null; // ★追加: スワイプしている指のIDを記憶
+            let swipeTouchId = null;
             const appContainer = $('#app-container');
 
             profileScreen.addEventListener('touchstart', (e) => {
-                // すでにスワイプ中なら、他の指のタッチは無視する
                 if (isEdgeSwipe) return;
 
                 const touch = e.changedTouches[0];
                 touchStartX = touch.clientX;
+                touchStartY = touch.clientY; // ★追加: Y座標を記録
 
-                // 画面左端(50px以内)からの開始のみ有効
                 if (touchStartX < 50) {
                     isEdgeSwipe = true;
-                    swipeTouchId = touch.identifier; // ★この指のIDを記録
+                    swipeTouchId = touch.identifier;
                     
                     profileScreen.classList.add('is-swiping'); 
                     appContainer.style.transition = 'none';
@@ -4157,20 +4157,32 @@
             profileScreen.addEventListener('touchmove', (e) => {
                 if (!isEdgeSwipe) return;
                 
-                // ★記録したIDを持つ指だけを探す
                 const touch = Array.from(e.changedTouches).find(t => t.identifier === swipeTouchId);
-                if (!touch) return; // 違う指の動きなら無視
+                if (!touch) return;
 
                 touchCurrentX = touch.clientX;
-                const diff = touchCurrentX - touchStartX;
+                const currentY = touch.clientY; // ★追加: 現在のY座標
+
+                const diffX = touchCurrentX - touchStartX;
+                const diffY = currentY - touchStartY; // ★追加: 縦の移動量
+
+                // ★追加: 縦移動の方が大きければスワイプバックを中止（これが重要）
+                if (Math.abs(diffY) > Math.abs(diffX)) {
+                    isEdgeSwipe = false; // キャンセル
+                    // スタイルをリセット
+                    profileScreen.classList.remove('is-swiping');
+                    appContainer.style.transition = '';
+                    return;
+                }
+
                 const screenWidth = window.innerWidth;
 
-                if (diff > 0) {
+                if (diffX > 0) {
                     if (e.cancelable) e.preventDefault(); 
                     
-                    profileScreen.style.transform = `translateX(${diff}px)`;
+                    profileScreen.style.transform = `translateX(${diffX}px)`;
                     
-                    const progress = Math.min(diff / screenWidth, 1);
+                    const progress = Math.min(diffX / screenWidth, 1);
                     const startX = -30; 
                     const currentMainX = startX + (Math.abs(startX) * progress);
 
@@ -4580,8 +4592,9 @@
             // 戻るボタン設定
             $('#close-status-btn').addEventListener('click', closeStatusScreen);
 
-            // --- マイステータス画面のスワイプバック (プロフィール画面と同じロジック) ---
+            // --- マイステータス画面のスワイプバック ---
             let statusTouchStartX = 0;
+            let statusTouchStartY = 0; // ★追加
             let statusTouchCurrentX = 0;
             let isStatusEdgeSwipe = false;
             let statusSwipeTouchId = null;
@@ -4590,7 +4603,9 @@
                 if (isStatusEdgeSwipe) return;
                 const touch = e.changedTouches[0];
                 statusTouchStartX = touch.clientX;
-                if (statusTouchStartX < 50) { // 左端50px以内
+                statusTouchStartY = touch.clientY; // ★追加
+
+                if (statusTouchStartX < 50) { 
                     isStatusEdgeSwipe = true;
                     statusSwipeTouchId = touch.identifier;
                     statusScreen.classList.add('is-swiping');
@@ -4604,19 +4619,30 @@
                 if (!touch) return;
 
                 statusTouchCurrentX = touch.clientX;
-                const diff = statusTouchCurrentX - statusTouchStartX;
+                const currentY = touch.clientY; // ★追加
+
+                const diffX = statusTouchCurrentX - statusTouchStartX;
+                const diffY = currentY - statusTouchStartY; // ★追加
+
+                // ★追加: 縦移動判定
+                if (Math.abs(diffY) > Math.abs(diffX)) {
+                    isStatusEdgeSwipe = false;
+                    statusScreen.classList.remove('is-swiping');
+                    $('#app-container').style.transition = '';
+                    return;
+                }
                 
-                if (diff > 0) {
+                if (diffX > 0) {
                     if (e.cancelable) e.preventDefault();
-                    statusScreen.style.transform = `translateX(${diff}px)`;
+                    statusScreen.style.transform = `translateX(${diffX}px)`;
                     
-                    const progress = Math.min(diff / window.innerWidth, 1);
+                    const progress = Math.min(diffX / window.innerWidth, 1);
                     const startX = -30;
                     const currentMainX = startX + (Math.abs(startX) * progress);
                     $('#app-container').style.transform = `translateX(${currentMainX}%)`;
                 }
             }, { passive: false });
-
+            
             statusScreen.addEventListener('touchend', (e) => {
                 if (!isStatusEdgeSwipe) return;
                 const touch = Array.from(e.changedTouches).find(t => t.identifier === statusSwipeTouchId);
