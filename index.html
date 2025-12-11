@@ -4755,8 +4755,9 @@
                     const wrapperClass = (type === 'background') ? 'w-full aspect-[9/16]' : '';
 
                     // ロック状態の表示
-                    const lockOverlay = !isUnlocked ? `<div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center rounded-lg text-white"><i data-lucide="lock" class="w-5 h-5 mb-1"></i><span class="text-xs font-bold">${item.cost}</span></div>` : '';
-
+                    const overlayShape = (type === 'theme') ? 'rounded-full' : 'rounded-xl';
+                    const lockOverlay = !isUnlocked ? `<div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center ${overlayShape} text-white"><i data-lucide="lock" class="w-5 h-5 mb-1"></i><span class="text-xs font-bold">${item.cost}</span></div>` : '';
+                    
                     return `
                         <div class="text-center cursor-pointer item-btn group relative" data-id="${id}" data-type="${type}">
                             <div class="${containerClass} ${wrapperClass} mx-auto relative ${activeClass} transition-transform active:scale-95 bg-gray-200 dark:bg-gray-700 flex items-center justify-center border-2 border-transparent">
