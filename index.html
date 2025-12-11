@@ -4222,14 +4222,6 @@
                 }
             });
 
-            // 3. アイテム詳細画面 (これもクラス化して共通管理できます)
-            const itemDetailPage = new SubPage('item-detail-screen', {
-                onClose: () => {
-                    stopMusicPreview(); // 閉じるときに音楽を止める
-                }
-            });
-
-
             // ==========================================
             // ▼▼▼ ボタンイベントの紐付け ▼▼▼
             // ==========================================
@@ -4265,14 +4257,7 @@
             // ※既存の openItemDetailScreen 関数自体は残してもいいですが、
             //   表示/非表示部分を itemDetailPage.open() / close() に置き換えます。
 
-            const openItemDetailScreen = (id, type) => {
-               // ... (データの取得やHTML生成ロジックはそのまま) ...
-               
-               // ★最後の表示処理だけ変更
-               itemDetailPage.open();
-            };
-
-            $('#close-item-detail-btn').addEventListener('click', () => itemDetailPage.close());
+            
 
             // スワイプで閉じる処理（詳細画面用）もクラスに含まれているので、
             // 個別に書いていた touchstart/touchmove/touchend は削除してOKです。
@@ -4806,7 +4791,18 @@
                 });
             };
 
-            // ★新規追加: 詳細画面を開く関数
+            // ==========================================
+            // ▼▼▼ アイテム詳細画面の制御 (SubPageクラス適用版) ▼▼▼
+            // ==========================================
+
+            // 1. クラスのインスタンス化 (必ず関数の前に書く)
+            const itemDetailPage = new SubPage('item-detail-screen', {
+                onClose: () => {
+                    stopMusicPreview(); // 閉じるときに音楽を止める
+                }
+            });
+
+            // 2. 詳細画面を開く関数
             const openItemDetailScreen = (id, type) => {
                 const screen = $('#item-detail-screen');
                 let itemData, isUnlocked, isActive;
@@ -4860,7 +4856,7 @@
                     
                     let innerContent = `<i data-lucide="${iconName}" class="w-16 h-16 ${iconColor}"></i>`;
 
-                    // ▼▼▼ 修正: 音楽の場合は試聴ボタンを重ねる ▼▼▼
+                    // 音楽の場合は試聴ボタンを重ねる
                     if (type === 'music') {
                         innerContent += `
                             <button id="detail-music-play-btn" class="absolute inset-0 flex items-center justify-center bg-black/5 hover:bg-black/20 transition-colors z-10 group">
@@ -4880,22 +4876,18 @@
                             if (playBtn) {
                                 playBtn.onclick = (e) => {
                                     e.stopPropagation();
-                                    // 既に再生中で、この曲なら停止
                                     if (!previewAudio.paused && previewAudio.src === itemData.url) {
                                         stopMusicPreview();
                                     } else {
-                                        // 新規再生
                                         stopMusicPreview(); // 他を止める
                                         previewAudio.src = itemData.url;
                                         previewAudio.volume = 0.5;
                                         previewAudio.play();
                                         
-                                        // アイコンを停止(square)に変更
                                         playIcon.setAttribute('data-lucide', 'square');
-                                        playIcon.classList.remove('ml-0.5'); // 真ん中調整用のマージン削除
+                                        playIcon.classList.remove('ml-0.5');
                                         lucide.createIcons();
                                         
-                                        // 30秒自動停止
                                         previewTimeout = setTimeout(stopMusicPreview, 30000);
                                     }
                                 };
@@ -4944,7 +4936,6 @@
                             newBtn.onclick = () => applyItem(id, type);
                         }
                     } else {
-                        // ゲーム・音楽
                         newBtn.innerHTML = `<span>解放済み</span>`;
                         newBtn.className = "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold py-3 px-8 rounded-full shadow-none cursor-default min-w-[140px]";
                         newBtn.onclick = null;
@@ -4977,106 +4968,15 @@
 
                 lucide.createIcons();
 
-                // 画面表示
-                screen.style.display = 'flex';
-                requestAnimationFrame(() => {
-                    screen.classList.add('active');
-                    $('#status-screen').classList.add('background-pushed');
-                });
+                // ★重要: SubPageクラスの open メソッドを呼ぶ
+                itemDetailPage.open();
             };
 
-            // ★新規追加: 詳細画面を閉じる
-            const closeItemDetailScreen = () => {
-                // ▼▼▼ 試聴停止を追加 ▼▼▼
-                stopMusicPreview();
+            // 閉じるボタンの紐付け
+            $('#close-item-detail-btn').addEventListener('click', () => itemDetailPage.close());
 
-                const screen = $('#item-detail-screen');
-                screen.classList.remove('active');
-                $('#status-screen').classList.remove('background-pushed'); 
-
-                setTimeout(() => {
-                    if (!screen.classList.contains('active')) {
-                        screen.style.display = 'none';
-                    }
-                }, 300);
-            };
-
-            // ★新規追加: 購入処理
-            const purchaseItem = (id, type, cost) => {
-                addLP(-cost, 'アイテム交換', false);
-                
-                if (type === 'theme') state.profile.unlockedThemes.push(id);
-                else if (type === 'background') state.profile.unlockedBackgrounds.push(id);
-                else if (type === 'game') state.profile.unlockedGames.push(id);
-                else if (type === 'music') state.profile.unlockedMusic.push(id);
-
-                saveState();
-                showToast('交換しました！');
-
-                if (type === 'game') syncGamesToBreakIcons();
-
-                // 画面を更新（ボタンの状態を「適用する」などに変えるため）
-                openItemDetailScreen(id, type);
-                renderStatusPageContent(); // 親画面も更新
-                
-                // 設定ページも更新
-                if ($('#settings-page').classList.contains('active')) {
-                    renderEngine.pages['settings-page']();
-                }
-            };
-
-            // ★新規追加: 適用処理
-            const applyItem = (id, type) => {
-                if (type === 'theme') {
-                    state.profile.activeTheme = id;
-                    renderEngine.renderAll(); // 全体再描画（色変更）
-                } else if (type === 'background') {
-                    state.profile.activeBackground = id;
-                    updateAppearance(); // 背景変更
-                }
-                saveState();
-                showToast('適用しました！');
-                
-                // 画面更新
-                openItemDetailScreen(id, type);
-                renderStatusPageContent();
-                
-                // 設定ページも更新
-                if ($('#settings-page').classList.contains('active')) {
-                    renderEngine.pages['settings-page']();
-                }
-            };
-
-            // 閉じるボタンのイベント
-            $('#close-item-detail-btn').addEventListener('click', closeItemDetailScreen);
-            
-            // スワイプで閉じる処理（簡易版）
-            const detailScreen = $('#item-detail-screen');
-            let detailTouchStart = 0;
-            detailScreen.addEventListener('touchstart', (e) => {
-                if (e.target.closest('.preview-carousel')) return; // カルーセル操作時は無効
-                detailTouchStart = e.changedTouches[0].clientX;
-            }, {passive: true});
-            
-            detailScreen.addEventListener('touchmove', (e) => {
-                if (e.target.closest('.preview-carousel')) return;
-                const diff = e.changedTouches[0].clientX - detailTouchStart;
-                if (diff > 0) { // 右へスワイプ
-                    e.preventDefault();
-                    detailScreen.style.transform = `translateX(${diff}px)`;
-                }
-            }, {passive: false});
-
-            detailScreen.addEventListener('touchend', (e) => {
-                if (e.target.closest('.preview-carousel')) return;
-                const diff = e.changedTouches[0].clientX - detailTouchStart;
-                if (diff > 100) { // 100px以上スワイプで閉じる
-                    detailScreen.style.transform = '';
-                    closeItemDetailScreen();
-                } else {
-                    detailScreen.style.transform = '';
-                }
-            });
+            // ※ 古いスワイプ制御コードや closeItemDetailScreen 関数は削除されました
+            // ==========================================
 
             // 購入ボタンへのイベントリスナー設定用ヘルパー関数
             const attachPurchaseEvents = () => {
