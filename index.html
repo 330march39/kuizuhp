@@ -2011,7 +2011,7 @@
                             </div>
                             <i data-lucide="chevron-right" class="text-gray-400"></i>
                         `;
-                        profileCard.addEventListener('click', () => { openProfileModal(); });
+                        profileCard.addEventListener('click', () => { profilePage.open(); });
                         settingsPage.appendChild(profileCard);
 
                         // --- 2. 通知設定 ---
@@ -4214,6 +4214,7 @@
                     gradeSelect.value = state.user.grade;
                 }
             });
+            $('#close-profile-btn').addEventListener('click', () => profilePage.close());
 
             // 2. ステータス画面
             const statusPage = new SubPage('status-screen', {
@@ -4221,6 +4222,11 @@
                     renderStatusPageContent(); // ステータス画面の描画
                 }
             });
+            // LPボタン（ヘッダーの星マーク）を押したらステータス画面を開く
+            $('#lp-button').addEventListener('click', () => statusPage.open());
+
+            // 戻るボタンを押したらステータス画面を閉じる
+            $('#close-status-btn').addEventListener('click', () => statusPage.close());
 
             // ==========================================
             // ▼▼▼ PeerJS データ移行ロジック ▼▼▼
