@@ -4709,11 +4709,8 @@
                         }
                     }, 1500); // 1.5秒待ってからフェードアウト開始
             };
-            const renderStatusPageContent = () => {
-                // LP表示更新
-                $('#status-lp-display').textContent = state.profile.lp;
 
-                const purchaseItem = (id, type, cost) => {
+            const purchaseItem = (id, type, cost) => {
                     if (state.profile.lp < cost) {
                         showToast('LPが足りません');
                         return;
@@ -4753,6 +4750,10 @@
                     renderStatusPageContent(); // 再描画して「適用中」表示にする
                     showToast('適用しました');
                 };
+            
+            const renderStatusPageContent = () => {
+                // LP表示更新
+                $('#status-lp-display').textContent = state.profile.lp;
 
                 // 共通のクリックハンドラ
                 const createItemHTML = (id, item, type, isUnlocked, isActive) => {
