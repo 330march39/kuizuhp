@@ -4997,6 +4997,18 @@
                                 state.profile.activeTheme = themeId; // 状態を更新
                                 saveState();        // 保存
                                 updateAppearance(); // 見た目を即座に反映
+                                const theme = initialData.themes[themeId];
+                                if (theme) {
+                                    document.documentElement.style.setProperty('--primary-color', theme.color);
+                                    document.documentElement.style.setProperty('--primary-color-hover', theme.hover);
+                                    
+                                    // ステータスバー（ノッチ部分）の色も更新（ライトモード時のみ反映されることが多い）
+                                    const metaThemeColor = document.getElementById('meta-theme-color');
+                                    if (metaThemeColor && !document.documentElement.classList.contains('dark')) {
+                                        // ダークモードでなければテーマカラーを適用（お好みで）
+                                        // metaThemeColor.setAttribute('content', theme.color); 
+                                    }
+                                }
                                 renderThemes();     // 選択枠を更新するために再描画
                             });
                         });
