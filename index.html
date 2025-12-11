@@ -386,7 +386,7 @@
             z-index: -1; /* iframeが読み込まれたら隠れるように後ろへ、あるいはJSで制御 */
         }
         
-        /* ゲームプレビュー用の横スクロールコンテナ（スワイプ対応） */
+        /* ゲームプレビュー用の横スクロールコンテナ */
         .preview-carousel {
             display: flex;
             overflow-x: auto;
@@ -395,23 +395,30 @@
             scroll-snap-type: x mandatory; /* スナップスクロール */
             -webkit-overflow-scrolling: touch;
             gap: 1rem;
-            padding-bottom: 1rem;
+            padding: 0 1.5rem; /* 両端に余白を追加 */
             margin-bottom: 1rem;
             width: 100%;
-            height: 60vh;
+            /* ▼▼▼ 修正: 高さを大きくする（縦長画像用） ▼▼▼ */
+            height: 550px; /* 必要に応じて調整してください */
+            align-items: center; /* 上下中央揃え */
         }
         
         .preview-item {
-            flex: 0 0 100%; /* 1つで幅100%を使う */
-            scroll-snap-align: center;
-            width: 100%;
+            /* ▼▼▼ 修正: 幅を100%から固定幅に変更（これで横並びになります） ▼▼▼ */
+            flex: 0 0 280px; /* 1枚の幅を280pxに固定（次が見えるように） */
+            width: 280px;
+            
+            /* 高さを親要素いっぱいにする */
             height: 100%;
-            border-radius: 0.5rem;
+            scroll-snap-align: center;
+            
+            border-radius: 1rem; /* 角丸を大きく */
             background-color: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* 影をつけて浮き出させる */
         }
         
         .preview-item img,
@@ -5021,7 +5028,7 @@
                     carousel.innerHTML = '';
                     itemData.previews.forEach(url => {
                         const item = document.createElement('div');
-                        item.className = 'preview-item w-64 h-40 flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 snap-center';
+                        item.className = 'preview-item flex-shrink-0 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 snap-center h-full';
                         if (url.endsWith('.mp4')) {
                             item.innerHTML = `<video src="${url}" controls class="w-full h-full object-contain"></video>`;
                         } else {
