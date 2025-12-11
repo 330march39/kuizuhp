@@ -5190,35 +5190,42 @@
         
         // ゲームプレビュー（画像・動画）を生成する関数
         const renderGamePreviews = (game) => {
-            const container = $('#game-preview-container');
+            const container = $('#detail-carousel'); // ★ID変更: game-preview-container -> detail-carousel
+            if(!container) return; // エラーガード
             container.innerHTML = ''; // クリア
         
             if (!game.previews || game.previews.length === 0) {
                 // プレビューがない場合のダミー
                 container.innerHTML = `
-                    <div class="preview-item">
-                        <div class="flex flex-col items-center text-gray-400">
-                            <i data-lucide="image-off" class="w-12 h-12 mb-2"></i>
-                            <span>No Preview</span>
-                        </div>
+                    <div class="preview-item w-full aspect-video bg-gray-100 dark:bg-gray-800 rounded-xl flex flex-col items-center justify-center text-gray-400 border border-gray-200 dark:border-gray-700">
+                        <i data-lucide="image-off" class="w-12 h-12 mb-2"></i>
+                        <span>No Preview</span>
                     </div>`;
                 return;
             }
         
             game.previews.forEach(url => {
                 const item = document.createElement('div');
-                item.className = 'preview-item';
+                // ★スタイル変更: 大きく表示し、スナップスクロールに対応させる
+                // w-[85vw]: 画面幅の85% (横に見切れさせてスクロールを促す)
+                // aspect-[9/16]: スマホ縦画面比率
+                // flex-shrink-0: 縮小させない
+                item.className = 'preview-item w-[70vw] md:w-[300px] aspect-[9/16] flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 snap-center shadow-sm';
                 
                 // 拡張子で画像か動画か簡易判定
                 const isVideo = url.endsWith('.mp4') || url.endsWith('.webm');
                 
                 if (isVideo) {
-                    item.innerHTML = `<video src="${url}" controls playsinline muted class="pointer-events-auto"></video>`;
+                    item.innerHTML = `<video src="${url}" controls playsinline muted class="w-full h-full object-cover pointer-events-auto"></video>`;
                 } else {
-                    item.innerHTML = `<img src="${url}" alt="preview">`;
+                    item.innerHTML = `<img src="${url}" alt="preview" class="w-full h-full object-cover">`;
                 }
                 container.appendChild(item);
             });
+            
+            // ★コンテナのスタイル設定 (横スクロール強制)
+            container.className = "flex overflow-x-auto gap-4 pb-4 px-6 snap-x snap-mandatory scroll-smooth no-scrollbar";
+            // ※ no-scrollbar はTailwind標準にはないので、CSSで隠すか、あるいはスクロールバーが出ても許容するか
         };
         
         // BGM試聴の再生・停止制御
