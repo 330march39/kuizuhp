@@ -539,7 +539,7 @@
             background-color: #f3f4f6; /* light bg */
             z-index: 100; /* 最前面 */
             transform: translateX(100%); /* 初期状態は右外側 */
-            transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); /* iOS風のイージング */
+            transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1); /* iOS風のイージング */
             will-change: transform;
             display: flex;
             flex-direction: column;
@@ -4155,7 +4155,7 @@
                             this.el.style.display = 'none';
                         }
                         this.closeTimer = null;
-                    }, 300);
+                    }, 500);
                 }
             }
 
