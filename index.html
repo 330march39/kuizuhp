@@ -4222,6 +4222,46 @@
                     renderStatusPageContent(); // ステータス画面の描画
                 }
             });
+
+            const openMigrationBtn = $('#open-migration-menu-btn');
+            if (openMigrationBtn) {
+                openMigrationBtn.addEventListener('click', () => {
+                    // プロフィール画面を閉じてからモーダルを開く
+                    profilePage.close(); 
+                    setTimeout(() => openMigrationModal(), 300);
+                });
+            }
+
+            $$('.status-tab-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const target = e.currentTarget.dataset.target; // theme, background, game, music のいずれか
+
+                    // 1. 全てのタブを非アクティブ状態にする（色はグレーに戻す）
+                    $$('.status-tab-btn').forEach(b => {
+                        b.classList.remove('active', 'primary-bg', 'text-white');
+                        b.classList.add('bg-gray-200', 'dark:bg-gray-600'); 
+                    });
+
+                    // 2. クリックされたタブをアクティブ状態にする（色はテーマカラー）
+                    e.currentTarget.classList.remove('bg-gray-200', 'dark:bg-gray-600');
+                    e.currentTarget.classList.add('active', 'primary-bg', 'text-white');
+
+                    // 3. 全てのコンテンツエリアを隠す
+                    $$('.status-content-section').forEach(section => {
+                        section.classList.add('hidden');
+                    });
+
+                    // 4. 選択されたコンテンツエリアだけを表示する
+                    const targetSection = $(`#status-content-${target}`);
+                    if (targetSection) {
+                        targetSection.classList.remove('hidden');
+                    }
+                    
+                    // アイコンの再生成（念のため）
+                    lucide.createIcons();
+                });
+            });
+            
             // LPボタン（ヘッダーの星マーク）を押したらステータス画面を開く
             $('#lp-button').addEventListener('click', () => statusPage.open());
 
