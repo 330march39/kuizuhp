@@ -4713,6 +4713,47 @@
                 // LP表示更新
                 $('#status-lp-display').textContent = state.profile.lp;
 
+                const purchaseItem = (id, type, cost) => {
+                    if (state.profile.lp < cost) {
+                        showToast('LPが足りません');
+                        return;
+                    }
+                    state.profile.lp -= cost;
+                    
+                    if (type === 'theme') state.profile.unlockedThemes.push(id);
+                    else if (type === 'background') state.profile.unlockedBackgrounds.push(id);
+                    else if (type === 'game') state.profile.unlockedGames.push(id);
+                    else if (type === 'music') state.profile.unlockedMusic.push(id);
+                    
+                    saveState();
+                    updateLpDisplay();
+                    
+                    // ゲームの場合は即座に休憩アイコンに追加
+                    if(type === 'game') syncGamesToBreakIcons();
+
+                    renderStatusPageContent(); // 再描画してボタンの状態を更新
+                    showToast('交換しました！');
+                };
+
+                const applyItem = (id, type) => {
+                    if (type === 'theme') {
+                        state.profile.activeTheme = id;
+                        // 色を即座に反映させる処理
+                        const theme = initialData.themes[id];
+                        if (theme) {
+                            document.documentElement.style.setProperty('--primary-color', theme.color);
+                            document.documentElement.style.setProperty('--primary-color-hover', theme.hover);
+                        }
+                    } else if (type === 'background') {
+                        state.profile.activeBackground = id;
+                        updateAppearance();  // ダークモード等の更新
+                        updateBackgrounds(); // 背景画像の更新
+                    }
+                    saveState();
+                    renderStatusPageContent(); // 再描画して「適用中」表示にする
+                    showToast('適用しました');
+                };
+
                 // 共通のクリックハンドラ
                 const createItemHTML = (id, item, type, isUnlocked, isActive) => {
                     let iconHTML = '';
