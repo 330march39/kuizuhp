@@ -4223,46 +4223,6 @@
             });
 
             // ==========================================
-            // ▼▼▼ ボタンイベントの紐付け ▼▼▼
-            // ==========================================
-
-            // プロフィール画面系
-            $('#settings-page').addEventListener('click', (e) => { // 動的生成されるカード対策
-                if (e.target.closest('#settings-profile-card')) {
-                    profilePage.open();
-                }
-            });
-            $('#close-profile-btn').addEventListener('click', () => profilePage.close());
-            
-            // 保存ボタン時の処理
-            $('#save-profile-btn').addEventListener('click', () => {
-                state.user.icon = $('#edit-profile-icon').value;
-                state.user.name = $('#edit-profile-name').value;
-                state.user.grade = $('#edit-profile-grade').value;
-                saveState();
-                renderEngine.pages['settings-page']();
-                
-                profilePage.close(); // ★クラスのメソッドで閉じる
-                showToast('プロフィールを更新しました');
-            });
-
-
-            // ステータス画面系
-            $('#lp-button').addEventListener('click', () => statusPage.open());
-            $('#close-status-btn').addEventListener('click', () => statusPage.close());
-
-
-            // アイテム詳細画面系
-            // (既存の openItemDetailScreen 関数の中身を、クラスを使う形に書き換えます)
-            // ※既存の openItemDetailScreen 関数自体は残してもいいですが、
-            //   表示/非表示部分を itemDetailPage.open() / close() に置き換えます。
-
-            
-
-            // スワイプで閉じる処理（詳細画面用）もクラスに含まれているので、
-            // 個別に書いていた touchstart/touchmove/touchend は削除してOKです。
-
-            // ==========================================
             // ▼▼▼ PeerJS データ移行ロジック ▼▼▼
             // ==========================================
             
