@@ -4037,190 +4037,245 @@
                 }
             });
 
-            // --- プロフィール画面の制御 (アニメーション & スワイプ対応) ---
-            const profileScreen = $('#profile-screen'); 
-            
-            // ★追加: 閉じる処理のタイマーIDを保存する変数
-            let profileCloseTimer = null;
-            
-            // プロフィール編集画面を開く
-            function openProfileModal() {
-                if (profileCloseTimer) {
-                    clearTimeout(profileCloseTimer);
-                    profileCloseTimer = null;
+            // ==========================================
+            // ▼▼▼ 汎用サブページ管理クラス (これ1つで全ページ対応) ▼▼▼
+            // ==========================================
+            class SubPage {
+                constructor(elementId, options = {}) {
+                    this.el = document.getElementById(elementId);
+                    this.appContainer = document.getElementById('app-container');
+                    this.onOpen = options.onOpen || null;   // 開くときに実行する関数
+                    this.onClose = options.onClose || null; // 閉じるときに実行する関数
+                    
+                    this.closeTimer = null;
+
+                    // スワイプ制御用変数
+                    this.touchStartX = 0;
+                    this.touchStartY = 0;
+                    this.touchCurrentX = 0;
+                    this.isEdgeSwipe = false;
+                    this.swipeTouchId = null;
+
+                    // 初期化
+                    this.initEvents();
                 }
 
-                // スタイルリセット
-                profileScreen.style.transform = '';
-                profileScreen.classList.remove('is-swiping');
-                
-                // ★追加: メイン画面の変形スタイルをリセット（スワイプ中断などで残っている場合のため）
-                const appContainer = $('#app-container');
-                appContainer.style.transform = '';
-                appContainer.style.filter = '';
+                // イベントリスナーの設定
+                initEvents() {
+                    if (!this.el) return;
 
-                // 値のセット (既存処理)
-                $('#edit-profile-icon').value = state.user.icon;
-                $('#edit-profile-name').value = state.user.name;
-                const gradeSelect = $('#edit-profile-grade');
-                if (gradeSelect.children.length <= 1) { 
-                    gradeSelect.innerHTML = $('#reg-grade').innerHTML;
+                    // タッチ開始
+                    this.el.addEventListener('touchstart', (e) => {
+                        if (this.isEdgeSwipe) return;
+                        const touch = e.changedTouches[0];
+                        this.touchStartX = touch.clientX;
+                        this.touchStartY = touch.clientY;
+
+                        // 画面左端(50px以内)からの操作のみスワイプバックとみなす
+                        if (this.touchStartX < 50) {
+                            this.isEdgeSwipe = true;
+                            this.swipeTouchId = touch.identifier;
+                            this.el.classList.add('is-swiping');
+                            this.appContainer.style.transition = 'none';
+                        }
+                    }, { passive: true });
+
+                    // タッチ移動
+                    this.el.addEventListener('touchmove', (e) => {
+                        if (!this.isEdgeSwipe) return;
+                        
+                        const touch = Array.from(e.changedTouches).find(t => t.identifier === this.swipeTouchId);
+                        if (!touch) return;
+
+                        this.touchCurrentX = touch.clientX;
+                        const currentY = touch.clientY;
+
+                        const diffX = this.touchCurrentX - this.touchStartX;
+                        const diffY = currentY - this.touchStartY;
+
+                        // ▼▼▼ 縦移動判定 (縦スクロール中はスワイプバックをキャンセル) ▼▼▼
+                        if (Math.abs(diffY) > Math.abs(diffX)) {
+                            this.resetSwipeState();
+                            return;
+                        }
+
+                        if (diffX > 0) {
+                            if (e.cancelable) e.preventDefault();
+                            
+                            // ページの移動
+                            this.el.style.transform = `translateX(${diffX}px)`;
+                            
+                            // 背景（メイン画面）のパララックス移動
+                            const screenWidth = window.innerWidth;
+                            const progress = Math.min(diffX / screenWidth, 1);
+                            const startX = -30;
+                            const currentMainX = startX + (Math.abs(startX) * progress);
+                            this.appContainer.style.transform = `translateX(${currentMainX}%)`;
+                        }
+                    }, { passive: false });
+
+                    // タッチ終了
+                    this.el.addEventListener('touchend', (e) => {
+                        if (!this.isEdgeSwipe) return;
+                        const touch = Array.from(e.changedTouches).find(t => t.identifier === this.swipeTouchId);
+                        if (!touch) return;
+
+                        this.el.classList.remove('is-swiping');
+                        this.appContainer.style.transition = '';
+
+                        const diff = this.touchCurrentX - this.touchStartX;
+                        const threshold = window.innerWidth / 3; // 画面の1/3以上動かしたら閉じる
+
+                        if (diff > threshold) {
+                            this.close(); // 閉じる
+                        } else {
+                            this.resetPosition(); // 元に戻す
+                        }
+                        
+                        this.isEdgeSwipe = false;
+                        this.swipeTouchId = null;
+                    });
                 }
-                gradeSelect.value = state.user.grade;
-                
-                // 表示
-                profileScreen.style.display = 'flex'; 
-                void profileScreen.offsetWidth; 
 
-                // アニメーション開始
-                profileScreen.classList.add('active');
-                
-                // ▼▼▼ 追加: メイン画面を奥へ移動 ▼▼▼
-                appContainer.classList.add('background-pushed');
-            }
-            
-            // プロフィール編集画面を閉じる
-            function closeProfileModal() {
-                profileScreen.classList.remove('active');
-                
-                // ▼▼▼ 追加: メイン画面を元に戻す ▼▼▼
-                const appContainer = $('#app-container');
-                appContainer.classList.remove('background-pushed');
-                // JSで直接スタイル操作していた場合のためにクリーンアップ
-                appContainer.style.transform = '';
-                appContainer.style.filter = '';
+                // スワイプ中断時のリセット
+                resetSwipeState() {
+                    this.isEdgeSwipe = false;
+                    this.el.classList.remove('is-swiping');
+                    this.appContainer.style.transition = '';
+                    this.resetPosition();
+                }
 
-                if (profileCloseTimer) clearTimeout(profileCloseTimer);
+                // 位置を元に戻す（キャンセル時）
+                resetPosition() {
+                    this.el.style.transform = '';
+                    this.appContainer.style.transform = '';
+                    this.appContainer.style.filter = '';
+                }
 
-                profileCloseTimer = setTimeout(() => {
-                    if(!profileScreen.classList.contains('active')){
-                        profileScreen.style.display = 'none';
-                        profileScreen.style.transform = ''; 
+                // ページを開く
+                open() {
+                    if (this.closeTimer) {
+                        clearTimeout(this.closeTimer);
+                        this.closeTimer = null;
                     }
-                    profileCloseTimer = null; 
-                }, 300); 
+
+                    // 開く前の処理（データの描画など）
+                    if (this.onOpen) this.onOpen();
+
+                    // スタイルリセット
+                    this.resetPosition();
+                    
+                    // 表示＆アニメーション
+                    this.el.style.display = 'flex';
+                    void this.el.offsetWidth; // リフロー強制
+                    this.el.classList.add('active');
+                    
+                    // メイン画面を奥へ
+                    this.appContainer.classList.add('background-pushed');
+                }
+
+                // ページを閉じる
+                close() {
+                    this.el.classList.remove('active');
+                    
+                    // 閉じる前の処理
+                    if (this.onClose) this.onClose();
+
+                    // メイン画面を戻す
+                    this.appContainer.classList.remove('background-pushed');
+                    this.resetPosition();
+
+                    if (this.closeTimer) clearTimeout(this.closeTimer);
+                    
+                    // アニメーション完了後に非表示
+                    this.closeTimer = setTimeout(() => {
+                        if (!this.el.classList.contains('active')) {
+                            this.el.style.display = 'none';
+                        }
+                        this.closeTimer = null;
+                    }, 300);
+                }
             }
 
-            // 戻るボタン
-            $('#close-profile-btn').addEventListener('click', closeProfileModal);
+            // ==========================================
+            // ▼▼▼ 各ページのインスタンス化 (ここだけで管理できます) ▼▼▼
+            // ==========================================
+
+            // 1. プロフィール画面
+            const profilePage = new SubPage('profile-screen', {
+                onOpen: () => {
+                    // プロフィール画面特有の描画処理をここに移動
+                    $('#edit-profile-icon').value = state.user.icon;
+                    $('#edit-profile-name').value = state.user.name;
+                    const gradeSelect = $('#edit-profile-grade');
+                    if (gradeSelect.children.length <= 1) { 
+                        gradeSelect.innerHTML = $('#reg-grade').innerHTML;
+                    }
+                    gradeSelect.value = state.user.grade;
+                }
+            });
+
+            // 2. ステータス画面
+            const statusPage = new SubPage('status-screen', {
+                onOpen: () => {
+                    renderStatusPageContent(); // ステータス画面の描画
+                }
+            });
+
+            // 3. アイテム詳細画面 (これもクラス化して共通管理できます)
+            const itemDetailPage = new SubPage('item-detail-screen', {
+                onClose: () => {
+                    stopMusicPreview(); // 閉じるときに音楽を止める
+                }
+            });
+
+
+            // ==========================================
+            // ▼▼▼ ボタンイベントの紐付け ▼▼▼
+            // ==========================================
+
+            // プロフィール画面系
+            $('#settings-page').addEventListener('click', (e) => { // 動的生成されるカード対策
+                if (e.target.closest('#settings-profile-card')) {
+                    profilePage.open();
+                }
+            });
+            $('#close-profile-btn').addEventListener('click', () => profilePage.close());
             
-            // 保存ボタン
+            // 保存ボタン時の処理
             $('#save-profile-btn').addEventListener('click', () => {
                 state.user.icon = $('#edit-profile-icon').value;
                 state.user.name = $('#edit-profile-name').value;
                 state.user.grade = $('#edit-profile-grade').value;
                 saveState();
-                
-                // 設定画面を再描画
                 renderEngine.pages['settings-page']();
-                closeProfileModal();
+                
+                profilePage.close(); // ★クラスのメソッドで閉じる
                 showToast('プロフィールを更新しました');
             });
 
-            // アイコンランダム変更
-            $('#edit-icon-random-btn').addEventListener('click', () => {
-                $('#edit-profile-icon').value = getRandomEmoji();
-            });
 
-            // 機種変更ボタン
-            $('#open-migration-menu-btn').addEventListener('click', () => {
-                 openMigrationModal(false);
-            });
+            // ステータス画面系
+            $('#lp-button').addEventListener('click', () => statusPage.open());
+            $('#close-status-btn').addEventListener('click', () => statusPage.close());
 
 
-            // --- 左エッジからのスワイプバック機能 (マルチタッチ対応修正版) ---
-            let touchStartX = 0;
-            let touchStartY = 0; // ★追加: Y座標の開始位置
-            let touchCurrentX = 0;
-            let isEdgeSwipe = false;
-            let swipeTouchId = null;
-            const appContainer = $('#app-container');
+            // アイテム詳細画面系
+            // (既存の openItemDetailScreen 関数の中身を、クラスを使う形に書き換えます)
+            // ※既存の openItemDetailScreen 関数自体は残してもいいですが、
+            //   表示/非表示部分を itemDetailPage.open() / close() に置き換えます。
 
-            profileScreen.addEventListener('touchstart', (e) => {
-                if (isEdgeSwipe) return;
+            const openItemDetailScreen = (id, type) => {
+               // ... (データの取得やHTML生成ロジックはそのまま) ...
+               
+               // ★最後の表示処理だけ変更
+               itemDetailPage.open();
+            };
 
-                const touch = e.changedTouches[0];
-                touchStartX = touch.clientX;
-                touchStartY = touch.clientY; // ★追加: Y座標を記録
+            $('#close-item-detail-btn').addEventListener('click', () => itemDetailPage.close());
 
-                if (touchStartX < 50) {
-                    isEdgeSwipe = true;
-                    swipeTouchId = touch.identifier;
-                    
-                    profileScreen.classList.add('is-swiping'); 
-                    appContainer.style.transition = 'none';
-                } else {
-                    isEdgeSwipe = false;
-                }
-            }, { passive: true });
-
-            profileScreen.addEventListener('touchmove', (e) => {
-                if (!isEdgeSwipe) return;
-                
-                const touch = Array.from(e.changedTouches).find(t => t.identifier === swipeTouchId);
-                if (!touch) return;
-
-                touchCurrentX = touch.clientX;
-                const currentY = touch.clientY; // ★追加: 現在のY座標
-
-                const diffX = touchCurrentX - touchStartX;
-                const diffY = currentY - touchStartY; // ★追加: 縦の移動量
-
-                // ★追加: 縦移動の方が大きければスワイプバックを中止（これが重要）
-                if (Math.abs(diffY) > Math.abs(diffX)) {
-                    isEdgeSwipe = false; // キャンセル
-                    // スタイルをリセット
-                    profileScreen.classList.remove('is-swiping');
-                    appContainer.style.transition = '';
-                    return;
-                }
-
-                const screenWidth = window.innerWidth;
-
-                if (diffX > 0) {
-                    if (e.cancelable) e.preventDefault(); 
-                    
-                    profileScreen.style.transform = `translateX(${diffX}px)`;
-                    
-                    const progress = Math.min(diffX / screenWidth, 1);
-                    const startX = -30; 
-                    const currentMainX = startX + (Math.abs(startX) * progress);
-
-                    appContainer.style.transform = `translateX(${currentMainX}%)`;
-                }
-            }, { passive: false });
-
-            profileScreen.addEventListener('touchend', (e) => {
-                if (!isEdgeSwipe) return;
-                
-                // ★記録したIDを持つ指が離れたか確認
-                const touch = Array.from(e.changedTouches).find(t => t.identifier === swipeTouchId);
-                if (!touch) return; // 違う指なら無視してスワイプ継続
-
-                profileScreen.classList.remove('is-swiping'); 
-                appContainer.style.transition = '';
-                
-                const diff = touchCurrentX - touchStartX;
-                const threshold = window.innerWidth / 3; 
-
-                if (diff > threshold) {
-                    // --- 閉じる動作 ---
-                    profileScreen.style.transform = ''; 
-                    appContainer.style.transform = '';
-                    appContainer.style.filter = '';
-                    
-                    closeProfileModal();
-                } else {
-                    // --- キャンセル（元に戻す）動作 ---
-                    profileScreen.style.transform = ''; 
-                    appContainer.style.transform = '';
-                    appContainer.style.filter = '';
-                }
-                
-                isEdgeSwipe = false;
-                swipeTouchId = null; // ★IDリセット
-            });
-
+            // スワイプで閉じる処理（詳細画面用）もクラスに含まれているので、
+            // 個別に書いていた touchstart/touchmove/touchend は削除してOKです。
 
             // ==========================================
             // ▼▼▼ PeerJS データ移行ロジック ▼▼▼
@@ -4517,154 +4572,6 @@
                 }
                 lucide.createIcons();
             };
-
-            // --- マイステータス画面 (サブページ) の制御 ---
-            const statusScreen = $('#status-screen');
-            let statusCloseTimer = null;
-
-            // 画面を開く
-            function openStatusScreen() {
-                if (statusCloseTimer) {
-                    clearTimeout(statusCloseTimer);
-                    statusCloseTimer = null;
-                }
-                
-                // 初回描画
-                renderStatusPageContent();
-                
-                // リセット
-                statusScreen.style.transform = '';
-                statusScreen.classList.remove('is-swiping');
-                
-                // 表示＆アニメーション
-                statusScreen.style.display = 'flex';
-                void statusScreen.offsetWidth; // リフロー強制
-                statusScreen.classList.add('active');
-                
-                // メイン画面を奥へ
-                $('#app-container').classList.add('background-pushed');
-            }
-
-            // 画面を閉じる
-            function closeStatusScreen() {
-                statusScreen.classList.remove('active');
-                
-                // メイン画面を戻す
-                const appContainer = $('#app-container');
-                appContainer.classList.remove('background-pushed');
-                appContainer.style.transform = '';
-                appContainer.style.filter = '';
-
-                if (statusCloseTimer) clearTimeout(statusCloseTimer);
-                statusCloseTimer = setTimeout(() => {
-                    if (!statusScreen.classList.contains('active')) {
-                        statusScreen.style.display = 'none';
-                        statusScreen.style.transform = '';
-                    }
-                    statusCloseTimer = null;
-                }, 300);
-            }
-
-            // タブ切り替えロジック
-            $$('.status-tab-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const target = e.currentTarget.dataset.target;
-
-                    // 1. タブの見た目更新
-                    $$('.status-tab-btn').forEach(b => {
-                        b.classList.remove('active', 'primary-bg', 'text-white');
-                        b.classList.add('bg-gray-200', 'dark:bg-gray-600');
-                    });
-                    e.currentTarget.classList.add('active', 'primary-bg', 'text-white');
-                    e.currentTarget.classList.remove('bg-gray-200', 'dark:bg-gray-600');
-
-                    // 2. コンテンツの表示切り替え
-                    $$('.status-content-section').forEach(section => {
-                        section.classList.add('hidden');
-                    });
-                    $(`#status-content-${target}`).classList.remove('hidden');
-                });
-            });
-
-            // トリガー設定 (既存のモーダル呼び出しを置換)
-            $('#lp-button').addEventListener('click', openStatusScreen);
-            
-            // 戻るボタン設定
-            $('#close-status-btn').addEventListener('click', closeStatusScreen);
-
-            // --- マイステータス画面のスワイプバック ---
-            let statusTouchStartX = 0;
-            let statusTouchStartY = 0; // ★追加
-            let statusTouchCurrentX = 0;
-            let isStatusEdgeSwipe = false;
-            let statusSwipeTouchId = null;
-
-            statusScreen.addEventListener('touchstart', (e) => {
-                if (isStatusEdgeSwipe) return;
-                const touch = e.changedTouches[0];
-                statusTouchStartX = touch.clientX;
-                statusTouchStartY = touch.clientY; // ★追加
-
-                if (statusTouchStartX < 50) { 
-                    isStatusEdgeSwipe = true;
-                    statusSwipeTouchId = touch.identifier;
-                    statusScreen.classList.add('is-swiping');
-                    $('#app-container').style.transition = 'none';
-                }
-            }, { passive: true });
-
-            statusScreen.addEventListener('touchmove', (e) => {
-                if (!isStatusEdgeSwipe) return;
-                const touch = Array.from(e.changedTouches).find(t => t.identifier === statusSwipeTouchId);
-                if (!touch) return;
-
-                statusTouchCurrentX = touch.clientX;
-                const currentY = touch.clientY; // ★追加
-
-                const diffX = statusTouchCurrentX - statusTouchStartX;
-                const diffY = currentY - statusTouchStartY; // ★追加
-
-                // ★追加: 縦移動判定
-                if (Math.abs(diffY) > Math.abs(diffX)) {
-                    isStatusEdgeSwipe = false;
-                    statusScreen.classList.remove('is-swiping');
-                    $('#app-container').style.transition = '';
-                    return;
-                }
-                
-                if (diffX > 0) {
-                    if (e.cancelable) e.preventDefault();
-                    statusScreen.style.transform = `translateX(${diffX}px)`;
-                    
-                    const progress = Math.min(diffX / window.innerWidth, 1);
-                    const startX = -30;
-                    const currentMainX = startX + (Math.abs(startX) * progress);
-                    $('#app-container').style.transform = `translateX(${currentMainX}%)`;
-                }
-            }, { passive: false });
-            
-            statusScreen.addEventListener('touchend', (e) => {
-                if (!isStatusEdgeSwipe) return;
-                const touch = Array.from(e.changedTouches).find(t => t.identifier === statusSwipeTouchId);
-                if (!touch) return;
-
-                statusScreen.classList.remove('is-swiping');
-                $('#app-container').style.transition = '';
-
-                const diff = statusTouchCurrentX - statusTouchStartX;
-                if (diff > window.innerWidth / 3) {
-                    // 閉じる
-                    statusScreen.style.transform = '';
-                    closeStatusScreen();
-                } else {
-                    // 戻す
-                    statusScreen.style.transform = '';
-                    $('#app-container').style.transform = '';
-                    $('#app-container').style.filter = '';
-                }
-                isStatusEdgeSwipe = false;
-                statusSwipeTouchId = null;
-            });
 
             const init = () => {
                 if ('serviceWorker' in navigator) {
