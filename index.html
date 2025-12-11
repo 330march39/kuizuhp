@@ -1105,7 +1105,58 @@
     
     <div id="countdown-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6"><h2 id="countdown-modal-title" class="text-xl font-bold mb-4">カウントダウン設定</h2><div class="space-y-4"><input id="countdown-name" type="text" placeholder="イベント名 (例: 期末テスト)" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600 appearance-none min-w-0"><input id="countdown-date" type="date" class="w-full block p-2 border rounded dark:bg-gray-800 dark:border-gray-600 appearance-none min-w-0"></div><div class="flex justify-between items-center mt-6"><button id="countdown-delete-btn" class="text-red-500 hover:text-red-700 font-semibold p-2 hidden"><i data-lucide="trash-2" class="w-5 h-5 inline-block mr-1"></i>削除</button><div class="flex space-x-2"><button id="countdown-cancel-btn" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">キャンセル</button><button id="countdown-save-btn" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg">保存</button></div></div></div></div>
    
-    <div id="point-details-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 flex flex-col max-h-[90vh]"><div class="flex justify-between items-center mb-4 flex-shrink-0"><h2 class="text-xl font-bold">マイステータス</h2><button id="close-point-modal-btn" class="p-1"><i data-lucide="x"></i></button></div><div class="space-y-6 overflow-y-auto"><div class="text-center"><p class="text-sm text-gray-500">現在の学習ポイント</p><p class="text-4xl font-bold primary-text" id="modal-lp-display"></p></div><div><h3 class="font-semibold mb-2">テーマカラー</h3><div id="modal-theme-selector" class="grid grid-cols-4 gap-4"></div></div><div><h3 class="font-semibold mb-2">壁紙</h3><div id="modal-background-selector" class="grid grid-cols-3 gap-2"></div></div></div></div></div>
+    <div id="status-screen" class="screen-layer">
+        <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0">
+            <div class="flex items-center flex-1">
+                <button id="close-status-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                    <div class="flex items-center font-medium primary-text">
+                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                        <span>戻る</span>
+                    </div>
+                </button>
+            </div>
+            
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">マイステータス</h2>
+            
+            <div class="flex-1"></div>
+        </header>
+
+        <div class="bg-gray-50 dark:bg-gray-800/50 p-6 text-center flex-shrink-0">
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">現在の学習ポイント</p>
+            <p class="text-5xl font-bold primary-text" id="status-lp-display">0</p>
+            <p class="text-xs text-gray-400 mt-2">学習してLPを貯め、アイテムと交換しよう</p>
+        </div>
+
+        <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 overflow-x-auto">
+            <div class="flex space-x-2 pb-1" id="status-tabs-container">
+                <button class="status-tab-btn active primary-bg text-white px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors" data-target="theme">テーマカラー</button>
+                <button class="status-tab-btn bg-gray-200 dark:bg-gray-600 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors" data-target="background">壁紙</button>
+                <button class="status-tab-btn bg-gray-200 dark:bg-gray-600 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors" data-target="game">ミニゲーム</button>
+                <button class="status-tab-btn bg-gray-200 dark:bg-gray-600 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors" data-target="music">BGM</button>
+            </div>
+        </div>
+    
+        <div class="flex-grow overflow-y-auto p-4 pb-safe bg-gray-100 dark:bg-gray-900">
+            
+            <div id="status-content-theme" class="status-content-section">
+                <div id="status-theme-list" class="grid grid-cols-4 gap-4"></div>
+            </div>
+
+            <div id="status-content-background" class="status-content-section hidden">
+                <div id="status-background-list" class="grid grid-cols-2 gap-3"></div>
+            </div>
+
+            <div id="status-content-game" class="status-content-section hidden">
+                <div id="status-game-list" class="grid grid-cols-3 gap-3"></div>
+            </div>
+
+            <div id="status-content-music" class="status-content-section hidden">
+                <div id="status-music-list" class="grid grid-cols-3 gap-3"></div>
+            </div>
+
+        </div>
+    </div>
+    
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300 z-50 transform -translate-y-10"></div>
         
     <div id="quest-active-screen" class="focus-view-bg hidden fixed inset-0 bg-gray-900 text-gray-100 z-50 flex flex-col items-center justify-center p-4 transition-all duration-500 bg-cover bg-center">
@@ -2815,7 +2866,7 @@
                     if (itemType === 'game') {
                         syncGamesToBreakIcons();
                     }
-                    renderPointModalContent(); // モーダル再描画
+                    renderStatusPageContent();
                     
                     // 設定ページが開かれていれば再描画
                     if ($('#settings-page').classList.contains('active')) {
@@ -4494,6 +4545,140 @@
                 lucide.createIcons();
             };
 
+            // --- マイステータス画面 (サブページ) の制御 ---
+            const statusScreen = $('#status-screen');
+            let statusCloseTimer = null;
+
+            // 画面を開く
+            function openStatusScreen() {
+                if (statusCloseTimer) {
+                    clearTimeout(statusCloseTimer);
+                    statusCloseTimer = null;
+                }
+                
+                // 初回描画
+                renderStatusPageContent();
+                
+                // リセット
+                statusScreen.style.transform = '';
+                statusScreen.classList.remove('is-swiping');
+                
+                // 表示＆アニメーション
+                statusScreen.style.display = 'flex';
+                void statusScreen.offsetWidth; // リフロー強制
+                statusScreen.classList.add('active');
+                
+                // メイン画面を奥へ
+                $('#app-container').classList.add('background-pushed');
+            }
+
+            // 画面を閉じる
+            function closeStatusScreen() {
+                statusScreen.classList.remove('active');
+                
+                // メイン画面を戻す
+                const appContainer = $('#app-container');
+                appContainer.classList.remove('background-pushed');
+                appContainer.style.transform = '';
+                appContainer.style.filter = '';
+
+                if (statusCloseTimer) clearTimeout(statusCloseTimer);
+                statusCloseTimer = setTimeout(() => {
+                    if (!statusScreen.classList.contains('active')) {
+                        statusScreen.style.display = 'none';
+                        statusScreen.style.transform = '';
+                    }
+                    statusCloseTimer = null;
+                }, 300);
+            }
+
+            // タブ切り替えロジック
+            $$('.status-tab-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const target = e.currentTarget.dataset.target;
+
+                    // 1. タブの見た目更新
+                    $$('.status-tab-btn').forEach(b => {
+                        b.classList.remove('active', 'primary-bg', 'text-white');
+                        b.classList.add('bg-gray-200', 'dark:bg-gray-600');
+                    });
+                    e.currentTarget.classList.add('active', 'primary-bg', 'text-white');
+                    e.currentTarget.classList.remove('bg-gray-200', 'dark:bg-gray-600');
+
+                    // 2. コンテンツの表示切り替え
+                    $$('.status-content-section').forEach(section => {
+                        section.classList.add('hidden');
+                    });
+                    $(`#status-content-${target}`).classList.remove('hidden');
+                });
+            });
+
+            // トリガー設定 (既存のモーダル呼び出しを置換)
+            $('#lp-button').addEventListener('click', openStatusScreen);
+            
+            // 戻るボタン設定
+            $('#close-status-btn').addEventListener('click', closeStatusScreen);
+
+            // --- マイステータス画面のスワイプバック (プロフィール画面と同じロジック) ---
+            let statusTouchStartX = 0;
+            let statusTouchCurrentX = 0;
+            let isStatusEdgeSwipe = false;
+            let statusSwipeTouchId = null;
+
+            statusScreen.addEventListener('touchstart', (e) => {
+                if (isStatusEdgeSwipe) return;
+                const touch = e.changedTouches[0];
+                statusTouchStartX = touch.clientX;
+                if (statusTouchStartX < 50) { // 左端50px以内
+                    isStatusEdgeSwipe = true;
+                    statusSwipeTouchId = touch.identifier;
+                    statusScreen.classList.add('is-swiping');
+                    $('#app-container').style.transition = 'none';
+                }
+            }, { passive: true });
+
+            statusScreen.addEventListener('touchmove', (e) => {
+                if (!isStatusEdgeSwipe) return;
+                const touch = Array.from(e.changedTouches).find(t => t.identifier === statusSwipeTouchId);
+                if (!touch) return;
+
+                statusTouchCurrentX = touch.clientX;
+                const diff = statusTouchCurrentX - statusTouchStartX;
+                
+                if (diff > 0) {
+                    if (e.cancelable) e.preventDefault();
+                    statusScreen.style.transform = `translateX(${diff}px)`;
+                    
+                    const progress = Math.min(diff / window.innerWidth, 1);
+                    const startX = -30;
+                    const currentMainX = startX + (Math.abs(startX) * progress);
+                    $('#app-container').style.transform = `translateX(${currentMainX}%)`;
+                }
+            }, { passive: false });
+
+            statusScreen.addEventListener('touchend', (e) => {
+                if (!isStatusEdgeSwipe) return;
+                const touch = Array.from(e.changedTouches).find(t => t.identifier === statusSwipeTouchId);
+                if (!touch) return;
+
+                statusScreen.classList.remove('is-swiping');
+                $('#app-container').style.transition = '';
+
+                const diff = statusTouchCurrentX - statusTouchStartX;
+                if (diff > window.innerWidth / 3) {
+                    // 閉じる
+                    statusScreen.style.transform = '';
+                    closeStatusScreen();
+                } else {
+                    // 戻す
+                    statusScreen.style.transform = '';
+                    $('#app-container').style.transform = '';
+                    $('#app-container').style.filter = '';
+                }
+                isStatusEdgeSwipe = false;
+                statusSwipeTouchId = null;
+            });
+
             const init = () => {
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.register('sw.js')
@@ -4648,82 +4833,73 @@
                         }
                     }, 1500); // 1.5秒待ってからフェードアウト開始
             };
-            const renderPointModalContent = () => {
+            const renderStatusPageContent = () => {
+                // LP表示更新
+                $('#status-lp-display').textContent = state.profile.lp;
+
                 // 1. テーマ
-                const themeContainer = $('#modal-theme-selector');
+                const themeContainer = $('#status-theme-list');
                 themeContainer.innerHTML = Object.entries(initialData.themes).map(([id, theme]) => {
                     const isUnlocked = state.profile.unlockedThemes.includes(id);
-                    // (既存の表示ロジック...)
                     if (isUnlocked) {
-                         return `<div class="text-center"><button class="theme-btn w-12 h-12 rounded-full border-4 ${state.profile.activeTheme === id ? 'border-blue-500' : 'border-transparent'} relative" style="background-color: ${theme.color}" data-theme="${id}"><div class="absolute inset-0 flex items-center justify-center rounded-full"><i data-lucide="check" class="w-6 h-6 text-white"></i></div></button><p class="text-xs mt-1">${theme.name}</p></div>`;
+                         return `<div class="text-center"><button class="theme-btn w-16 h-16 rounded-full border-4 ${state.profile.activeTheme === id ? 'border-blue-500' : 'border-transparent'} relative transition-transform active:scale-95" style="background-color: ${theme.color}" data-theme="${id}"><div class="absolute inset-0 flex items-center justify-center rounded-full"><i data-lucide="check" class="w-8 h-8 text-white/50"></i></div></button><p class="text-xs mt-2 font-bold">${theme.name}</p></div>`;
                     } else {
-                        return `<div class="text-center"><button class="theme-btn w-12 h-12 rounded-full border-4 border-transparent relative" style="background-color: ${theme.color}" data-theme="${id}"><div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-full text-white"><i data-lucide="lock" class="w-5 h-5"></i><span class="text-[10px] font-bold">${theme.cost}</span></div></button><p class="text-xs mt-1">${theme.name}</p></div>`;
+                        return `<div class="text-center"><button class="theme-btn w-16 h-16 rounded-full border-4 border-transparent relative transition-transform active:scale-95" style="background-color: ${theme.color}" data-theme="${id}"><div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-full text-white"><i data-lucide="lock" class="w-6 h-6 mb-1"></i><span class="text-xs font-bold">${theme.cost}</span></div></button><p class="text-xs mt-2 text-gray-500">${theme.name}</p></div>`;
                     }
                 }).join('');
 
                 // 2. 壁紙
-                const backgroundContainer = $('#modal-background-selector');
+                const backgroundContainer = $('#status-background-list');
                 backgroundContainer.innerHTML = Object.entries(initialData.backgrounds).map(([id, bg]) => {
                     const isUnlocked = state.profile.unlockedBackgrounds.includes(id);
                     const style = bg.url ? `background-image: url(${bg.url})` : 'background-color: #6b7280;';
-                    // (既存の表示ロジック...)
-                     if (isUnlocked) {
-                        return `<div class="text-center"><button class="background-btn w-full h-20 rounded-lg border-4 ${state.profile.activeBackground === id ? 'border-blue-500' : 'border-transparent'} relative bg-cover bg-center" style="${style}" data-bg="${id}"><div class="absolute inset-0 flex items-center justify-center rounded-md"><i data-lucide="check" class="w-8 h-8 text-white"></i></div></button><p class="text-xs mt-1">${bg.name}</p></div>`;
+                    
+                    if (isUnlocked) {
+                        return `<div class="text-center"><button class="background-btn w-full aspect-[9/16] rounded-lg border-4 ${state.profile.activeBackground === id ? 'border-blue-500' : 'border-transparent'} relative bg-cover bg-center shadow-sm transition-transform active:scale-95" style="${style}" data-bg="${id}"><div class="absolute inset-0 flex items-center justify-center rounded-md"><i data-lucide="check" class="w-10 h-10 text-white shadow-sm"></i></div></button><p class="text-xs mt-1 font-bold">${bg.name}</p></div>`;
                     } else {
-                         return `<div class="text-center"><button class="background-btn w-full h-20 rounded-lg border-4 border-transparent relative bg-cover bg-center" style="${style}" data-bg="${id}"><div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-md text-white"><i data-lucide="lock" class="w-6 h-6"></i><span class="text-sm font-bold">${bg.cost}</span></div></button><p class="text-xs mt-1">${bg.name}</p></div>`;
+                         return `<div class="text-center"><button class="background-btn w-full aspect-[9/16] rounded-lg border-4 border-transparent relative bg-cover bg-center shadow-sm transition-transform active:scale-95" style="${style}" data-bg="${id}"><div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-md text-white"><i data-lucide="lock" class="w-8 h-8 mb-1"></i><span class="text-sm font-bold">${bg.cost}</span></div></button><p class="text-xs mt-1 text-gray-500">${bg.name}</p></div>`;
                     }
                 }).join('');
 
-                // ▼▼▼ 【追加】ゲーム＆音楽セクションの描画（マイステータスモーダル内に動的に追加） ▼▼▼
-                
-                // モーダル内のコンテンツコンテナを取得（なければ既存の場所に追加）
-                const container = $('#point-details-modal .space-y-6');
-                
-                // 既存のゲーム・音楽セクションがあれば削除（二重描画防止）
-                const existingGameSec = container.querySelector('#modal-game-section');
-                if(existingGameSec) existingGameSec.remove();
-                const existingMusicSec = container.querySelector('#modal-music-section');
-                if(existingMusicSec) existingMusicSec.remove();
-
-                // ゲームセクション作成
-                const gameHtml = Object.entries(initialData.games).map(([id, game]) => {
+                // 3. ミニゲーム
+                const gameContainer = $('#status-game-list');
+                gameContainer.innerHTML = Object.entries(initialData.games).map(([id, game]) => {
                     const isUnlocked = state.profile.unlockedGames.includes(id);
-                    return isUnlocked 
-                        ? `<div class="text-center opacity-50"><div class="w-16 h-16 mx-auto bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center"><i data-lucide="check" class="w-8 h-8"></i></div><p class="text-xs mt-1">${game.name}</p></div>`
-                        : `<div class="text-center cursor-pointer game-purchase-btn" data-id="${id}"><div class="w-16 h-16 mx-auto bg-gray-200 dark:bg-gray-600 rounded-lg flex flex-col items-center justify-center relative hover:bg-gray-300 dark:hover:bg-gray-500 transition"><i data-lucide="${game.icon}" class="w-6 h-6 mb-1"></i><span class="text-xs font-bold">${game.cost} LP</span></div><p class="text-xs mt-1">${game.name}</p></div>`;
+                    // 解放済みは少し薄く表示、未解放は購入ボタン
+                    if (isUnlocked) {
+                        return `<div class="text-center opacity-60"><div class="w-full aspect-square bg-gray-200 dark:bg-gray-700 rounded-xl flex flex-col items-center justify-center border-2 border-transparent"><i data-lucide="check-circle" class="w-8 h-8 text-green-500 mb-1"></i><span class="text-[10px] font-bold">解放済</span></div><p class="text-xs mt-1 font-bold truncate">${game.name}</p></div>`;
+                    } else {
+                        return `<div class="text-center cursor-pointer game-purchase-btn group" data-id="${id}"><div class="w-full aspect-square bg-white dark:bg-gray-800 rounded-xl flex flex-col items-center justify-center relative shadow-sm border-2 border-gray-100 dark:border-gray-700 group-hover:border-indigo-500 transition-colors"><i data-lucide="${game.icon}" class="w-8 h-8 mb-1 text-indigo-500"></i><span class="text-xs font-bold bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full">${game.cost}</span></div><p class="text-xs mt-1 font-bold truncate">${game.name}</p></div>`;
+                    }
                 }).join('');
 
-                const gameSection = document.createElement('div');
-                gameSection.id = 'modal-game-section';
-                gameSection.innerHTML = `<h3 class="font-semibold mb-2">ミニゲーム</h3><div class="grid grid-cols-4 gap-4">${gameHtml || '<p class="text-sm text-gray-400">アイテムがありません</p>'}</div>`;
-                container.appendChild(gameSection);
-
-                // 音楽セクション作成
-                const musicHtml = Object.entries(initialData.music).map(([id, music]) => {
+                // 4. BGM
+                const musicContainer = $('#status-music-list');
+                musicContainer.innerHTML = Object.entries(initialData.music).map(([id, music]) => {
                     const isUnlocked = state.profile.unlockedMusic.includes(id);
-                    return isUnlocked
-                        ? `<div class="text-center opacity-50"><div class="w-16 h-16 mx-auto bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center"><i data-lucide="check" class="w-8 h-8"></i></div><p class="text-xs mt-1">${music.name}</p></div>`
-                        : `<div class="text-center cursor-pointer music-purchase-btn" data-id="${id}"><div class="w-16 h-16 mx-auto bg-gray-200 dark:bg-gray-600 rounded-lg flex flex-col items-center justify-center relative hover:bg-gray-300 dark:hover:bg-gray-500 transition"><i data-lucide="music" class="w-6 h-6 mb-1"></i><span class="text-xs font-bold">${music.cost} LP</span></div><p class="text-xs mt-1">${music.name}</p></div>`;
+                    if (isUnlocked) {
+                        return `<div class="text-center opacity-60"><div class="w-full aspect-square bg-gray-200 dark:bg-gray-700 rounded-xl flex flex-col items-center justify-center border-2 border-transparent"><i data-lucide="check-circle" class="w-8 h-8 text-pink-500 mb-1"></i><span class="text-[10px] font-bold">解放済</span></div><p class="text-xs mt-1 font-bold truncate">${music.name}</p></div>`;
+                    } else {
+                        return `<div class="text-center cursor-pointer music-purchase-btn group" data-id="${id}"><div class="w-full aspect-square bg-white dark:bg-gray-800 rounded-xl flex flex-col items-center justify-center relative shadow-sm border-2 border-gray-100 dark:border-gray-700 group-hover:border-pink-500 transition-colors"><i data-lucide="music" class="w-8 h-8 mb-1 text-pink-500"></i><span class="text-xs font-bold bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300 px-2 py-0.5 rounded-full">${music.cost}</span></div><p class="text-xs mt-1 font-bold truncate">${music.name}</p></div>`;
+                    }
                 }).join('');
 
-                const musicSection = document.createElement('div');
-                musicSection.id = 'modal-music-section';
-                musicSection.innerHTML = `<h3 class="font-semibold mb-2">BGM</h3><div class="grid grid-cols-4 gap-4">${musicHtml || '<p class="text-sm text-gray-400">アイテムがありません</p>'}</div>`;
-                container.appendChild(musicSection);
-
-                // アイコン更新とイベントリスナー再設定
+                // アイコン再生成
                 lucide.createIcons();
-                
-                // 購入ボタンのリスナー設定
-                gameSection.querySelectorAll('.game-purchase-btn').forEach(btn => {
+
+                // 購入ボタンのイベント再設定
+                attachPurchaseEvents();
+            };
+
+            // 購入ボタンへのイベントリスナー設定用ヘルパー関数
+            const attachPurchaseEvents = () => {
+                // ゲーム購入
+                $$('.game-purchase-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const id = btn.dataset.id;
                         const item = initialData.games[id];
-                        
-                        $('#game-purchase-title').textContent = item.name; // 「〜を交換しますか？」は削除してシンプルに
+                        $('#game-purchase-title').textContent = item.name;
                         $('#game-purchase-cost').textContent = `必要ポイント: ${item.cost} LP`;
-                        
-                        // ★プレビュー生成
                         renderGamePreviews(item);
                         
                         const confirmBtn = $('#game-purchase-confirm');
@@ -4731,30 +4907,27 @@
                         confirmBtn.dataset.itemType = 'game';
                         confirmBtn.disabled = state.profile.lp < item.cost;
                         
-                        lucide.createIcons(); // プレビュー内のアイコン描画
+                        lucide.createIcons();
                         $('#game-purchase-modal').style.display = 'flex';
                     });
                 });
 
-                musicSection.querySelectorAll('.music-purchase-btn').forEach(btn => {
+                // 音楽購入
+                $$('.music-purchase-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const id = btn.dataset.id;
                         const item = initialData.music[id];
-                        
                         $('#music-purchase-title').textContent = item.name;
                         $('#music-purchase-cost').textContent = `必要ポイント: ${item.cost} LP`;
                         
-                        // ★試聴ボタンの設定
                         const previewBtn = $('#music-preview-btn');
-                        // 古いイベントリスナーを削除するためにクローンして置換（簡易的な方法）
                         const newPreviewBtn = previewBtn.cloneNode(true);
                         previewBtn.parentNode.replaceChild(newPreviewBtn, previewBtn);
                         
-                        newPreviewBtn.addEventListener('click', (e) => {
-                            // ▼修正: アイコンではなくボタン要素そのものを渡す
+                        newPreviewBtn.addEventListener('click', () => {
                             toggleMusicPreview(item.url, newPreviewBtn);
                         });
-                
+                        
                         const confirmBtn = $('#music-purchase-confirm');
                         confirmBtn.dataset.itemId = id;
                         confirmBtn.dataset.itemType = 'music';
@@ -4765,7 +4938,7 @@
                     });
                 });
             };
-
+            
         /* ▼▼▼ 追加機能用関数 ▼▼▼ */
         
         // ゲームプレビュー（画像・動画）を生成する関数
