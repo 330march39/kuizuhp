@@ -2822,18 +2822,6 @@
                     renderEngine.pages['focus-page']();
                 }
             });
-            
-            $('#lp-button').addEventListener('click', () => {
-                // 1. LPポイントの表示を更新
-                $('#modal-lp-display').textContent = state.profile.lp;
-                
-                // 2. テーマと壁紙のリストを描画（関数呼び出し）
-                renderPointModalContent(); 
-                
-                // 3. モーダルを表示
-                $('#point-details-modal').style.display = 'flex';
-                lucide.createIcons();
-            });
 
             function handlePurchase(e) {
                 const { itemId, itemType } = e.target.dataset;
@@ -5041,11 +5029,6 @@
         $('#background-purchase-confirm').addEventListener('click', handlePurchase);
         $('#background-purchase-cancel').addEventListener('click', () => {
             $('#background-purchase-modal').style.display = 'none';
-        });
-
-        // --- ポイント詳細モーダルを閉じるボタン ---
-        $('#close-point-modal-btn').addEventListener('click', () => {
-            $('#point-details-modal').style.display = 'none';
         });
 
         // --- カウントダウンモーダル関連のボタン ---
