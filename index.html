@@ -1778,9 +1778,16 @@
             };
             
             const updateLpDisplay = () => {
-                $('#lp-display').textContent = `${state.profile.lp} LP`;
-                if ($('#point-details-modal').style.display === 'flex') {
-                    $('#modal-lp-display').textContent = state.profile.lp;
+                // ヘッダーのLP表示を更新
+                const headerLp = $('#lp-display');
+                if (headerLp) {
+                    headerLp.textContent = `${state.profile.lp} LP`;
+                }
+            
+                // 新しい「マイステータス画面」のLP表示を更新
+                const statusLp = $('#status-lp-display');
+                if (statusLp) {
+                    statusLp.textContent = state.profile.lp;
                 }
             };
 
