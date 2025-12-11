@@ -4159,6 +4159,35 @@
                 }
             }
 
+            // ▼▼▼ 【追加】クエストページの定義（これが抜けていました） ▼▼▼
+            const questPage = new SubPage('quest-view', {
+                onOpen: () => {
+                    renderQuestPlan();
+                    lucide.createIcons();
+                }
+            });
+
+            // クエスト表示ボタン（Focusページ内）
+            const showQuestBtn = document.getElementById('show-quest-btn');
+            if (showQuestBtn) {
+                showQuestBtn.addEventListener('click', (e) => {
+                    // bodyのクリックイベントと重複しないように伝播を止める
+                    e.stopPropagation(); 
+                    questPage.open();
+                });
+            }
+
+            // クエスト戻るボタン
+            const questBackBtn = document.getElementById('quest-back-btn');
+            if (questBackBtn) {
+                questBackBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    questPage.close();
+                    updateFocusModeUI(); 
+                });
+            }
+            // ▲▲▲ 追加ここまで ▲▲▲
+
             // ==========================================
             // ▼▼▼ 各ページのインスタンス化 (ここだけで管理できます) ▼▼▼
             // ==========================================
