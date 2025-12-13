@@ -771,29 +771,28 @@
             </div>
         </main>
 
-        <div id="mini-timer-container" class="bottom-safe-20 fixed left-0 right-0 max-w-lg mx-auto px-4 z-20">
-             <div id="mini-timer-bar" class="w-full bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg flex items-center p-2 space-x-3 cursor-pointer">
-                <div class="flex items-center space-x-3 flex-grow min-w-0">
-                    <i data-lucide="timer" class="w-5 h-5 primary-text flex-shrink-0"></i>
-                    <span id="mini-timer-text" class="text-sm font-bold tabular-nums text-white truncate"></span>
-                </div>
-                <div class="w-1/3 h-1.5 bg-gray-600 rounded-full overflow-hidden flex-shrink-0">
-                    <div id="mini-timer-progress-bar" class="h-full primary-bg rounded-full"></div>
-                </div>
-                <button id="close-mini-timer-btn" class="p-1 text-gray-400 hover:text-white flex-shrink-0">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
+        </div> <div id="mini-timer-container" class="bottom-safe-20 fixed left-0 right-0 max-w-lg mx-auto px-4 z-20">
+            <div id="mini-timer-bar" class="w-full bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg flex items-center p-2 space-x-3 cursor-pointer">
+            <div class="flex items-center space-x-3 flex-grow min-w-0">
+                <i data-lucide="timer" class="w-5 h-5 primary-text flex-shrink-0"></i>
+                <span id="mini-timer-text" class="text-sm font-bold tabular-nums text-white truncate"></span>
             </div>
+            <div class="w-1/3 h-1.5 bg-gray-600 rounded-full overflow-hidden flex-shrink-0">
+                <div id="mini-timer-progress-bar" class="h-full primary-bg rounded-full"></div>
+            </div>
+            <button id="close-mini-timer-btn" class="p-1 text-gray-400 hover:text-white flex-shrink-0">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
         </div>
-
-        <nav class="nav-safe fixed bottom-0 left-0 right-0 max-w-lg mx-auto h-14 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
-            <button class="tab-btn flex flex-col items-center justify-center w-full h-full primary-text" data-page="home-page" data-title="ホーム"><i data-lucide="home" class="w-6 h-6"></i><span class="text-xs mt-1">ホーム</span></button>
-            <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="study-page" data-title="学習"><i data-lucide="book-marked" class="w-6 h-6"></i><span class="text-xs mt-1">学習</span></button>
-            <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="focus-page" data-title="集中"><i data-lucide="timer" class="w-6 h-6"></i><span class="text-xs mt-1">集中</span></button>
-            <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="my-chart-page" data-title="レポート"><i data-lucide="clipboard-list" class="w-6 h-6"></i><span class="text-xs mt-1">レポート</span></button>
-            <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="settings-page" data-title="設定"><i data-lucide="settings" class="w-6 h-6"></i><span class="text-xs mt-1">設定</span></button>
-        </nav>
     </div>
+
+    <nav class="nav-safe fixed bottom-0 left-0 right-0 max-w-lg mx-auto h-14 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
+        <button class="tab-btn flex flex-col items-center justify-center w-full h-full primary-text" data-page="home-page" data-title="ホーム"><i data-lucide="home" class="w-6 h-6"></i><span class="text-xs mt-1">ホーム</span></button>
+        <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="study-page" data-title="学習"><i data-lucide="book-marked" class="w-6 h-6"></i><span class="text-xs mt-1">学習</span></button>
+        <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="focus-page" data-title="集中"><i data-lucide="timer" class="w-6 h-6"></i><span class="text-xs mt-1">集中</span></button>
+        <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="my-chart-page" data-title="レポート"><i data-lucide="clipboard-list" class="w-6 h-6"></i><span class="text-xs mt-1">レポート</span></button>
+        <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="settings-page" data-title="設定"><i data-lucide="settings" class="w-6 h-6"></i><span class="text-xs mt-1">設定</span></button>
+    </nav>
 
     <div id="welcome-screen" class="fixed inset-0 z-[200] bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-6 hidden">
         <div class="mb-12 animate-fadeIn">
