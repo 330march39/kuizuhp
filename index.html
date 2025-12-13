@@ -10,17 +10,45 @@
     <meta name="theme-color" content="#1f2937" media="(prefers-color-scheme: dark)">
 
     <style>
-        /* 1. htmlとbodyに最初から背景色をつける (これが白飛び防止の鍵) */
+        /* 1. 全体のスクロール固定 (バウンス防止) */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100%;
-            background-color: #ffffff; /* gray-100 (ライトモードの背景) */
-            overflow: hidden;            /* 画面全体のはみ出しを禁止 */
-            position: fixed;             /* 👈 iOSで全体がスクロールするのを防ぐ最強の設定 */
-            top: 0; left: 0;             /* 位置を完全に固定 */
-            overscroll-behavior-y: none; /* 画面端のバウンス（白い余白が見える現象）を禁止 */
+            height: 100%; /* iOSでは 100dvh の方が安定する場合もあります */
+            background-color: #ffffff;
+            overflow: hidden;            /* はみ出し禁止 */
+            position: fixed;             /* ★これがバウンス防止のキモ */
+            top: 0; left: 0;
+            overscroll-behavior-y: none; /* 引っ張り効果禁止 */
+        }
+        
+        /* 2. メインコンテンツ (ここだけスクロールさせる) */
+        main {
+            /* calc計算式: ヘッダー(3.5rem) + タブバー(3.5rem) + セーフエリア を引いた高さ */
+            height: calc(100% - 7rem - env(safe-area-inset-bottom, 20px));
+            overflow-y: auto;            /* 縦スクロール許可 */
+            -webkit-overflow-scrolling: touch; /* なめらかスクロール */
+            overscroll-behavior-y: contain;    /* 親へのスクロール連鎖を止める */
+        }
+        
+        /* 3. タブバーの強制配置修正 (今回の核心部分) */
+        .nav-safe {
+            /* 画面に対する絶対的な位置指定 */
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 50;
+        
+            /* 高さ計算: 元の高さ(3.5rem) + セーフエリア */
+            height: calc(3.5rem + env(safe-area-inset-bottom, 20px));
+            
+            /* 余白設定: コンテンツを上に押し上げる */
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+            
+            /* 重要: これにより高さ計算が崩れなくなります */
+            box-sizing: border-box; 
         }
 
         /* 2. スプラッシュスクリーンの設定 */
@@ -799,7 +827,7 @@
         </div>
     </div>
 
-    <nav class="nav-safe left-0 right-0 max-w-lg mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top">
+    <nav class="nav-safe max-w-lg mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top">
         <button class="tab-btn flex flex-col items-center justify-center w-full h-full primary-text" data-page="home-page" data-title="ホーム"><i data-lucide="home" class="w-6 h-6"></i><span class="text-xs mt-1">ホーム</span></button>
         <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="study-page" data-title="学習"><i data-lucide="book-marked" class="w-6 h-6"></i><span class="text-xs mt-1">学習</span></button>
         <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="focus-page" data-title="集中"><i data-lucide="timer" class="w-6 h-6"></i><span class="text-xs mt-1">集中</span></button>
