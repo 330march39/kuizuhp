@@ -570,7 +570,7 @@
         <img id="splash-logo-dark" src="SQ_logo3.png" alt="StudyQuest Logo Dark" class="w-64 h-64 mb-4 hidden dark:block">
     </div>
 
-    <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto shadow-2xl bg-gray-100 dark:bg-gray-900">
+    <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto shadow-2xl bg-gray-100 dark:bg-gray-900 overflow-hidden">
         
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm">
             <h1 id="header-title" class="text-lg font-bold text-gray-900 dark:text-white">ホーム</h1>
@@ -581,7 +581,7 @@
             </button>
         </header>
 
-        <main class="flex-grow overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
+        <main class="flex-grow overflow-y-auto">
             <div id="home-page" class="page active p-4 space-y-6">
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm text-center">
                     <p id="today-date" class="text-lg font-semibold text-gray-600 dark:text-gray-300"></p>
@@ -782,7 +782,7 @@
             </div>
         </div>
 
-        <nav class="nav-safe fixed bottom-0 left-0 right-0 max-w-lg mx-auto h-14 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
+        <nav class="nav-safe flex-shrink-0 w-full h-14 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full primary-text" data-page="home-page" data-title="ホーム"><i data-lucide="home" class="w-6 h-6"></i><span class="text-xs mt-1">ホーム</span></button>
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="study-page" data-title="学習"><i data-lucide="book-marked" class="w-6 h-6"></i><span class="text-xs mt-1">学習</span></button>
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="focus-page" data-title="集中"><i data-lucide="timer" class="w-6 h-6"></i><span class="text-xs mt-1">集中</span></button>
