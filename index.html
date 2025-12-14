@@ -591,21 +591,30 @@
             animation: coinFloat 3s ease-in-out infinite;
         }
 
-        /* 後光（サンバースト）エフェクト */
+        /* 後光（サンバースト）エフェクト - 修正版 */
         .sunburst {
             position: absolute;
-            top: 50%; left: 50%;
-            width: 500px; height: 500px;
-            margin-left: -250px; margin-top: -250px;
+            top: 50%;
+            left: 50%;
+            width: 600px; /* 少し大きく */
+            height: 600px;
+            margin-left: -300px;
+            margin-top: -300px;
             background: repeating-conic-gradient(
                 from 0deg,
-                rgba(255, 215, 0, 0.2) 0deg 20deg,
+                rgba(255, 215, 0, 0.15) 0deg 20deg, /* 透明度を調整 */
                 transparent 20deg 40deg
             );
             border-radius: 50%;
             animation: sunburstRotate 20s linear infinite;
-            z-index: 0;
-            pointer-events: none; /* クリックを邪魔しない */
+            z-index: 0; /* カード内の最背面 */
+            pointer-events: none;
+        }
+        
+        /* ポップアップ内のコンテンツを光より前に出すための設定 */
+        .popup-content-layer {
+            position: relative;
+            z-index: 10;
         }
         
         /* 数字がカウントアップする時用のクラス（JS制御用） */
@@ -1315,34 +1324,34 @@
     </div>
 
     <div id="lp-popup-modal" class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden" style="opacity: 0; transition: opacity 0.3s;">
-        <div class="absolute inset-0 overflow-hidden flex items-center justify-center pointer-events-none">
+        
+        <div id="lp-popup-content" class="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative transform scale-0 overflow-hidden border border-yellow-400/30">
+            
             <div class="sunburst"></div>
-        </div>
 
-        <div id="lp-popup-content" class="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative z-10 transform scale-0">
-            
-            <h2 class="text-3xl font-black text-gray-800 dark:text-white mb-6 tracking-widest drop-shadow-sm">GET!</h2>
-            
-            <div class="relative w-40 h-40 mx-auto mb-6">
-                <div class="absolute inset-0 bg-yellow-400 blur-[40px] opacity-40 rounded-full animate-pulse"></div>
-                <img src="coin.png" alt="LP Coin" class="w-full h-full object-contain relative z-10 animate-coin-float drop-shadow-xl">
-            </div>
-
-            <div class="mb-2">
-                <span class="text-lg font-bold text-gray-500 dark:text-gray-400 block mb-1" id="lp-popup-reason">ログインボーナス</span>
-                <div class="flex items-baseline justify-center space-x-1">
-                    <span class="text-2xl font-bold text-yellow-500">+</span>
-                    <span id="lp-popup-amount" class="text-6xl font-black lp-amount-text font-mono">0</span>
-                    <span class="text-xl font-bold text-yellow-600 dark:text-yellow-500">LP</span>
+            <div class="popup-content-layer">
+                <h2 class="text-3xl font-black text-gray-800 dark:text-white mb-6 tracking-widest drop-shadow-sm">GET!</h2>
+                
+                <div class="relative w-40 h-40 mx-auto mb-6">
+                    <div class="absolute inset-0 bg-yellow-400 blur-[40px] opacity-40 rounded-full animate-pulse"></div>
+                    <img src="coin.png" alt="LP Coin" class="w-full h-full object-contain relative z-10 animate-coin-float drop-shadow-xl">
                 </div>
+
+                <div class="mb-2">
+                    <span class="text-lg font-bold text-gray-500 dark:text-gray-400 block mb-1" id="lp-popup-reason">ログインボーナス</span>
+                    <div class="flex items-baseline justify-center space-x-1">
+                        <span class="text-2xl font-bold text-yellow-500">+</span>
+                        <span id="lp-popup-amount" class="text-6xl font-black lp-amount-text font-mono">0</span>
+                        <span class="text-xl font-bold text-yellow-600 dark:text-yellow-500">LP</span>
+                    </div>
+                </div>
+
+                <p class="text-sm text-gray-400 mb-8">現在の合計: <span id="lp-popup-total" class="font-bold">0</span> LP</p>
+
+                <button id="lp-popup-close-btn" class="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold py-4 px-8 rounded-full shadow-lg transform transition active:scale-95 text-xl">
+                    OK
+                </button>
             </div>
-
-            <p class="text-sm text-gray-400 mb-8">現在の合計: <span id="lp-popup-total" class="font-bold">0</span> LP</p>
-
-            <button id="lp-popup-close-btn" class="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold py-4 px-8 rounded-full shadow-lg transform transition active:scale-95 text-xl flex items-center justify-center">
-                <i data-lucide="thumbs-up" class="w-6 h-6 mr-2"></i>
-                OK
-            </button>
         </div>
     </div>
     
@@ -2446,43 +2455,66 @@
             const addLP = (amount, reason, show = true) => {
                 state.profile.lp += amount;
                 updateLpDisplay();
-                saveState(); // ここで保存もしておく
+                saveState();
 
-                if(show) {
-                    // トーストの代わりにポップアップを表示
+                // 修正点: amount が 1以上 かつ show が true の時だけポップアップを出す
+                if(show && amount > 0) {
                     showLpPopup(amount, reason);
                 }
             };
 
-            // ▼▼▼ 追加: ポップアップ表示・非表示ロジック ▼▼▼
+            // ▼▼▼ 追加・修正: ポップアップ制御ロジック ▼▼▼
             const lpPopupModal = document.getElementById('lp-popup-modal');
             const lpPopupContent = document.getElementById('lp-popup-content');
             const lpPopupAmount = document.getElementById('lp-popup-amount');
             const lpPopupReason = document.getElementById('lp-popup-reason');
             const lpPopupTotal = document.getElementById('lp-popup-total');
             const lpPopupCloseBtn = document.getElementById('lp-popup-close-btn');
+            
+            let popupAutoCloseTimer = null; // 自動クローズ用のタイマーID
+
+            // ポップアップを閉じる関数（共通化）
+            const closeLpPopup = () => {
+                // タイマーが残っていたらクリア（手動で閉じた場合など）
+                if (popupAutoCloseTimer) {
+                    clearTimeout(popupAutoCloseTimer);
+                    popupAutoCloseTimer = null;
+                }
+
+                // フェードアウト
+                lpPopupModal.style.opacity = '0';
+                lpPopupContent.classList.remove('animate-pop-elastic');
+                lpPopupContent.classList.add('scale-0');
+
+                setTimeout(() => {
+                    lpPopupModal.classList.add('hidden');
+                }, 300);
+            };
 
             // ポップアップを表示する関数
             const showLpPopup = (amount, reason) => {
-                // 1. テキストをセット
                 lpPopupReason.textContent = reason;
                 lpPopupTotal.textContent = state.profile.lp;
                 
-                // 2. モーダルを表示（透明度アニメーション用）
+                // 表示
                 lpPopupModal.classList.remove('hidden');
-                // 少し遅らせてopacityを1にする（フェードイン）
                 requestAnimationFrame(() => {
                     lpPopupModal.style.opacity = '1';
-                    // コンテンツにポップアップアニメーションクラスを付与
                     lpPopupContent.classList.remove('scale-0');
                     lpPopupContent.classList.add('animate-pop-elastic');
                 });
 
-                // 3. 数字のカウントアップ演出
+                // 数字カウントアップ
                 animateValue(lpPopupAmount, 0, amount, 1000);
                 
-                // アイコン生成（OKボタン用）
+                // アイコン生成
                 lucide.createIcons();
+
+                // ★追加: 5秒後に自動で閉じる
+                if (popupAutoCloseTimer) clearTimeout(popupAutoCloseTimer); // 重複防止
+                popupAutoCloseTimer = setTimeout(() => {
+                    closeLpPopup();
+                }, 5000); // 5000ms = 5秒
             };
 
             // 数字をカウントアップするヘルパー関数
