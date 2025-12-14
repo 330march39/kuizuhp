@@ -561,6 +561,60 @@
             transition: none; /* 指に追従させるためアニメーションを切る */
             box-shadow: -10px 0 25px rgba(0,0,0,0.1);
         }
+        /* ▼▼▼ 追加: LP獲得ポップアップ用アニメーション ▼▼▼ */
+        
+        /* ポップアップが弾むように出現 */
+        @keyframes popInElastic {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            70% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        /* コインが浮遊するアニメーション */
+        @keyframes coinFloat {
+            0%, 100% { transform: translateY(0) rotateY(0deg); }
+            50% { transform: translateY(-10px) rotateY(10deg); }
+        }
+
+        /* 後ろの光が回転するアニメーション */
+        @keyframes sunburstRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-pop-elastic {
+            animation: popInElastic 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .animate-coin-float {
+            animation: coinFloat 3s ease-in-out infinite;
+        }
+
+        /* 後光（サンバースト）エフェクト */
+        .sunburst {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 500px; height: 500px;
+            margin-left: -250px; margin-top: -250px;
+            background: repeating-conic-gradient(
+                from 0deg,
+                rgba(255, 215, 0, 0.2) 0deg 20deg,
+                transparent 20deg 40deg
+            );
+            border-radius: 50%;
+            animation: sunburstRotate 20s linear infinite;
+            z-index: 0;
+            pointer-events: none; /* クリックを邪魔しない */
+        }
+        
+        /* 数字がカウントアップする時用のクラス（JS制御用） */
+        .lp-amount-text {
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: linear-gradient(45deg, #fbbf24, #d97706);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -1257,6 +1311,38 @@
                 <div id="status-music-list" class="grid grid-cols-3 gap-3"></div>
             </div>
 
+        </div>
+    </div>
+
+    <div id="lp-popup-modal" class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden" style="opacity: 0; transition: opacity 0.3s;">
+        <div class="absolute inset-0 overflow-hidden flex items-center justify-center pointer-events-none">
+            <div class="sunburst"></div>
+        </div>
+
+        <div id="lp-popup-content" class="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative z-10 transform scale-0">
+            
+            <h2 class="text-3xl font-black text-gray-800 dark:text-white mb-6 tracking-widest drop-shadow-sm">GET!</h2>
+            
+            <div class="relative w-40 h-40 mx-auto mb-6">
+                <div class="absolute inset-0 bg-yellow-400 blur-[40px] opacity-40 rounded-full animate-pulse"></div>
+                <img src="coin.png" alt="LP Coin" class="w-full h-full object-contain relative z-10 animate-coin-float drop-shadow-xl">
+            </div>
+
+            <div class="mb-2">
+                <span class="text-lg font-bold text-gray-500 dark:text-gray-400 block mb-1" id="lp-popup-reason">ログインボーナス</span>
+                <div class="flex items-baseline justify-center space-x-1">
+                    <span class="text-2xl font-bold text-yellow-500">+</span>
+                    <span id="lp-popup-amount" class="text-6xl font-black lp-amount-text font-mono">0</span>
+                    <span class="text-xl font-bold text-yellow-600 dark:text-yellow-500">LP</span>
+                </div>
+            </div>
+
+            <p class="text-sm text-gray-400 mb-8">現在の合計: <span id="lp-popup-total" class="font-bold">0</span> LP</p>
+
+            <button id="lp-popup-close-btn" class="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold py-4 px-8 rounded-full shadow-lg transform transition active:scale-95 text-xl flex items-center justify-center">
+                <i data-lucide="thumbs-up" class="w-6 h-6 mr-2"></i>
+                OK
+            </button>
         </div>
     </div>
     
@@ -2359,9 +2445,74 @@
 
             const addLP = (amount, reason, show = true) => {
                 state.profile.lp += amount;
-                if(show) showToast(`${reason}で ${amount} LP 獲得！`);
                 updateLpDisplay();
+                saveState(); // ここで保存もしておく
+
+                if(show) {
+                    // トーストの代わりにポップアップを表示
+                    showLpPopup(amount, reason);
+                }
             };
+
+            // ▼▼▼ 追加: ポップアップ表示・非表示ロジック ▼▼▼
+            const lpPopupModal = document.getElementById('lp-popup-modal');
+            const lpPopupContent = document.getElementById('lp-popup-content');
+            const lpPopupAmount = document.getElementById('lp-popup-amount');
+            const lpPopupReason = document.getElementById('lp-popup-reason');
+            const lpPopupTotal = document.getElementById('lp-popup-total');
+            const lpPopupCloseBtn = document.getElementById('lp-popup-close-btn');
+
+            // ポップアップを表示する関数
+            const showLpPopup = (amount, reason) => {
+                // 1. テキストをセット
+                lpPopupReason.textContent = reason;
+                lpPopupTotal.textContent = state.profile.lp;
+                
+                // 2. モーダルを表示（透明度アニメーション用）
+                lpPopupModal.classList.remove('hidden');
+                // 少し遅らせてopacityを1にする（フェードイン）
+                requestAnimationFrame(() => {
+                    lpPopupModal.style.opacity = '1';
+                    // コンテンツにポップアップアニメーションクラスを付与
+                    lpPopupContent.classList.remove('scale-0');
+                    lpPopupContent.classList.add('animate-pop-elastic');
+                });
+
+                // 3. 数字のカウントアップ演出
+                animateValue(lpPopupAmount, 0, amount, 1000);
+                
+                // アイコン生成（OKボタン用）
+                lucide.createIcons();
+            };
+
+            // 数字をカウントアップするヘルパー関数
+            const animateValue = (obj, start, end, duration) => {
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    // イージング（終わり際にゆっくりになる）
+                    const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+                    
+                    obj.innerHTML = Math.floor(progress * (end - start) + start);
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    }
+                };
+                window.requestAnimationFrame(step);
+            };
+
+            // 閉じるボタンの処理
+            lpPopupCloseBtn.addEventListener('click', () => {
+                // フェードアウト
+                lpPopupModal.style.opacity = '0';
+                lpPopupContent.classList.remove('animate-pop-elastic');
+                lpPopupContent.classList.add('scale-0'); // 次回のために縮めておく
+
+                setTimeout(() => {
+                    lpPopupModal.classList.add('hidden');
+                }, 300); // transitionの時間と合わせる
+            });
             
             const formatTime = (s) => {
                 const totalSeconds = Math.floor(s);
